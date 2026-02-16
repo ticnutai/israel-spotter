@@ -68,11 +68,11 @@ export async function searchByGushHelka(gush: number, helka: number): Promise<Ge
   }
 }
 
-// Search by address using Nominatim
+// Search by address using Photon (Komoot)
 export async function searchByAddress(address: string): Promise<GeoResult> {
   const query = encodeURIComponent(address + ', Israel');
   const response = await fetch(
-    `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1&countrycodes=il`
+    `https://photon.komoot.io/api/?q=${query}&lang=he&limit=1`
   );
 
   if (!response.ok) {
@@ -81,14 +81,18 @@ export async function searchByAddress(address: string): Promise<GeoResult> {
 
   const data = await response.json();
 
-  if (!data || data.length === 0) {
+  if (!data?.features || data.features.length === 0) {
     throw new Error('לא נמצאה כתובת תואמת');
   }
 
+  const feature = data.features[0];
+  const [lng, lat] = feature.geometry.coordinates;
+  const name = feature.properties?.name || feature.properties?.street || address;
+
   return {
-    lat: parseFloat(data[0].lat),
-    lng: parseFloat(data[0].lon),
-    label: data[0].display_name || address,
+    lat,
+    lng,
+    label: name,
   };
 }
 
