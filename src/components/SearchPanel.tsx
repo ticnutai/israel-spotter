@@ -4,19 +4,24 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
 import { Search, MapPin, Loader2, AlertCircle } from "lucide-react";
 import { searchByGushHelka, searchByAddress, type GeoResult } from "@/lib/geocode";
+import { fetchBoundaries, type BoundaryResult } from "@/lib/boundaries";
 
 interface SearchPanelProps {
   onResult: (result: GeoResult) => void;
+  onBoundaries: (boundaries: BoundaryResult | null) => void;
 }
 
-export function SearchPanel({ onResult }: SearchPanelProps) {
+export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
   const [gush, setGush] = useState("");
   const [helka, setHelka] = useState("");
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [warning, setWarning] = useState("");
+  const [showBoundaries, setShowBoundaries] = useState(false);
 
   const handleGushHelkaSearch = async () => {
     if (!gush || !helka) {
@@ -25,9 +30,19 @@ export function SearchPanel({ onResult }: SearchPanelProps) {
     }
     setLoading(true);
     setError("");
+    setWarning("");
+    onBoundaries(null);
     try {
       const result = await searchByGushHelka(Number(gush), Number(helka));
       onResult(result);
+
+      if (showBoundaries) {
+        const boundaries = await fetchBoundaries(Number(gush), Number(helka));
+        if (!boundaries.parcelGeometry && !boundaries.blockGeometry) {
+          setWarning("לא נמצאו גבולות גרפיים עבור גוש/חלקה זה");
+        }
+        onBoundaries(boundaries);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "שגיאה בחיפוש");
     } finally {
@@ -42,6 +57,8 @@ export function SearchPanel({ onResult }: SearchPanelProps) {
     }
     setLoading(true);
     setError("");
+    setWarning("");
+    onBoundaries(null);
     try {
       const result = await searchByAddress(address);
       onResult(result);
@@ -49,6 +66,13 @@ export function SearchPanel({ onResult }: SearchPanelProps) {
       setError(e instanceof Error ? e.message : "שגיאה בחיפוש");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleBoundaries = (checked: boolean) => {
+    setShowBoundaries(checked);
+    if (!checked) {
+      onBoundaries(null);
     }
   };
 
@@ -97,6 +121,16 @@ export function SearchPanel({ onResult }: SearchPanelProps) {
               חיפוש
             </Button>
           </div>
+          <div className="flex items-center gap-2 mt-3">
+            <Switch
+              id="show-boundaries"
+              checked={showBoundaries}
+              onCheckedChange={handleToggleBoundaries}
+            />
+            <Label htmlFor="show-boundaries" className="cursor-pointer">
+              הצג גבולות חלקה/גוש
+            </Label>
+          </div>
         </TabsContent>
 
         <TabsContent value="address">
@@ -123,6 +157,13 @@ export function SearchPanel({ onResult }: SearchPanelProps) {
         <Alert variant="destructive" className="mt-3 max-w-2xl mx-auto">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {warning && !error && (
+        <Alert className="mt-3 max-w-2xl mx-auto">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{warning}</AlertDescription>
         </Alert>
       )}
     </div>
