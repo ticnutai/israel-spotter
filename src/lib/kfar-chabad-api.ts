@@ -239,7 +239,7 @@ export async function getGush(gush: number): Promise<{ gush: GushInfo; parcels: 
       const g = gushRows[0] || { gush_id: gush, gush_name: "", region: "" };
       return {
         gush: { gush: g.gush_id, name: g.gush_name || "", area_type: g.region || "", plan_count: 0, permit_count: 0, parcel_count: parcelRows.length, notes: null },
-        parcels: parcelRows.map((r: any) => ({ id: r.id, gush: r.gush_id, helka: parseInt(r.parcel_num) || 0, plan_count: 0, permit_count: 0, doc_count: 0, area_sqm: r.area_sqm || 0, land_use: r.land_use || "" })),
+        parcels: parcelRows.map((r: any) => ({ id: r.id, gush: r.gush_id, helka: parseInt(r.parcel_num) || 0, plan_count: 0, permit_count: 0, doc_count: 0, has_tashrit: 0, notes: null })),
       };
     }
   );
@@ -253,7 +253,7 @@ export async function getGushParcels(gush: number): Promise<ParcelInfo[]> {
     },
     async () => {
       const rows = await supabaseGet<any>("parcels", `select=*&gush_id=eq.${gush}&order=parcel_num`);
-      return rows.map((r: any) => ({ id: r.id, gush: r.gush_id, helka: parseInt(r.parcel_num) || 0, plan_count: 0, permit_count: 0, doc_count: 0, area_sqm: r.area_sqm || 0, land_use: r.land_use || "" }));
+      return rows.map((r: any) => ({ id: r.id, gush: r.gush_id, helka: parseInt(r.parcel_num) || 0, plan_count: 0, permit_count: 0, doc_count: 0, has_tashrit: 0, notes: null }));
     }
   );
 }
@@ -306,7 +306,7 @@ export async function getPlanDetail(planNumber: string): Promise<{
         supabaseGet<any>("plan_georef", `select=*&plan_id=eq.${encodeURIComponent(planNumber)}`),
       ]);
       return {
-        plan: plans[0] ? mapPlan(plans[0]) : { plan_number: planNumber, plan_name: "", plan_type: "", status: "", date: null, gush: 0, doc_count: docs.length },
+        plan: plans[0] ? mapPlan(plans[0]) : { id: 0, plan_number: planNumber, plan_name: "", plan_type: "", status: "", doc_count: docs.length, gush_list: null, notes: null },
         documents: docs.map(mapDocument),
         georef: georefs.map(mapGeoref),
       };
@@ -366,7 +366,7 @@ export async function getDocumentStats(): Promise<DocumentStats> {
         by_type[t] = (by_type[t] || 0) + 1;
         total_size += d.file_size_kb || 0;
       });
-      return { total, by_type, total_size_mb: Math.round(total_size / 1024 * 100) / 100 };
+      return { total, by_category: by_type, by_gush: [], by_file_type: by_type, tashrit_count: 0, georef_count: 0 };
     }
   );
 }
@@ -481,39 +481,53 @@ export async function getPlansForTimeline(): Promise<PlanSummary[]> {
 
 function mapPlan(r: any): PlanSummary {
   return {
-    plan_number: r.plan_id,
+    id: r.id || 0,
+    plan_number: r.plan_id || r.plan_number || "",
     plan_name: r.plan_name || "",
     plan_type: r.plan_type || "",
     status: r.status || "",
-    date: r.approval_date || null,
-    gush: r.gush_id || 0,
     doc_count: 0,
+    gush_list: r.gush_list || null,
+    notes: r.notes || null,
   };
 }
 
 function mapDocument(r: any): DocumentRecord {
   return {
     id: r.id,
-    gush: 0,
-    helka: 0,
-    plan_number: r.plan_id || null,
-    category: r.doc_type || "",
-    title: r.file_name || "",
+    gush: r.gush || 0,
+    helka: r.helka || 0,
+    plan_number: r.plan_id || r.plan_number || null,
+    category: r.doc_type || r.category || "",
+    title: r.title || r.file_name || "",
     file_name: r.file_name || "",
-    file_type: (r.file_name || "").split(".").pop() || "",
+    file_type: r.file_type || (r.file_name || "").split(".").pop() || "",
     file_path: r.file_path || "",
-    page_count: r.page_count || 0,
-    file_size_kb: r.file_size_kb || 0,
-    created_at: r.created_at || "",
+    file_size: r.file_size || r.file_size_kb || 0,
+    is_tashrit: r.is_tashrit || 0,
+    is_georef: r.is_georef || 0,
+    downloaded_at: r.downloaded_at || null,
   };
 }
 
 function mapGeoref(r: any): GeorefEntry {
   return {
-    plan_number: r.plan_id || "",
-    bbox: r.bbox_json ? JSON.parse(r.bbox_json) : null,
-    center_x: r.center_x || 0,
-    center_y: r.center_y || 0,
+    id: r.id || 0,
+    document_id: r.document_id || null,
+    image_path: r.image_path || "",
+    pixel_size_x: r.pixel_size_x || 0,
+    pixel_size_y: r.pixel_size_y || 0,
+    origin_x: r.origin_x || 0,
+    origin_y: r.origin_y || 0,
+    bbox_min_x: r.bbox_min_x || 0,
+    bbox_min_y: r.bbox_min_y || 0,
+    bbox_max_x: r.bbox_max_x || 0,
+    bbox_max_y: r.bbox_max_y || 0,
     crs: r.crs || "EPSG:2039",
+    method: r.method || "",
+    file_name: r.file_name || null,
+    plan_number: r.plan_id || r.plan_number || null,
+    gush: r.gush || null,
+    helka: r.helka || null,
   };
 }
