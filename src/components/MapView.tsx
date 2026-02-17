@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 import type { GeoResult } from "@/lib/geocode";
 import type { BoundaryResult } from "@/lib/boundaries";
 import { MapLayerSwitcher, MAP_LAYERS, LABELS_LAYER_URL, type MapLayerOption } from "./MapLayerSwitcher";
+import { MapMeasure } from "./MapMeasure";
 
 // Fix default marker icons for Leaflet + bundler
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -30,6 +31,7 @@ export function MapView({ result, boundaries }: MapViewProps) {
   const labelsLayerRef = useRef<L.TileLayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeLayerId, setActiveLayerId] = useState("osm");
+  const [mapReady, setMapReady] = useState(false);
 
   // Initialize map
   useEffect(() => {
@@ -44,6 +46,7 @@ export function MapView({ result, boundaries }: MapViewProps) {
 
     tileLayerRef.current = tile;
     mapRef.current = map;
+    setMapReady(true);
 
     return () => {
       map.remove();
@@ -137,6 +140,7 @@ export function MapView({ result, boundaries }: MapViewProps) {
     <div className="flex-1 w-full relative">
       <div ref={containerRef} className="absolute inset-0" />
       <MapLayerSwitcher activeLayerId={activeLayerId} onLayerChange={handleLayerChange} />
+      {mapReady && <MapMeasure map={mapRef.current} />}
     </div>
   );
 }
