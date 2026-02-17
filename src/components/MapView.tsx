@@ -3,6 +3,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { GeoResult } from "@/lib/geocode";
 import type { BoundaryResult } from "@/lib/boundaries";
+import type { GISLayer } from "@/hooks/use-gis-layers";
 import { MapLayerSwitcher, MAP_LAYERS, LABELS_LAYER_URL, type MapLayerOption } from "./MapLayerSwitcher";
 import { MapMeasure } from "./MapMeasure";
 
@@ -21,12 +22,14 @@ L.Icon.Default.mergeOptions({
 interface MapViewProps {
   result: GeoResult | null;
   boundaries: BoundaryResult | null;
+  gisLayers?: GISLayer[];
 }
 
-export function MapView({ result, boundaries }: MapViewProps) {
+export function MapView({ result, boundaries, gisLayers = [] }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const boundaryLayerRef = useRef<L.LayerGroup | null>(null);
+  const gisLayerGroupRef = useRef<Map<string, L.GeoJSON>>(new Map());
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const labelsLayerRef = useRef<L.TileLayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -135,6 +138,49 @@ export function MapView({ result, boundaries }: MapViewProps) {
 
     boundaryLayerRef.current = layerGroup;
   }, [boundaries]);
+
+  // Update GIS layers
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove layers no longer present
+    gisLayerGroupRef.current.forEach((layer, id) => {
+      if (!gisLayers.find((l) => l.id === id)) {
+        layer.remove();
+        gisLayerGroupRef.current.delete(id);
+      }
+    });
+
+    gisLayers.forEach((gl) => {
+      const existing = gisLayerGroupRef.current.get(gl.id);
+
+      if (existing) {
+        // Toggle visibility
+        if (gl.visible && !mapRef.current!.hasLayer(existing)) {
+          existing.addTo(mapRef.current!);
+        } else if (!gl.visible && mapRef.current!.hasLayer(existing)) {
+          existing.remove();
+        }
+      } else if (gl.visible && gl.geojson) {
+        const layer = L.geoJSON(gl.geojson as any, {
+          style: {
+            color: "#16a34a",
+            weight: 2,
+            fillColor: "#22c55e",
+            fillOpacity: 0.15,
+          },
+          onEachFeature: (feature, layer) => {
+            if (feature.properties?.name) {
+              layer.bindPopup(
+                `<div dir="rtl" style="text-align:right;">${feature.properties.name}</div>`
+              );
+            }
+          },
+        }).addTo(mapRef.current!);
+        gisLayerGroupRef.current.set(gl.id, layer);
+      }
+    });
+  }, [gisLayers]);
 
   return (
     <div className="flex-1 w-full relative">
