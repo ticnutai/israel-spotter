@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { GeoResult } from "@/lib/geocode";
 import type { BoundaryResult } from "@/lib/boundaries";
+import { MapLayerSwitcher, MAP_LAYERS, LABELS_LAYER_URL, type MapLayerOption } from "./MapLayerSwitcher";
 
 // Fix default marker icons for Leaflet + bundler
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -25,23 +26,53 @@ export function MapView({ result, boundaries }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const boundaryLayerRef = useRef<L.LayerGroup | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const labelsLayerRef = useRef<L.TileLayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [activeLayerId, setActiveLayerId] = useState("osm");
 
   // Initialize map
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
     const map = L.map(containerRef.current).setView([31.5, 34.8], 8);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    const defaultLayer = MAP_LAYERS[0];
+    const tile = L.tileLayer(defaultLayer.url, {
+      attribution: defaultLayer.attribution,
+      maxZoom: defaultLayer.maxZoom,
     }).addTo(map);
 
+    tileLayerRef.current = tile;
     mapRef.current = map;
 
     return () => {
       map.remove();
       mapRef.current = null;
     };
+  }, []);
+
+  const handleLayerChange = useCallback((layer: MapLayerOption) => {
+    if (!mapRef.current) return;
+    setActiveLayerId(layer.id);
+
+    if (tileLayerRef.current) tileLayerRef.current.remove();
+    if (labelsLayerRef.current) {
+      labelsLayerRef.current.remove();
+      labelsLayerRef.current = null;
+    }
+
+    tileLayerRef.current = L.tileLayer(layer.url, {
+      attribution: layer.attribution,
+      maxZoom: layer.maxZoom,
+    }).addTo(mapRef.current);
+
+    // Add labels overlay for hybrid mode
+    if (layer.id === "esri-hybrid") {
+      labelsLayerRef.current = L.tileLayer(LABELS_LAYER_URL, {
+        maxZoom: 19,
+        pane: "overlayPane",
+      }).addTo(mapRef.current);
+    }
   }, []);
 
   // Update marker on result change
@@ -65,7 +96,6 @@ export function MapView({ result, boundaries }: MapViewProps) {
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Clear existing boundaries
     if (boundaryLayerRef.current) {
       boundaryLayerRef.current.clearLayers();
       boundaryLayerRef.current.remove();
@@ -76,7 +106,6 @@ export function MapView({ result, boundaries }: MapViewProps) {
 
     const layerGroup = L.layerGroup().addTo(mapRef.current);
 
-    // Draw block boundary (blue, behind parcel)
     if (boundaries.blockGeometry) {
       L.geoJSON(boundaries.blockGeometry as any, {
         style: {
@@ -88,7 +117,6 @@ export function MapView({ result, boundaries }: MapViewProps) {
       }).addTo(layerGroup);
     }
 
-    // Draw parcel boundary (red, on top)
     if (boundaries.parcelGeometry) {
       const parcelLayer = L.geoJSON(boundaries.parcelGeometry as any, {
         style: {
@@ -99,12 +127,16 @@ export function MapView({ result, boundaries }: MapViewProps) {
         },
       }).addTo(layerGroup);
 
-      // Fit map to parcel bounds
       mapRef.current.fitBounds(parcelLayer.getBounds(), { padding: [50, 50] });
     }
 
     boundaryLayerRef.current = layerGroup;
   }, [boundaries]);
 
-  return <div ref={containerRef} className="flex-1 w-full" />;
+  return (
+    <div className="flex-1 w-full relative">
+      <div ref={containerRef} className="absolute inset-0" />
+      <MapLayerSwitcher activeLayerId={activeLayerId} onLayerChange={handleLayerChange} />
+    </div>
+  );
 }
