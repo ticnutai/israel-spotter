@@ -183,7 +183,7 @@ export function MapView({ result, boundaries, gisLayers = [] }: MapViewProps) {
   }, [gisLayers]);
 
   return (
-    <div className="flex-1 w-full relative">
+    <div className="w-full h-full relative">
       <div ref={containerRef} className="absolute inset-0" />
       <MapLayerSwitcher activeLayerId={activeLayerId} onLayerChange={handleLayerChange} />
       {mapReady && <MapMeasure map={mapRef.current} />}
