@@ -7,85 +7,155 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
-      gis_layers: {
+      gushim: {
         Row: {
-          created_at: string
-          file_path: string
-          file_type: string
-          geojson: Json | null
-          id: string
-          name: string
+          gush_id: number
+          gush_name: string | null
+          region: string | null
+          area_dunam: number | null
+          created_at: string | null
         }
         Insert: {
-          created_at?: string
-          file_path: string
-          file_type: string
-          geojson?: Json | null
-          id?: string
-          name: string
+          gush_id: number
+          gush_name?: string | null
+          region?: string | null
+          area_dunam?: number | null
+          created_at?: string | null
         }
         Update: {
-          created_at?: string
-          file_path?: string
-          file_type?: string
-          geojson?: Json | null
-          id?: string
-          name?: string
+          gush_id?: number
+          gush_name?: string | null
+          region?: string | null
+          area_dunam?: number | null
+          created_at?: string | null
         }
         Relationships: []
       }
-      profiles: {
+      parcels: {
         Row: {
-          avatar_url: string | null
-          created_at: string
-          display_name: string | null
-          email: string | null
-          id: string
-          updated_at: string
-          user_id: string
+          id: number
+          gush_id: number
+          parcel_num: string
+          area_sqm: number | null
+          land_use: string | null
+          owner_type: string | null
+          created_at: string | null
         }
         Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          display_name?: string | null
-          email?: string | null
-          id?: string
-          updated_at?: string
-          user_id: string
+          id?: number
+          gush_id: number
+          parcel_num: string
+          area_sqm?: number | null
+          land_use?: string | null
+          owner_type?: string | null
+          created_at?: string | null
         }
         Update: {
-          avatar_url?: string | null
-          created_at?: string
-          display_name?: string | null
-          email?: string | null
-          id?: string
-          updated_at?: string
-          user_id?: string
+          id?: number
+          gush_id?: number
+          parcel_num?: string
+          area_sqm?: number | null
+          land_use?: string | null
+          owner_type?: string | null
+          created_at?: string | null
         }
         Relationships: []
       }
-      user_roles: {
+      plans: {
         Row: {
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
+          plan_id: string
+          plan_name: string | null
+          plan_type: string | null
+          status: string | null
+          approval_date: string | null
+          gush_id: number | null
+          created_at: string | null
         }
         Insert: {
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
+          plan_id: string
+          plan_name?: string | null
+          plan_type?: string | null
+          status?: string | null
+          approval_date?: string | null
+          gush_id?: number | null
+          created_at?: string | null
         }
         Update: {
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
+          plan_id?: string
+          plan_name?: string | null
+          plan_type?: string | null
+          status?: string | null
+          approval_date?: string | null
+          gush_id?: number | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          id: number
+          plan_id: string | null
+          doc_type: string | null
+          file_name: string | null
+          file_path: string | null
+          page_count: number | null
+          file_size_kb: number | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          plan_id?: string | null
+          doc_type?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          page_count?: number | null
+          file_size_kb?: number | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          plan_id?: string | null
+          doc_type?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          page_count?: number | null
+          file_size_kb?: number | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      plan_georef: {
+        Row: {
+          id: number
+          plan_id: string | null
+          bbox_json: string | null
+          center_x: number | null
+          center_y: number | null
+          crs: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          plan_id?: string | null
+          bbox_json?: string | null
+          center_x?: number | null
+          center_y?: number | null
+          crs?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          plan_id?: string | null
+          bbox_json?: string | null
+          center_x?: number | null
+          center_y?: number | null
+          crs?: string | null
+          created_at?: string | null
         }
         Relationships: []
       }
@@ -94,16 +164,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -230,8 +294,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["admin", "moderator", "user"],
-    },
+    Enums: {},
   },
 } as const

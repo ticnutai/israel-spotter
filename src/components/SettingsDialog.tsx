@@ -133,7 +133,7 @@ export function SettingsDialog() {
 
               <textarea
                 className="w-full h-48 font-mono text-sm bg-muted/50 border rounded-md p-3 resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="-- הכנס פקודות SQL כאן...&#10;CREATE TABLE example (id SERIAL PRIMARY KEY);&#10;ALTER TABLE example ADD COLUMN name TEXT;"
+                placeholder={"-- הכנס פקודות SQL כאן...\nCREATE TABLE example (id SERIAL PRIMARY KEY);\nALTER TABLE example ADD COLUMN name TEXT;"}
                 value={sql}
                 onChange={(e) => setSql(e.target.value)}
                 dir="ltr"

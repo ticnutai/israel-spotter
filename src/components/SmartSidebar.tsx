@@ -17,7 +17,7 @@ import {
   Settings,
   Pin,
   PinOff,
-  ChevronLeft,
+  ChevronRight,
   Upload,
   Layers,
   Map,
@@ -138,7 +138,7 @@ export function SmartSidebar({
       <div
         ref={sidebarRef}
         className={cn(
-          "h-full flex flex-row-reverse shrink-0 z-40",
+          "h-full flex flex-row shrink-0 z-40",
           "transition-all duration-300 ease-in-out",
         )}
         style={{
@@ -239,7 +239,7 @@ export function SmartSidebar({
                 onClick={() => setHovered(false)}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -294,7 +294,6 @@ import {
 
 import {
   ChevronDown,
-  ChevronRight,
   Download,
   Image,
   FileText,
