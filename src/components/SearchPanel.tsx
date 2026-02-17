@@ -10,6 +10,7 @@ import { searchByGushHelka, searchByAddress, type GeoResult } from "@/lib/geocod
 import { fetchBoundaries, type BoundaryResult } from "@/lib/boundaries";
 import { useSearchHistory, type SearchHistoryItem } from "@/hooks/use-search-history";
 import { SettingsDialog } from "./SettingsDialog";
+import { UserMenu } from "./UserMenu";
 
 interface SearchPanelProps {
   onResult: (result: GeoResult) => void;
@@ -101,7 +102,10 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
     <div className="w-full bg-card border-b p-4" dir="rtl">
       <div className="flex items-center justify-between max-w-2xl mx-auto mb-2">
         <h1 className="text-lg font-bold">Israel Spotter</h1>
-        <SettingsDialog />
+        <div className="flex items-center gap-1">
+          <UserMenu />
+          <SettingsDialog />
+        </div>
       </div>
       <Tabs defaultValue="gush" className="w-full max-w-2xl mx-auto">
         <TabsList className="w-full grid grid-cols-2">
