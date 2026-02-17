@@ -146,12 +146,12 @@ export function MapMeasure({ map }: MapMeasureProps) {
   }, [map]);
 
   return (
-    <div className="absolute top-3 left-3 z-[1000] flex flex-col gap-2" dir="rtl">
+    <div className="absolute top-14 left-3 z-[1000] flex flex-col gap-2" dir="rtl">
       <Button
         size="icon"
         variant={active ? "default" : "outline"}
         onClick={toggleActive}
-        className="h-9 w-9 shadow-md"
+        className="h-9 w-9 shadow-md gold-border gold-glow"
         title="מדידת מרחק"
       >
         <Ruler className="h-4 w-4" />

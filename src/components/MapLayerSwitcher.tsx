@@ -85,13 +85,13 @@ export function MapLayerSwitcher({ activeLayerId, onLayerChange }: MapLayerSwitc
     <div ref={ref} className="absolute top-3 left-3 z-[1000]" dir="rtl">
       <button
         onClick={() => setOpen(!open)}
-        className="bg-card/95 backdrop-blur border rounded-lg shadow-lg p-2.5 hover:bg-accent transition-colors"
+        className="bg-background/95 backdrop-blur gold-border gold-glow rounded-lg shadow-lg p-2.5 hover:bg-accent transition-colors text-primary"
         title="שכבות מפה"
       >
         <Layers className="h-5 w-5" />
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 bg-card/95 backdrop-blur border rounded-lg shadow-lg overflow-hidden min-w-[160px]">
+        <div className="absolute top-full left-0 mt-1 bg-background/95 backdrop-blur gold-border rounded-lg shadow-lg overflow-hidden min-w-[160px]">
           {MAP_LAYERS.map((layer) => (
             <button
               key={layer.id}
