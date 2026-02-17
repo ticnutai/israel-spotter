@@ -31,7 +31,7 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="flex flex-row-reverse h-screen bg-background" dir="rtl">
+    <div className="flex flex-row h-screen bg-background" dir="rtl">
       {/* Smart Sidebar – right side with auto-hide + pin */}
       <SmartSidebar
         onSelectGush={handleSelectGush}
