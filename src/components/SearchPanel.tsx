@@ -28,7 +28,7 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
     const gushNum = g ?? Number(gush);
     const helkaNum = h ?? (helka ? Number(helka) : undefined);
     if (!gushNum) {
-      setError("╫ש╫⌐ ╫£╫פ╫צ╫ש╫ƒ ╫₧╫í╫ñ╫¿ ╫ע╫ץ╫⌐");
+      setError("יש להזין מספר גוש");
       return;
     }
     setLoading(true);
@@ -39,17 +39,17 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
       const result = await searchByGushHelka(gushNum, helkaNum);
       onResult(result);
 
-      const label = helkaNum ? `╫ע╫ץ╫⌐ ${gushNum}, ╫ק╫£╫º╫פ ${helkaNum}` : `╫ע╫ץ╫⌐ ${gushNum}`;
+      const label = helkaNum ? `גוש ${gushNum}, חלקה ${helkaNum}` : `גוש ${gushNum}`;
       addEntry({ type: "gush", label, gush: gushNum, helka: helkaNum });
 
       // Always fetch and show boundaries (parcel polygon)
       const boundaries = await fetchBoundaries(gushNum, helkaNum);
       if (!boundaries.parcelGeometry && !boundaries.blockGeometry) {
-        setWarning("╫£╫נ ╫á╫₧╫ª╫נ╫ץ ╫ע╫ס╫ץ╫£╫ץ╫¬ ╫ע╫¿╫ñ╫ש╫ש╫¥");
+        setWarning("לא נמצאו גבולות גרפיים");
       }
       onBoundaries(boundaries);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "╫⌐╫ע╫ש╫נ╫פ ╫ס╫ק╫ש╫ñ╫ץ╫⌐");
+      setError(e instanceof Error ? e.message : "שגיאה בחיפוש");
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,7 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
   const handleAddressSearch = async (addr?: string) => {
     const searchAddr = addr ?? address;
     if (!searchAddr.trim()) {
-      setError("╫ש╫⌐ ╫£╫פ╫צ╫ש╫ƒ ╫¢╫¬╫ץ╫ס╫¬");
+      setError("יש להזין כתובת");
       return;
     }
     setLoading(true);
@@ -70,7 +70,7 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
       onResult(result);
       addEntry({ type: "address", label: searchAddr, address: searchAddr });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "╫⌐╫ע╫ש╫נ╫פ ╫ס╫ק╫ש╫ñ╫ץ╫⌐");
+      setError(e instanceof Error ? e.message : "שגיאה בחיפוש");
     } finally {
       setLoading(false);
     }
@@ -94,22 +94,22 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
         <TabsList className="w-full grid grid-cols-2">
           <TabsTrigger value="gush" className="gap-2">
             <MapPin className="h-4 w-4" />
-            ╫ע╫ץ╫⌐ / ╫ק╫£╫º╫פ
+            גוש / חלקה
           </TabsTrigger>
           <TabsTrigger value="address" className="gap-2">
             <Search className="h-4 w-4" />
-            ╫¢╫¬╫ץ╫ס╫¬
+            כתובת
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="gush">
           <div className="flex flex-col sm:flex-row gap-3 items-end mt-3">
             <div className="flex-1 w-full">
-              <Label htmlFor="gush-input">╫₧╫í╫ñ╫¿ ╫ע╫ץ╫⌐</Label>
+              <Label htmlFor="gush-input">מספר גוש</Label>
               <Input
                 id="gush-input"
                 type="number"
-                placeholder="╫£╫ף╫ץ╫ע╫₧╫פ: 6158"
+                placeholder="לדוגמה: 6158"
                 value={gush}
                 onChange={(e) => setGush(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleGushHelkaSearch()}
@@ -117,11 +117,11 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
               />
             </div>
             <div className="flex-1 w-full">
-              <Label htmlFor="helka-input">╫₧╫í╫ñ╫¿ ╫ק╫£╫º╫פ (╫נ╫ץ╫ñ╫ª╫ש╫ץ╫á╫£╫ש)</Label>
+              <Label htmlFor="helka-input">מספר חלקה (אופציונלי)</Label>
               <Input
                 id="helka-input"
                 type="number"
-                placeholder="╫¿╫ש╫º = ╫¢╫£ ╫פ╫ע╫ץ╫⌐"
+                placeholder="ריק = כל הגוש"
                 value={helka}
                 onChange={(e) => setHelka(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleGushHelkaSearch()}
@@ -130,21 +130,21 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
             </div>
             <Button onClick={() => handleGushHelkaSearch()} disabled={loading} className="w-full sm:w-auto">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-              ╫ק╫ש╫ñ╫ץ╫⌐
+              חיפוש
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            ╫ע╫ס╫ץ╫£╫ץ╫¬ ╫פ╫ע╫ץ╫⌐/╫ק╫£╫º╫פ ╫ש╫ץ╫ª╫ע╫ץ ╫נ╫ץ╫ר╫ץ╫₧╫ר╫ש╫¬ ╫ó╫£ ╫פ╫₧╫ñ╫פ
+            גבולות הגוש/חלקה יוצגו אוטומטית על המפה
           </p>
         </TabsContent>
 
         <TabsContent value="address">
           <div className="flex flex-col sm:flex-row gap-3 items-end mt-3">
             <div className="flex-1 w-full">
-              <Label htmlFor="address-input">╫¢╫¬╫ץ╫ס╫¬</Label>
+              <Label htmlFor="address-input">כתובת</Label>
               <Input
                 id="address-input"
-                placeholder="╫£╫ף╫ץ╫ע╫₧╫פ: ╫¿╫ץ╫ר╫⌐╫ש╫£╫ף 1, ╫¬╫£ ╫נ╫ס╫ש╫ס"
+                placeholder="לדוגמה: רוטשילד 1, תל אביב"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAddressSearch()}
@@ -152,7 +152,7 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
             </div>
             <Button onClick={() => handleAddressSearch()} disabled={loading} className="w-full sm:w-auto">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-              ╫ק╫ש╫ñ╫ץ╫⌐
+              חיפוש
             </Button>
           </div>
         </TabsContent>
@@ -166,15 +166,15 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <History className="h-3.5 w-3.5" />
-            ╫ק╫ש╫ñ╫ץ╫⌐╫ש╫¥ ╫נ╫ק╫¿╫ץ╫á╫ש╫¥ ({history.length})
+            חיפושים אחרונים ({history.length})
           </button>
           {showHistory && (
             <div className="mt-2 border rounded-lg bg-card overflow-hidden">
               <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/50">
-                <span className="text-xs font-medium text-muted-foreground">╫פ╫ש╫í╫ר╫ץ╫¿╫ש╫פ</span>
+                <span className="text-xs font-medium text-muted-foreground">היסטוריה</span>
                 <button onClick={clearHistory} className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1">
                   <Trash2 className="h-3 w-3" />
-                  ╫á╫º╫פ
+                  נקה
                 </button>
               </div>
               <ul className="divide-y max-h-48 overflow-y-auto">

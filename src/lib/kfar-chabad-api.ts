@@ -1,5 +1,5 @@
 /**
- * kfar-chabad-api.ts Γאף Client for the local FastAPI backend v2
+ * kfar-chabad-api.ts – Client for the local FastAPI backend v2
  */
 
 const API_BASE = "/api";

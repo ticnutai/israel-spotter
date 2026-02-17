@@ -1,8 +1,8 @@
 /**
- * KfarChabadPanel.tsx Γאף Sidebar panel for Kfar Chabad GIS
+ * KfarChabadPanel.tsx – Sidebar panel for Kfar Chabad GIS
  *
- * Hierarchical navigation:  ╫ע╫ץ╫⌐ Γזע ╫ק╫£╫º╫פ Γזע ╫¬╫ץ╫¢╫á╫ש╫¬ Γזע ╫₧╫í╫₧╫¢╫ש╫¥
- * Tabs: ╫ע╫ץ╫⌐╫ש╫¥ | ╫ª╫ש╫£╫ץ╫₧╫ש ╫נ╫ץ╫ץ╫ש╫¿ | ╫ק╫ש╫ñ╫ץ╫⌐
+ * Hierarchical navigation:  גוש → חלקה → תוכנית → מסמכים
+ * Tabs: גושים | צילומי אוויר | חיפוש
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -47,7 +47,7 @@ interface KfarChabadPanelProps {
   onSelectPlanImage: (path: string) => void;
 }
 
-// ΓפאΓפאΓפא File-type helpers ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+// ─── File-type helpers ───────────────────────────────────────────────────────
 
 function fileIcon(ft: string) {
   if (ft === "image") return <Image className="h-3.5 w-3.5 text-blue-500" />;
@@ -61,7 +61,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// ΓפאΓפאΓפא Document row ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+// ─── Document row ────────────────────────────────────────────────────────────
 
 function DocRow({
   doc,
@@ -76,7 +76,7 @@ function DocRow({
       {fileIcon(doc.file_type)}
       <span className="flex-1 truncate">{doc.title}</span>
       {doc.is_tashrit === 1 && (
-        <span className="text-[10px] bg-blue-100 text-blue-700 px-1 rounded">╫¬╫⌐╫¿╫ש╫ר</span>
+        <span className="text-[10px] bg-blue-100 text-blue-700 px-1 rounded">תשריט</span>
       )}
       {doc.is_georef === 1 && (
         <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded">GEO</span>
@@ -88,7 +88,7 @@ function DocRow({
             variant="ghost"
             size="sm"
             className="h-5 w-5 p-0"
-            title="╫פ╫ª╫ע ╫ó╫£ ╫פ╫₧╫ñ╫פ"
+            title="הצג על המפה"
             onClick={() => {
               const rel = doc.file_path
                 .replace(/^\.\/kfar_chabad_data[\\/]plans[\\/]/, "");
@@ -99,7 +99,7 @@ function DocRow({
           </Button>
         )}
         <a href={documentFileUrl(doc.id)} target="_blank" rel="noopener noreferrer">
-          <Button variant="ghost" size="sm" className="h-5 w-5 p-0" title="╫פ╫ץ╫¿╫ף">
+          <Button variant="ghost" size="sm" className="h-5 w-5 p-0" title="הורד">
             <Download className="h-3 w-3" />
           </Button>
         </a>
@@ -108,9 +108,9 @@ function DocRow({
   );
 }
 
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 //  Main Panel
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 
 export function KfarChabadPanel({
   onSelectGush,
@@ -141,7 +141,7 @@ export function KfarChabadPanel({
   const [searchTotal, setSearchTotal] = useState(0);
   const [searching, setSearching] = useState(false);
 
-  // ΓפאΓפא Initial load ΓפאΓפא
+  // ── Initial load ──
   useEffect(() => {
     loadAll();
   }, []);
@@ -161,13 +161,13 @@ export function KfarChabadPanel({
       setGushim(gList);
       setStats(docStats);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "╫⌐╫ע╫ש╫נ╫פ ╫ס╫ר╫ó╫ש╫á╫¬ ╫á╫¬╫ץ╫á╫ש╫¥ ╫₧╫פ╫⌐╫¿╫¬");
+      setError(e instanceof Error ? e.message : "שגיאה בטעינת נתונים מהשרת");
     } finally {
       setLoading(false);
     }
   }
 
-  // ΓפאΓפא Gush expand ΓפאΓפא
+  // ── Gush expand ──
   const toggleGush = useCallback(async (gush: number) => {
     if (expandedGush === gush) {
       setExpandedGush(null);
@@ -187,7 +187,7 @@ export function KfarChabadPanel({
     }
   }, [expandedGush]);
 
-  // ΓפאΓפא Parcel expand ΓפאΓפא
+  // ── Parcel expand ──
   const toggleParcel = useCallback(async (gush: number, helka: number) => {
     const key = `${gush}_${helka}`;
     if (expandedParcel === key) {
@@ -204,7 +204,7 @@ export function KfarChabadPanel({
     }
   }, [expandedParcel]);
 
-  // ΓפאΓפא Search ΓפאΓפא
+  // ── Search ──
   const doSearch = useCallback(async () => {
     if (!searchText.trim()) return;
     setSearching(true);
@@ -220,11 +220,11 @@ export function KfarChabadPanel({
     }
   }, [searchText]);
 
-  // ΓפאΓפא Render ΓפאΓפא
+  // ── Render ──
   if (loading) {
     return (
       <div className="p-4 text-center text-muted-foreground text-sm" dir="rtl">
-        ╫ר╫ץ╫ó╫ƒ ╫á╫¬╫ץ╫á╫ש╫¥ ╫₧╫פ╫⌐╫¿╫¬...
+        טוען נתונים מהשרת...
       </div>
     );
   }
@@ -233,7 +233,7 @@ export function KfarChabadPanel({
     return (
       <div className="p-4" dir="rtl">
         <p className="text-destructive text-sm mb-2">{error}</p>
-        <Button variant="outline" size="sm" onClick={loadAll}>╫á╫í╫פ ╫⌐╫ץ╫ס</Button>
+        <Button variant="outline" size="sm" onClick={loadAll}>נסה שוב</Button>
       </div>
     );
   }
@@ -248,11 +248,11 @@ export function KfarChabadPanel({
       <div className="border-b p-3 flex items-center gap-2 bg-primary/5">
         <MapPin className="h-5 w-5 text-primary" />
         <div>
-          <h2 className="font-semibold text-sm">╫¢╫ñ╫¿ ╫ק╫ס&quot;╫ף Γאף ╫₧╫ó╫¿╫¢╫¬ GIS</h2>
+          <h2 className="font-semibold text-sm">כפר חב&quot;ד – מערכת GIS</h2>
           {stats && (
             <p className="text-xs text-muted-foreground">
-              {stats.total} ╫₧╫í╫₧╫¢╫ש╫¥ ┬╖ {activeGushim.length} ╫ע╫ץ╫⌐╫ש╫¥ ╫ñ╫ó╫ש╫£╫ש╫¥ ┬╖{" "}
-              {aerialYears.length} ╫⌐╫á╫ץ╫¬ ╫ª╫ש╫£╫ץ╫¥
+              {stats.total} מסמכים · {activeGushim.length} גושים פעילים ·{" "}
+              {aerialYears.length} שנות צילום
             </p>
           )}
         </div>
@@ -262,19 +262,19 @@ export function KfarChabadPanel({
         <TabsList className="grid grid-cols-3 m-2 shrink-0">
           <TabsTrigger value="gushim" className="gap-1 text-xs">
             <Database className="h-3.5 w-3.5" />
-            ╫ע╫ץ╫⌐╫ש╫¥
+            גושים
           </TabsTrigger>
           <TabsTrigger value="aerial" className="gap-1 text-xs">
             <Plane className="h-3.5 w-3.5" />
-            ╫ª╫ש╫£╫ץ╫¥ ╫נ╫ץ╫ץ╫ש╫¿
+            צילום אוויר
           </TabsTrigger>
           <TabsTrigger value="search" className="gap-1 text-xs">
             <Search className="h-3.5 w-3.5" />
-            ╫ק╫ש╫ñ╫ץ╫⌐
+            חיפוש
           </TabsTrigger>
         </TabsList>
 
-        {/* ΓפבΓפבΓפב Gushim tab ΓפבΓפבΓפב */}
+        {/* ━━━ Gushim tab ━━━ */}
         <TabsContent value="gushim" className="flex-1 m-0 min-h-0">
           <ScrollArea className="h-full px-2 pb-2">
             {/* Active gushim */}
@@ -291,12 +291,12 @@ export function KfarChabadPanel({
                     ) : (
                       <ChevronRight className="h-3.5 w-3.5" />
                     )}
-                    <span className="font-medium">╫ע╫ץ╫⌐ {g.gush}</span>
+                    <span className="font-medium">גוש {g.gush}</span>
                   </span>
                   <span className="flex gap-2 text-[11px] text-muted-foreground">
-                    <span>{g.plan_count} ╫¬╫ץ╫¢╫á╫ש╫ץ╫¬</span>
-                    <span>{g.permit_count} ╫פ╫ש╫¬╫¿╫ש╫¥</span>
-                    <span>{g.parcel_count} ╫ק╫£╫º╫ץ╫¬</span>
+                    <span>{g.plan_count} תוכניות</span>
+                    <span>{g.permit_count} היתרים</span>
+                    <span>{g.parcel_count} חלקות</span>
                   </span>
                 </button>
 
@@ -304,7 +304,7 @@ export function KfarChabadPanel({
                 {expandedGush === g.gush && (
                   <div className="border-t">
                     {parcels.length === 0 && (
-                      <p className="text-xs text-muted-foreground p-2">╫נ╫ש╫ƒ ╫ק╫£╫º╫ץ╫¬</p>
+                      <p className="text-xs text-muted-foreground p-2">אין חלקות</p>
                     )}
                     {parcels.map((p) => {
                       const pKey = `${p.gush}_${p.helka}`;
@@ -322,12 +322,12 @@ export function KfarChabadPanel({
                                 <ChevronRight className="h-3 w-3" />
                               )}
                               <FolderOpen className="h-3.5 w-3.5 text-amber-600" />
-                              ╫ק╫£╫º╫פ {p.helka}
+                              חלקה {p.helka}
                             </span>
                             <span className="flex gap-2 text-[10px] text-muted-foreground">
-                              {p.doc_count} ╫₧╫í╫₧╫¢╫ש╫¥
+                              {p.doc_count} מסמכים
                               {p.has_tashrit === 1 && (
-                                <span className="bg-blue-100 text-blue-700 px-1 rounded">╫¬╫⌐╫¿╫ש╫ר</span>
+                                <span className="bg-blue-100 text-blue-700 px-1 rounded">תשריט</span>
                               )}
                             </span>
                           </button>
@@ -340,7 +340,7 @@ export function KfarChabadPanel({
                                   {bp.plan_number && (
                                     <div className="px-5 py-1 text-[11px] font-medium bg-muted/40 flex items-center gap-1">
                                       <FileText className="h-3 w-3 text-primary" />
-                                      ╫¬╫ץ╫¢╫á╫ש╫¬: {bp.plan_number}
+                                      תוכנית: {bp.plan_number}
                                     </div>
                                   )}
                                   <div className="divide-y">
@@ -367,7 +367,7 @@ export function KfarChabadPanel({
                         onClick={() => onSelectGush(g.gush)}
                       >
                         <ArrowRight className="h-3 w-3 ml-1" />
-                        ╫פ╫ª╫ע ╫ע╫ץ╫⌐ {g.gush} ╫ס╫₧╫ñ╫פ
+                        הצג גוש {g.gush} במפה
                       </Button>
                     </div>
                   </div>
@@ -379,7 +379,7 @@ export function KfarChabadPanel({
             {emptyGushim.length > 0 && (
               <div className="border rounded-lg p-2 mb-2">
                 <p className="text-xs text-muted-foreground mb-1">
-                  ╫ע╫ץ╫⌐╫ש╫¥ ╫£╫£╫נ ╫₧╫í╫₧╫¢╫ש╫¥ ({emptyGushim.length}):
+                  גושים ללא מסמכים ({emptyGushim.length}):
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {emptyGushim.map((g) => (
@@ -400,20 +400,20 @@ export function KfarChabadPanel({
             {/* Stats summary */}
             {stats && (
               <div className="border rounded-lg p-3 mt-2">
-                <h3 className="text-sm font-medium mb-2">╫í╫ש╫¢╫ץ╫¥ ╫á╫¬╫ץ╫á╫ש╫¥</h3>
+                <h3 className="text-sm font-medium mb-2">סיכום נתונים</h3>
                 <div className="space-y-1 text-xs">
                   {Object.entries(stats.by_category).map(([cat, cnt]) => (
                     <div key={cat} className="flex justify-between">
-                      <span>{cat === "plans" ? "╫¬╫ץ╫¢╫á╫ש╫ץ╫¬" : "╫פ╫ש╫¬╫¿╫ש╫¥"}</span>
+                      <span>{cat === "plans" ? "תוכניות" : "היתרים"}</span>
                       <span className="text-muted-foreground">{cnt}</span>
                     </div>
                   ))}
                   <div className="flex justify-between text-muted-foreground">
-                    <span>╫¬╫⌐╫¿╫ש╫ר╫ש╫¥</span>
+                    <span>תשריטים</span>
                     <span>{stats.tashrit_count}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
-                    <span>╫ó╫¥ ╫ע╫ש╫נ╫ץ╫¿╫ñ╫¿╫á╫í</span>
+                    <span>עם גיאורפרנס</span>
                     <span>{stats.georef_count}</span>
                   </div>
                   {stats.by_file_type && Object.entries(stats.by_file_type).map(([ft, cnt]) => (
@@ -423,7 +423,7 @@ export function KfarChabadPanel({
                     </div>
                   ))}
                   <div className="flex justify-between font-medium border-t pt-1 mt-1">
-                    <span>╫í╫פ&quot;╫¢</span>
+                    <span>סה&quot;כ</span>
                     <span>{stats.total}</span>
                   </div>
                 </div>
@@ -432,12 +432,12 @@ export function KfarChabadPanel({
           </ScrollArea>
         </TabsContent>
 
-        {/* ΓפבΓפבΓפב Aerial tab ΓפבΓפבΓפב */}
+        {/* ━━━ Aerial tab ━━━ */}
         <TabsContent value="aerial" className="flex-1 m-0 min-h-0">
           <ScrollArea className="h-full px-2 pb-2">
             {aerialYears.length === 0 && (
               <p className="text-sm text-muted-foreground p-2">
-                ╫£╫נ ╫á╫₧╫ª╫נ╫ץ ╫ª╫ש╫£╫ץ╫₧╫ש ╫נ╫ץ╫ץ╫ש╫¿ ╫₧╫º╫ץ╫₧╫ש╫ש╫¥
+                לא נמצאו צילומי אוויר מקומיים
               </p>
             )}
             {aerialYears.map((y) => (
@@ -453,7 +453,7 @@ export function KfarChabadPanel({
                     <span className="font-medium">{y.year}</span>
                   </span>
                   <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {y.levels.length} ╫¿╫₧╫ץ╫¬
+                    {y.levels.length} רמות
                     {expandedYear === y.year ? (
                       <ChevronDown className="h-3.5 w-3.5" />
                     ) : (
@@ -469,8 +469,8 @@ export function KfarChabadPanel({
                         className="flex items-center justify-between text-xs"
                       >
                         <span>
-                          ╫¿╫₧╫פ {lv.level} ┬╖ {lv.tile_count} ╫נ╫¿╫ש╫ק╫ש╫¥
-                          {lv.stitched && " ┬╖ ╫¬╫₧╫ץ╫á╫פ ╫₧╫נ╫ץ╫ק╫ף╫¬"}
+                          רמה {lv.level} · {lv.tile_count} אריחים
+                          {lv.stitched && " · תמונה מאוחדת"}
                         </span>
                         <Button
                           variant="ghost"
@@ -478,14 +478,14 @@ export function KfarChabadPanel({
                           className="h-7 text-xs"
                           onClick={() => onSelectAerialYear(y.year)}
                         >
-                          ╫פ╫ª╫ע
+                          הצג
                         </Button>
                       </div>
                     ))}
                     {y.levels[0]?.georef && (
                       <p className="text-[11px] text-muted-foreground">
-                        EPSG:2039 ┬╖{" "}
-                        {Math.abs(y.levels[0].georef.pixel_size_x).toFixed(2)} ╫₧&apos;/╫ñ╫ש╫º╫í╫£
+                        EPSG:2039 ·{" "}
+                        {Math.abs(y.levels[0].georef.pixel_size_x).toFixed(2)} מ&apos;/פיקסל
                       </p>
                     )}
                   </div>
@@ -495,11 +495,11 @@ export function KfarChabadPanel({
           </ScrollArea>
         </TabsContent>
 
-        {/* ΓפבΓפבΓפב Search tab ΓפבΓפבΓפב */}
+        {/* ━━━ Search tab ━━━ */}
         <TabsContent value="search" className="flex-1 m-0 min-h-0">
           <div className="px-2 pt-2 flex gap-1">
             <Input
-              placeholder="╫ק╫ñ╫⌐ ╫£╫ñ╫ש ╫⌐╫¥, ╫¬╫ץ╫¢╫á╫ש╫¬, ╫º╫ץ╫ס╫Ñ..."
+              placeholder="חפש לפי שם, תוכנית, קובץ..."
               className="text-xs h-8"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -517,15 +517,15 @@ export function KfarChabadPanel({
           <ScrollArea className="flex-1 px-2 pb-2 mt-1">
             {searchResults.length > 0 && (
               <p className="text-[11px] text-muted-foreground px-1 mb-1">
-                {searchTotal} ╫¬╫ץ╫ª╫נ╫ץ╫¬
+                {searchTotal} תוצאות
               </p>
             )}
             <div className="divide-y border rounded-lg overflow-hidden">
               {searchResults.map((doc) => (
                 <div key={doc.id} className="text-xs">
                   <div className="px-2 py-0.5 text-[10px] text-muted-foreground bg-muted/30">
-                    ╫ע╫ץ╫⌐ {doc.gush} ┬╖ ╫ק╫£╫º╫פ {doc.helka}
-                    {doc.plan_number && ` ┬╖ ${doc.plan_number}`}
+                    גוש {doc.gush} · חלקה {doc.helka}
+                    {doc.plan_number && ` · ${doc.plan_number}`}
                   </div>
                   <DocRow doc={doc} onShowImage={onSelectPlanImage} />
                 </div>
@@ -533,7 +533,7 @@ export function KfarChabadPanel({
             </div>
             {searchResults.length === 0 && searchText && !searching && (
               <p className="text-xs text-muted-foreground text-center mt-4">
-                ╫£╫נ ╫á╫₧╫ª╫נ╫ץ ╫¬╫ץ╫ª╫נ╫ץ╫¬
+                לא נמצאו תוצאות
               </p>
             )}
           </ScrollArea>

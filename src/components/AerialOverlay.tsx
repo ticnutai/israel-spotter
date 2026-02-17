@@ -1,8 +1,8 @@
 /**
- * AerialOverlay.tsx Γאף Shows historical aerial images as Leaflet overlays
+ * AerialOverlay.tsx – Shows historical aerial images as Leaflet overlays
  *
  * Uses the worldfile georeferencing info from the backend to place
- * stitched aerial images correctly on the map (EPSG:2039 Γזע WGS84).
+ * stitched aerial images correctly on the map (EPSG:2039 → WGS84).
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -15,7 +15,7 @@ interface AerialOverlayProps {
   year: string | null;
 }
 
-// Convert ITM (EPSG:2039) to WGS84 Γאפ same formula as geocode.ts
+// Convert ITM (EPSG:2039) to WGS84 — same formula as geocode.ts
 function itmToWgs84(x: number, y: number): [number, number] {
   const a = 6378137.0;
   const e = 0.0818191908426;
@@ -179,12 +179,12 @@ export function AerialOverlay({ map, year }: AerialOverlayProps) {
     >
       <div className="text-sm font-medium mb-2 flex items-center justify-between">
         <span>
-          ╫ª╫ש╫£╫ץ╫¥ ╫נ╫ץ╫ץ╫ש╫¿ {year}
-          {loading && <span className="text-muted-foreground mr-1">╫ר╫ץ╫ó╫ƒ...</span>}
+          צילום אוויר {year}
+          {loading && <span className="text-muted-foreground mr-1">טוען...</span>}
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground">╫⌐╫º╫ש╫ñ╫ץ╫¬</span>
+        <span className="text-xs text-muted-foreground">שקיפות</span>
         <Slider
           value={[opacity * 100]}
           max={100}

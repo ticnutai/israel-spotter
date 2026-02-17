@@ -1,5 +1,5 @@
 /**
- * geocode.ts Γאף Geo-search for Gush/Helka and Address
+ * geocode.ts – Geo-search for Gush/Helka and Address
  *
  * Uses Survey of Israel ArcGIS REST services for parcel/block lookup
  * and Photon (Komoot) for address geocoding.
@@ -11,13 +11,13 @@ export interface GeoResult {
   label: string;
 }
 
-// ΓפאΓפא ArcGIS boundary services (Survey of Israel) ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+// ── ArcGIS boundary services (Survey of Israel) ─────────────────────────────
 const PARCEL_SERVICE_URL =
   "https://services8.arcgis.com/JcXY3lLZni6BK4El/arcgis/rest/services/%D7%97%D7%9C%D7%A7%D7%95%D7%AA/FeatureServer/0/query";
 const BLOCK_SERVICE_URL =
   "https://services8.arcgis.com/JcXY3lLZni6BK4El/arcgis/rest/services/%D7%A9%D7%9B%D7%91%D7%AA_%D7%92%D7%95%D7%A9%D7%99%D7%9D/FeatureServer/0/query";
 
-// ΓפאΓפא Centroid helper ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+// ── Centroid helper ──────────────────────────────────────────────────────────
 function computeCentroid(geometry: GeoJSON.Geometry): { lat: number; lng: number } | null {
   let coords: number[][] = [];
 
@@ -36,7 +36,7 @@ function computeCentroid(geometry: GeoJSON.Geometry): { lat: number; lng: number
   return { lat: sumLat / coords.length, lng: sumLng / coords.length };
 }
 
-// ΓפאΓפא ArcGIS query helper ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+// ── ArcGIS query helper ──────────────────────────────────────────────────────
 async function queryArcGISFeature(
   url: string,
   where: string,
@@ -56,7 +56,7 @@ async function queryArcGISFeature(
   return data.features[0];
 }
 
-// ΓפאΓפא Search by Gush + optional Helka (Survey of Israel ArcGIS) ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+// ── Search by Gush + optional Helka (Survey of Israel ArcGIS) ────────────────
 export async function searchByGushHelka(
   gush: number,
   helka?: number,
@@ -71,7 +71,7 @@ export async function searchByGushHelka(
       if (feature?.geometry) {
         const centroid = computeCentroid(feature.geometry);
         if (centroid) {
-          return { ...centroid, label: `╫ע╫ץ╫⌐ ${gush}, ╫ק╫£╫º╫פ ${helka}` };
+          return { ...centroid, label: `גוש ${gush}, חלקה ${helka}` };
         }
       }
     }
@@ -85,7 +85,7 @@ export async function searchByGushHelka(
       const centroid = computeCentroid(feature.geometry);
       if (centroid) {
         const label =
-          helka && helka > 0 ? `╫ע╫ץ╫⌐ ${gush}, ╫ק╫£╫º╫פ ${helka}` : `╫ע╫ץ╫⌐ ${gush}`;
+          helka && helka > 0 ? `גוש ${gush}, חלקה ${helka}` : `גוש ${gush}`;
         return { ...centroid, label };
       }
     }
@@ -95,24 +95,24 @@ export async function searchByGushHelka(
     if (error instanceof Error && error.message === "NOT_FOUND") {
       throw new Error(
         helka && helka > 0
-          ? "╫£╫נ ╫á╫₧╫ª╫נ╫ץ ╫¬╫ץ╫ª╫נ╫ץ╫¬ ╫ó╫ס╫ץ╫¿ ╫ע╫ץ╫⌐/╫ק╫£╫º╫פ ╫צ╫פ"
-          : "╫£╫נ ╫á╫₧╫ª╫נ╫ץ ╫¬╫ץ╫ª╫נ╫ץ╫¬ ╫ó╫ס╫ץ╫¿ ╫ע╫ץ╫⌐ ╫צ╫פ",
+          ? "לא נמצאו תוצאות עבור גוש/חלקה זה"
+          : "לא נמצאו תוצאות עבור גוש זה",
       );
     }
-    throw new Error("╫⌐╫ע╫ש╫נ╫פ ╫ס╫ק╫ש╫ñ╫ץ╫⌐ ╫ע╫ץ╫⌐/╫ק╫£╫º╫פ. ╫á╫í╫פ ╫⌐╫á╫ש╫¬.");
+    throw new Error("שגיאה בחיפוש גוש/חלקה. נסה שנית.");
   }
 }
 
-// ΓפאΓפא Search by address (Photon / Komoot) ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+// ── Search by address (Photon / Komoot) ──────────────────────────────────────
 export async function searchByAddress(address: string): Promise<GeoResult> {
   // Try Photon first
-  const query = encodeURIComponent(address + ", ╫ש╫⌐╫¿╫נ╫£");
+  const query = encodeURIComponent(address + ", ישראל");
   const response = await fetch(
     `https://photon.komoot.io/api/?q=${query}&lang=he&limit=5`,
   );
 
   if (!response.ok) {
-    throw new Error("╫⌐╫ע╫ש╫נ╫פ ╫ס╫⌐╫ש╫¿╫ץ╫¬ ╫פ╫ק╫ש╫ñ╫ץ╫⌐");
+    throw new Error("שגיאה בשירות החיפוש");
   }
 
   const data = await response.json();
@@ -133,7 +133,7 @@ export async function searchByAddress(address: string): Promise<GeoResult> {
         };
       }
     }
-    throw new Error("╫£╫נ ╫á╫₧╫ª╫נ╫פ ╫¢╫¬╫ץ╫ס╫¬ ╫¬╫ץ╫נ╫₧╫¬");
+    throw new Error("לא נמצאה כתובת תואמת");
   }
 
   const feature = data.features[0];

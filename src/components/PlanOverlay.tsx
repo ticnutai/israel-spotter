@@ -1,5 +1,5 @@
 /**
- * PlanOverlay.tsx Γאף Display georeferenced plan images on the map
+ * PlanOverlay.tsx – Display georeferenced plan images on the map
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -22,7 +22,7 @@ interface PlanOverlayProps {
   onClose: () => void;
 }
 
-// ITM Γזע WGS84 (same as AerialOverlay)
+// ITM → WGS84 (same as AerialOverlay)
 function itmToWgs84(x: number, y: number): [number, number] {
   const a = 6378137.0;
   const e = 0.0818191908426;
@@ -146,14 +146,14 @@ export function PlanOverlay({ map, planPath, georef, onClose }: PlanOverlayProps
     >
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium truncate max-w-[170px]">
-          ╫⌐╫¢╫ס╫¬ ╫¬╫⌐╫¿╫ש╫ר
+          שכבת תשריט
         </span>
         <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={onClose}>
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground">╫⌐╫º╫ש╫ñ╫ץ╫¬</span>
+        <span className="text-xs text-muted-foreground">שקיפות</span>
         <Slider
           value={[opacity * 100]}
           max={100}

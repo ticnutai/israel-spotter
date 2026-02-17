@@ -106,7 +106,7 @@ All colors MUST be HSL.
   }
 }
 
-/* ΓפאΓפאΓפא Leaflet RTL fixes ΓפאΓפאΓפא */
+/* ─── Leaflet RTL fixes ─── */
 /* Prevent RTL direction from flipping Leaflet's internal layout */
 .leaflet-container {
   direction: ltr;

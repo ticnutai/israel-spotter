@@ -1,11 +1,11 @@
 /**
- * SmartSidebar.tsx Γאף Smart sidebar with auto-hide, pin, and tabbed content
+ * SmartSidebar.tsx – Smart sidebar with auto-hide, pin, and tabbed content
  *
  * Features:
- *   Γאó Pin mode: sidebar stays open permanently
- *   Γאó Auto-hide mode: sidebar opens on hover near right edge, closes when mouse leaves
- *   Γאó Vertical icon rail always visible when unpinned (collapsed)
- *   Γאó Tabs: ╫á╫¬╫ץ╫á╫ש╫¥ | ╫ª╫ש╫£╫ץ╫¥ ╫נ╫ץ╫ץ╫ש╫¿ | ╫ק╫ש╫ñ╫ץ╫⌐ ╫₧╫í╫₧╫¢╫ש╫¥ | ╫¢╫£╫ש╫¥ | ╫פ╫ע╫ף╫¿╫ץ╫¬
+ *   • Pin mode: sidebar stays open permanently
+ *   • Auto-hide mode: sidebar opens on hover near right edge, closes when mouse leaves
+ *   • Vertical icon rail always visible when unpinned (collapsed)
+ *   • Tabs: נתונים | צילום אוויר | חיפוש מסמכים | כלים | הגדרות
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -42,7 +42,7 @@ import { PdfExport } from "./PdfExport";
 import { PlanTimeline } from "./PlanTimeline";
 import { StatsCharts } from "./StatsCharts";
 
-// ΓפאΓפאΓפא Tab definitions ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+// ─── Tab definitions ─────────────────────────────────────────────────────────
 
 export interface SidebarTab {
   id: string;
@@ -52,17 +52,17 @@ export interface SidebarTab {
 }
 
 const SIDEBAR_TABS: SidebarTab[] = [
-  { id: "data", label: "╫á╫¬╫ץ╫á╫ש╫¥", icon: <Database className="h-5 w-5" /> },
-  { id: "aerial", label: "╫ª╫ש╫£╫ץ╫¥ ╫נ╫ץ╫ץ╫ש╫¿", icon: <Plane className="h-5 w-5" /> },
-  { id: "search", label: "╫ק╫ש╫ñ╫ץ╫⌐ ╫₧╫í╫₧╫¢╫ש╫¥", icon: <Search className="h-5 w-5" /> },
-  { id: "upload", label: "╫פ╫ó╫£╫נ╫¬ ╫º╫ס╫ª╫ש╫¥", icon: <Upload className="h-5 w-5" /> },
-  { id: "timeline", label: "╫ª╫ש╫¿ ╫צ╫₧╫ƒ", icon: <Clock className="h-5 w-5" /> },
-  { id: "stats", label: "╫í╫ר╫ר╫ש╫í╫ר╫ש╫º╫פ", icon: <BarChart3 className="h-5 w-5" /> },
-  { id: "tools", label: "╫¢╫£╫ש╫¥", icon: <Wrench className="h-5 w-5" /> },
-  { id: "settings", label: "╫פ╫ע╫ף╫¿╫ץ╫¬", icon: <Settings className="h-5 w-5" /> },
+  { id: "data", label: "נתונים", icon: <Database className="h-5 w-5" /> },
+  { id: "aerial", label: "צילום אוויר", icon: <Plane className="h-5 w-5" /> },
+  { id: "search", label: "חיפוש מסמכים", icon: <Search className="h-5 w-5" /> },
+  { id: "upload", label: "העלאת קבצים", icon: <Upload className="h-5 w-5" /> },
+  { id: "timeline", label: "ציר זמן", icon: <Clock className="h-5 w-5" /> },
+  { id: "stats", label: "סטטיסטיקה", icon: <BarChart3 className="h-5 w-5" /> },
+  { id: "tools", label: "כלים", icon: <Wrench className="h-5 w-5" /> },
+  { id: "settings", label: "הגדרות", icon: <Settings className="h-5 w-5" /> },
 ];
 
-// ΓפאΓפאΓפא Props ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+// ─── Props ───────────────────────────────────────────────────────────────────
 
 interface SmartSidebarProps {
   onSelectGush: (gush: number) => void;
@@ -71,14 +71,14 @@ interface SmartSidebarProps {
   defaultPinned?: boolean;
 }
 
-// ΓפאΓפאΓפא Sidebar width constants ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+// ─── Sidebar width constants ─────────────────────────────────────────────────
 
-const RAIL_WIDTH = 48; // px Γאף icon rail when collapsed
-const PANEL_WIDTH = 340; // px Γאף full panel content width
+const RAIL_WIDTH = 48; // px – icon rail when collapsed
+const PANEL_WIDTH = 340; // px – full panel content width
 
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 //  SmartSidebar Component
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 
 export function SmartSidebar({
   onSelectGush,
@@ -103,7 +103,7 @@ export function SmartSidebar({
   // Determine if the panel content should be visible
   const isOpen = pinned || hovered;
 
-  // ΓפאΓפא Mouse handlers for auto-hide ΓפאΓפא
+  // ── Mouse handlers for auto-hide ──
   const handleMouseEnter = useCallback(() => {
     if (pinned) return;
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
@@ -116,7 +116,7 @@ export function SmartSidebar({
     hoverTimerRef.current = setTimeout(() => setHovered(false), 300);
   }, [pinned]);
 
-  // ΓפאΓפא Edge detection Γאף invisible trigger zone when collapsed ΓפאΓפא
+  // ── Edge detection – invisible trigger zone when collapsed ──
   useEffect(() => {
     if (pinned) return;
 
@@ -131,7 +131,7 @@ export function SmartSidebar({
     return () => window.removeEventListener("mousemove", handleEdgeMove);
   }, [pinned, hovered]);
 
-  // ΓפאΓפא Render ΓפאΓפא
+  // ── Render ──
   return (
     <TooltipProvider delayDuration={200}>
       <div
@@ -147,7 +147,7 @@ export function SmartSidebar({
         onMouseLeave={handleMouseLeave}
         dir="rtl"
       >
-        {/* ΓפאΓפא Icon Rail (always visible) ΓפאΓפא */}
+        {/* ── Icon Rail (always visible) ── */}
         <div
           className={cn(
             "flex flex-col items-center py-2 border-l bg-card/95 backdrop-blur-sm",
@@ -208,13 +208,13 @@ export function SmartSidebar({
                 </button>
               </TooltipTrigger>
               <TooltipContent side="left" className="text-xs">
-                {pinned ? "╫ס╫ר╫£ ╫á╫ó╫ש╫ª╫פ (╫נ╫ץ╫ר╫ץ-╫פ╫í╫¬╫¿)" : "╫á╫ó╫Ñ ╫í╫ש╫ש╫ף╫ס╫¿"}
+                {pinned ? "בטל נעיצה (אוטו-הסתר)" : "נעץ סיידבר"}
               </TooltipContent>
             </Tooltip>
           </div>
         </div>
 
-        {/* ΓפאΓפא Panel Content (slides in/out) ΓפאΓפא */}
+        {/* ── Panel Content (slides in/out) ── */}
         <div
           className={cn(
             "h-full overflow-hidden flex flex-col bg-card border-l",
@@ -270,9 +270,9 @@ export function SmartSidebar({
   );
 }
 
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 //  TAB: Data (reuses existing KfarChabadPanel inline)
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 
 import {
   getAerialYears,
@@ -304,7 +304,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
-// ΓפאΓפא file helpers (reuse) ΓפאΓפא
+// ── file helpers (reuse) ──
 function fileIcon(ft: string) {
   if (ft === "image") return <Image className="h-3.5 w-3.5 text-blue-500" />;
   if (ft === "pdf") return <FileText className="h-3.5 w-3.5 text-red-500" />;
@@ -323,7 +323,7 @@ function DocRow({ doc, onShowImage }: { doc: DocumentRecord; onShowImage: (p: st
       {fileIcon(doc.file_type)}
       <span className="flex-1 truncate">{doc.title}</span>
       {doc.is_tashrit === 1 && (
-        <span className="text-[10px] bg-blue-100 text-blue-700 px-1 rounded">╫¬╫⌐╫¿╫ש╫ר</span>
+        <span className="text-[10px] bg-blue-100 text-blue-700 px-1 rounded">תשריט</span>
       )}
       {doc.is_georef === 1 && (
         <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded">GEO</span>
@@ -331,7 +331,7 @@ function DocRow({ doc, onShowImage }: { doc: DocumentRecord; onShowImage: (p: st
       <span className="text-[10px] text-muted-foreground">{formatSize(doc.file_size)}</span>
       <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         {isImage && doc.is_tashrit === 1 && (
-          <Button variant="ghost" size="sm" className="h-5 w-5 p-0" title="╫פ╫ª╫ע ╫ó╫£ ╫פ╫₧╫ñ╫פ"
+          <Button variant="ghost" size="sm" className="h-5 w-5 p-0" title="הצג על המפה"
             onClick={() => {
               const rel = doc.file_path.replace(/^\.\/kfar_chabad_data[\\/]plans[\\/]/, "");
               onShowImage(rel);
@@ -340,7 +340,7 @@ function DocRow({ doc, onShowImage }: { doc: DocumentRecord; onShowImage: (p: st
           </Button>
         )}
         <a href={documentFileUrl(doc.id)} target="_blank" rel="noopener noreferrer">
-          <Button variant="ghost" size="sm" className="h-5 w-5 p-0" title="╫פ╫ץ╫¿╫ף">
+          <Button variant="ghost" size="sm" className="h-5 w-5 p-0" title="הורד">
             <Download className="h-3 w-3" />
           </Button>
         </a>
@@ -349,7 +349,7 @@ function DocRow({ doc, onShowImage }: { doc: DocumentRecord; onShowImage: (p: st
   );
 }
 
-// ΓפאΓפא Data Tab ΓפאΓפא
+// ── Data Tab ──
 function DataTab({
   onSelectGush,
   onSelectAerialYear,
@@ -383,7 +383,7 @@ function DataTab({
       setGushim(gList);
       setStats(docStats);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "╫⌐╫ע╫ש╫נ╫פ ╫ס╫ר╫ó╫ש╫á╫¬ ╫á╫¬╫ץ╫á╫ש╫¥");
+      setError(e instanceof Error ? e.message : "שגיאה בטעינת נתונים");
     } finally {
       setLoading(false);
     }
@@ -433,7 +433,7 @@ function DataTab({
   if (loading) {
     return (
       <div className="p-4 text-center text-muted-foreground text-sm">
-        ╫ר╫ץ╫ó╫ƒ ╫á╫¬╫ץ╫á╫ש╫¥...
+        טוען נתונים...
       </div>
     );
   }
@@ -442,7 +442,7 @@ function DataTab({
       <div className="p-4">
         <p className="text-destructive text-sm mb-2">{error}</p>
         <Button variant="outline" size="sm" onClick={loadData}>
-          ╫á╫í╫פ ╫⌐╫ץ╫ס
+          נסה שוב
         </Button>
       </div>
     );
@@ -458,13 +458,13 @@ function DataTab({
         {stats && (
           <div className="flex gap-2 flex-wrap text-[11px] text-muted-foreground px-1">
             <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-              {stats.total} ╫₧╫í╫₧╫¢╫ש╫¥
+              {stats.total} מסמכים
             </span>
             <span className="bg-muted px-2 py-0.5 rounded-full">
-              {activeGushim.length} ╫ע╫ץ╫⌐╫ש╫¥ ╫ñ╫ó╫ש╫£╫ש╫¥
+              {activeGushim.length} גושים פעילים
             </span>
             <span className="bg-muted px-2 py-0.5 rounded-full">
-              {stats.tashrit_count} ╫¬╫⌐╫¿╫ש╫ר╫ש╫¥
+              {stats.tashrit_count} תשריטים
             </span>
           </div>
         )}
@@ -482,19 +482,19 @@ function DataTab({
                 ) : (
                   <ChevronRight className="h-3.5 w-3.5" />
                 )}
-                <span className="font-medium">╫ע╫ץ╫⌐ {g.gush}</span>
+                <span className="font-medium">גוש {g.gush}</span>
               </span>
               <span className="flex gap-2 text-[11px] text-muted-foreground">
-                <span>{g.plan_count} ╫¬╫ץ╫¢╫á╫ש╫ץ╫¬</span>
-                <span>{g.permit_count} ╫פ╫ש╫¬╫¿╫ש╫¥</span>
-                <span>{g.parcel_count} ╫ק╫£╫º╫ץ╫¬</span>
+                <span>{g.plan_count} תוכניות</span>
+                <span>{g.permit_count} היתרים</span>
+                <span>{g.parcel_count} חלקות</span>
               </span>
             </button>
 
             {expandedGush === g.gush && (
               <div className="border-t">
                 {parcels.length === 0 && (
-                  <p className="text-xs text-muted-foreground p-2">╫נ╫ש╫ƒ ╫ק╫£╫º╫ץ╫¬</p>
+                  <p className="text-xs text-muted-foreground p-2">אין חלקות</p>
                 )}
                 {parcels.map((p) => {
                   const pKey = `${p.gush}_${p.helka}`;
@@ -512,13 +512,13 @@ function DataTab({
                             <ChevronRight className="h-3 w-3" />
                           )}
                           <FolderOpen className="h-3.5 w-3.5 text-amber-600" />
-                          ╫ק╫£╫º╫פ {p.helka}
+                          חלקה {p.helka}
                         </span>
                         <span className="flex gap-2 text-[10px] text-muted-foreground">
-                          {p.doc_count} ╫₧╫í╫₧╫¢╫ש╫¥
+                          {p.doc_count} מסמכים
                           {p.has_tashrit === 1 && (
                             <span className="bg-blue-100 text-blue-700 px-1 rounded">
-                              ╫¬╫⌐╫¿╫ש╫ר
+                              תשריט
                             </span>
                           )}
                         </span>
@@ -530,7 +530,7 @@ function DataTab({
                               {bp.plan_number && (
                                 <div className="px-5 py-1 text-[11px] font-medium bg-muted/40 flex items-center gap-1">
                                   <FileText className="h-3 w-3 text-primary" />
-                                  ╫¬╫ץ╫¢╫á╫ש╫¬: {bp.plan_number}
+                                  תוכנית: {bp.plan_number}
                                 </div>
                               )}
                               <div className="divide-y">
@@ -557,7 +557,7 @@ function DataTab({
                     onClick={() => onSelectGush(g.gush)}
                   >
                     <ArrowRight className="h-3 w-3 ml-1" />
-                    ╫פ╫ª╫ע ╫ע╫ץ╫⌐ {g.gush} ╫ס╫₧╫ñ╫פ
+                    הצג גוש {g.gush} במפה
                   </Button>
                 </div>
               </div>
@@ -569,7 +569,7 @@ function DataTab({
         {emptyGushim.length > 0 && (
           <div className="border rounded-lg p-2">
             <p className="text-xs text-muted-foreground mb-1">
-              ╫ע╫ץ╫⌐╫ש╫¥ ╫£╫£╫נ ╫₧╫í╫₧╫¢╫ש╫¥ ({emptyGushim.length}):
+              גושים ללא מסמכים ({emptyGushim.length}):
             </p>
             <div className="flex flex-wrap gap-1">
               {emptyGushim.map((g) => (
@@ -592,20 +592,20 @@ function DataTab({
           <div className="border rounded-lg p-3">
             <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">
               <BarChart3 className="h-4 w-4 text-primary" />
-              ╫í╫ש╫¢╫ץ╫¥ ╫á╫¬╫ץ╫á╫ש╫¥
+              סיכום נתונים
             </h3>
             <div className="space-y-1 text-xs">
               {Object.entries(stats.by_category).map(([cat, cnt]) => (
                 <div key={cat} className="flex justify-between">
-                  <span>{cat === "plans" ? "╫¬╫ץ╫¢╫á╫ש╫ץ╫¬" : "╫פ╫ש╫¬╫¿╫ש╫¥"}</span>
+                  <span>{cat === "plans" ? "תוכניות" : "היתרים"}</span>
                   <span className="text-muted-foreground">{cnt}</span>
                 </div>
               ))}
               <div className="flex justify-between text-muted-foreground">
-                <span>╫¬╫⌐╫¿╫ש╫ר╫ש╫¥</span><span>{stats.tashrit_count}</span>
+                <span>תשריטים</span><span>{stats.tashrit_count}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>╫ó╫¥ ╫ע╫ש╫נ╫ץ╫¿╫ñ╫¿╫á╫í</span><span>{stats.georef_count}</span>
+                <span>עם גיאורפרנס</span><span>{stats.georef_count}</span>
               </div>
               {stats.by_file_type && Object.entries(stats.by_file_type).map(([ft, cnt]) => (
                 <div key={ft} className="flex justify-between text-muted-foreground">
@@ -613,7 +613,7 @@ function DataTab({
                 </div>
               ))}
               <div className="flex justify-between font-medium border-t pt-1 mt-1">
-                <span>╫í╫פ&quot;╫¢</span><span>{stats.total}</span>
+                <span>סה&quot;כ</span><span>{stats.total}</span>
               </div>
             </div>
           </div>
@@ -623,9 +623,9 @@ function DataTab({
   );
 }
 
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 //  TAB: Aerial
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 
 function AerialTab({ onSelectAerialYear }: { onSelectAerialYear: (y: string) => void }) {
   const [years, setYears] = useState<AerialYearInfo[]>([]);
@@ -636,7 +636,7 @@ function AerialTab({ onSelectAerialYear }: { onSelectAerialYear: (y: string) => 
     getAerialYears().then(setYears).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="p-4 text-center text-muted-foreground text-sm">╫ר╫ץ╫ó╫ƒ...</div>;
+  if (loading) return <div className="p-4 text-center text-muted-foreground text-sm">טוען...</div>;
 
   return (
     <ScrollArea className="h-full">
@@ -644,9 +644,9 @@ function AerialTab({ onSelectAerialYear }: { onSelectAerialYear: (y: string) => 
         {years.length === 0 && (
           <div className="text-center py-8">
             <Plane className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="text-sm text-muted-foreground">╫£╫נ ╫á╫₧╫ª╫נ╫ץ ╫ª╫ש╫£╫ץ╫₧╫ש ╫נ╫ץ╫ץ╫ש╫¿ ╫₧╫º╫ץ╫₧╫ש╫ש╫¥</p>
+            <p className="text-sm text-muted-foreground">לא נמצאו צילומי אוויר מקומיים</p>
             <p className="text-xs text-muted-foreground mt-1">
-              ╫פ╫ץ╫¿╫ף ╫ª╫ש╫£╫ץ╫₧╫ש ╫נ╫ץ╫ץ╫ש╫¿ ╫ף╫¿╫ת ╫í╫º╫¿╫ש╫ñ╫ר ╫פ╫פ╫ץ╫¿╫ף╫פ
+              הורד צילומי אוויר דרך סקריפט ההורדה
             </p>
           </div>
         )}
@@ -661,7 +661,7 @@ function AerialTab({ onSelectAerialYear }: { onSelectAerialYear: (y: string) => 
                 <span className="font-medium">{y.year}</span>
               </span>
               <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                {y.levels.length} ╫¿╫₧╫ץ╫¬
+                {y.levels.length} רמות
                 {expanded === y.year ? (
                   <ChevronDown className="h-3.5 w-3.5" />
                 ) : (
@@ -674,8 +674,8 @@ function AerialTab({ onSelectAerialYear }: { onSelectAerialYear: (y: string) => 
                 {y.levels.map((lv) => (
                   <div key={lv.level} className="flex items-center justify-between text-xs">
                     <span>
-                      ╫¿╫₧╫פ {lv.level} ┬╖ {lv.tile_count} ╫נ╫¿╫ש╫ק╫ש╫¥
-                      {lv.stitched && " ┬╖ ╫¬╫₧╫ץ╫á╫פ ╫₧╫נ╫ץ╫ק╫ף╫¬"}
+                      רמה {lv.level} · {lv.tile_count} אריחים
+                      {lv.stitched && " · תמונה מאוחדת"}
                     </span>
                     <Button
                       variant="outline"
@@ -684,13 +684,13 @@ function AerialTab({ onSelectAerialYear }: { onSelectAerialYear: (y: string) => 
                       onClick={() => onSelectAerialYear(y.year)}
                     >
                       <Layers className="h-3 w-3 ml-1" />
-                      ╫פ╫ª╫ע
+                      הצג
                     </Button>
                   </div>
                 ))}
                 {y.levels[0]?.georef && (
                   <p className="text-[11px] text-muted-foreground">
-                    EPSG:2039 ┬╖ {Math.abs(y.levels[0].georef.pixel_size_x).toFixed(2)} ╫₧&apos;/╫ñ╫ש╫º╫í╫£
+                    EPSG:2039 · {Math.abs(y.levels[0].georef.pixel_size_x).toFixed(2)} מ&apos;/פיקסל
                   </p>
                 )}
               </div>
@@ -702,7 +702,7 @@ function AerialTab({ onSelectAerialYear }: { onSelectAerialYear: (y: string) => 
         <div className="border-2 border-dashed border-muted-foreground/20 rounded-lg p-4 text-center">
           <Upload className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
           <p className="text-xs text-muted-foreground">
-            ╫ס╫º╫¿╫ץ╫ס: ╫פ╫ó╫£╫נ╫¬ ╫ª╫ש╫£╫ץ╫₧╫ש ╫נ╫ץ╫ץ╫ש╫¿ ╫ץ╫₧╫ñ╫ץ╫¬ ╫ש╫⌐╫ש╫¿╫ץ╫¬ ╫£╫₧╫ó╫¿╫¢╫¬
+            בקרוב: העלאת צילומי אוויר ומפות ישירות למערכת
           </p>
         </div>
       </div>
@@ -710,9 +710,9 @@ function AerialTab({ onSelectAerialYear }: { onSelectAerialYear: (y: string) => 
   );
 }
 
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 //  TAB: Search (documents)
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 
 function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => void }) {
   const [searchText, setSearchText] = useState("");
@@ -747,7 +747,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
       <div className="shrink-0 px-2 pt-2 space-y-2">
         <div className="flex gap-1">
           <Input
-            placeholder="╫ק╫ñ╫⌐ ╫£╫ñ╫ש ╫⌐╫¥, ╫¬╫ץ╫¢╫á╫ש╫¬, ╫º╫ץ╫ס╫Ñ..."
+            placeholder="חפש לפי שם, תוכנית, קובץ..."
             className="text-xs h-8"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -763,19 +763,19 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
-            <option value="">╫¢╫£ ╫פ╫º╫ר╫ע╫ץ╫¿╫ש╫ץ╫¬</option>
-            <option value="plans">╫¬╫ץ╫¢╫á╫ש╫ץ╫¬</option>
-            <option value="permits">╫פ╫ש╫¬╫¿╫ש╫¥</option>
+            <option value="">כל הקטגוריות</option>
+            <option value="plans">תוכניות</option>
+            <option value="permits">היתרים</option>
           </select>
           <select
             className="flex-1 h-7 rounded-md border bg-background px-2 text-xs"
             value={fileType}
             onChange={(e) => setFileType(e.target.value)}
           >
-            <option value="">╫¢╫£ ╫פ╫í╫ץ╫ע╫ש╫¥</option>
+            <option value="">כל הסוגים</option>
             <option value="pdf">PDF</option>
-            <option value="image">╫¬╫₧╫ץ╫á╫פ</option>
-            <option value="other">╫נ╫ק╫¿</option>
+            <option value="image">תמונה</option>
+            <option value="other">אחר</option>
           </select>
         </div>
       </div>
@@ -783,15 +783,15 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
       <ScrollArea className="flex-1 px-2 pb-2 mt-1">
         {total > 0 && (
           <p className="text-[11px] text-muted-foreground px-1 mb-1">
-            {total} ╫¬╫ץ╫ª╫נ╫ץ╫¬
+            {total} תוצאות
           </p>
         )}
         <div className="divide-y border rounded-lg overflow-hidden">
           {results.map((doc) => (
             <div key={doc.id} className="text-xs">
               <div className="px-2 py-0.5 text-[10px] text-muted-foreground bg-muted/30">
-                ╫ע╫ץ╫⌐ {doc.gush} ┬╖ ╫ק╫£╫º╫פ {doc.helka}
-                {doc.plan_number && ` ┬╖ ${doc.plan_number}`}
+                גוש {doc.gush} · חלקה {doc.helka}
+                {doc.plan_number && ` · ${doc.plan_number}`}
               </div>
               <DocRow doc={doc} onShowImage={onSelectPlanImage} />
             </div>
@@ -800,13 +800,13 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
         {results.length === 0 && (searchText || category || fileType) && !searching && (
           <div className="text-center py-6">
             <Search className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-            <p className="text-xs text-muted-foreground">╫£╫נ ╫á╫₧╫ª╫נ╫ץ ╫¬╫ץ╫ª╫נ╫ץ╫¬</p>
+            <p className="text-xs text-muted-foreground">לא נמצאו תוצאות</p>
           </div>
         )}
         {results.length === 0 && !searchText && !category && !fileType && (
           <div className="text-center py-6">
             <Search className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-            <p className="text-xs text-muted-foreground">╫פ╫צ╫ƒ ╫₧╫ש╫£╫ץ╫¬ ╫ק╫ש╫ñ╫ץ╫⌐ ╫נ╫ץ ╫ס╫ק╫¿ ╫ñ╫ש╫£╫ר╫¿</p>
+            <p className="text-xs text-muted-foreground">הזן מילות חיפוש או בחר פילטר</p>
           </div>
         )}
       </ScrollArea>
@@ -814,41 +814,41 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
   );
 }
 
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 //  TAB: Tools
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 
 function ToolsTab() {
   return (
     <ScrollArea className="h-full">
       <div className="px-3 py-3 space-y-3">
-        <p className="text-xs text-muted-foreground">╫¢╫£╫ש╫¥ ╫צ╫₧╫ש╫á╫ש╫¥ ╫ס╫₧╫ñ╫פ:</p>
+        <p className="text-xs text-muted-foreground">כלים זמינים במפה:</p>
 
         <ToolCard
           icon={<Ruler className="h-5 w-5 text-blue-500" />}
-          title="╫₧╫ף╫ש╫ף╫¬ ╫₧╫¿╫ק╫º╫ש╫¥"
-          description="╫₧╫ף╫ץ╫ף ╫₧╫¿╫ק╫º ╫ץ╫צ╫ץ╫ץ╫ש╫¬ ╫ó╫£ ╫פ╫₧╫ñ╫פ"
-          status="╫צ╫₧╫ש╫ƒ"
+          title="מדידת מרחקים"
+          description="מדוד מרחק וזווית על המפה"
+          status="זמין"
           statusColor="text-green-600 bg-green-100"
         />
         <ToolCard
           icon={<Globe className="h-5 w-5 text-green-500" />}
-          title="╫ע╫ש╫נ╫ץ╫¿╫ñ╫¿╫á╫í"
-          description="╫פ╫ª╫ע ╫¬╫⌐╫¿╫ש╫ר╫ש╫¥ ╫₧╫ע╫ש╫נ╫ץ╫¿╫ñ╫¿╫á╫í ╫ó╫£ ╫פ╫₧╫ñ╫פ"
-          status="╫צ╫₧╫ש╫ƒ"
+          title="גיאורפרנס"
+          description="הצג תשריטים מגיאורפרנס על המפה"
+          status="זמין"
           statusColor="text-green-600 bg-green-100"
         />
         <ToolCard
           icon={<Layers className="h-5 w-5 text-purple-500" />}
-          title="╫⌐╫¢╫ס╫ץ╫¬ ╫₧╫ñ╫פ"
-          description="╫פ╫ק╫£╫ú ╫ס╫ש╫ƒ ╫₧╫ñ╫¬ OSM, ╫£╫ץ╫ץ╫ש╫ש╫ƒ, ╫ץ-Hybrid"
-          status="╫צ╫₧╫ש╫ƒ"
+          title="שכבות מפה"
+          description="החלף בין מפת OSM, לוויין, ו-Hybrid"
+          status="זמין"
           statusColor="text-green-600 bg-green-100"
         />
 
-        {/* PDF Export Γאף inline */}
+        {/* PDF Export – inline */}
         <div className="border-t pt-3 mt-3">
-          <p className="text-xs font-medium text-muted-foreground mb-2">╫ש╫ש╫ª╫ץ╫נ ╫₧╫ñ╫פ:</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">ייצוא מפה:</p>
         </div>
         <PdfExport />
       </div>
@@ -887,9 +887,9 @@ function ToolCard({
   );
 }
 
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 //  TAB: Settings
-// ΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנΓץנ
+// ═════════════════════════════════════════════════════════════════════════════
 
 function SettingsTab() {
   const [config, setConfig] = useState<KfarChabadConfig | null>(null);
@@ -899,7 +899,7 @@ function SettingsTab() {
     getConfig().then(setConfig).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="p-4 text-center text-muted-foreground text-sm">╫ר╫ץ╫ó╫ƒ...</div>;
+  if (loading) return <div className="p-4 text-center text-muted-foreground text-sm">טוען...</div>;
 
   return (
     <ScrollArea className="h-full">
@@ -908,22 +908,22 @@ function SettingsTab() {
         <div className="border rounded-lg p-3">
           <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">
             <Info className="h-4 w-4 text-primary" />
-            ╫₧╫ש╫ף╫ó ╫₧╫ó╫¿╫¢╫¬
+            מידע מערכת
           </h3>
           <div className="space-y-1.5 text-xs">
-            <InfoRow label="╫ñ╫¿╫ץ╫ש╫º╫ר" value='╫¢╫ñ╫¿ ╫ק╫ס"╫ף Γאף ╫₧╫ó╫¿╫¢╫¬ GIS' />
+            <InfoRow label="פרויקט" value='כפר חב"ד – מערכת GIS' />
             <InfoRow label="CRS" value="EPSG:2039 (Israel TM Grid)" />
             {config && (
               <>
                 <InfoRow
-                  label="╫₧╫¿╫¢╫צ (WGS84)"
+                  label="מרכז (WGS84)"
                   value={`${config.center_wgs84.lat.toFixed(4)}, ${config.center_wgs84.lng.toFixed(4)}`}
                 />
                 <InfoRow
-                  label="╫₧╫¿╫¢╫צ (ITM)"
+                  label="מרכז (ITM)"
                   value={`${config.center.x.toLocaleString()}, ${config.center.y.toLocaleString()}`}
                 />
-                <InfoRow label="╫ע╫ץ╫⌐╫ש╫¥" value={String(config.gushim.length)} />
+                <InfoRow label="גושים" value={String(config.gushim.length)} />
               </>
             )}
           </div>
@@ -934,19 +934,19 @@ function SettingsTab() {
           <div className="border rounded-lg p-3">
             <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">
               <Database className="h-4 w-4 text-primary" />
-              ╫í╫ש╫¢╫ץ╫¥ DB
+              סיכום DB
             </h3>
             <div className="space-y-1 text-xs">
               {Object.entries(config.db_summary).map(([key, val]) => (
                 <InfoRow
                   key={key}
                   label={
-                    key === "gushim" ? "╫ע╫ץ╫⌐╫ש╫¥"
-                    : key === "parcels" ? "╫ק╫£╫º╫ץ╫¬"
-                    : key === "plans" ? "╫¬╫ץ╫¢╫á╫ש╫ץ╫¬ ╫ש╫ש╫ק╫ץ╫ף╫ש╫ץ╫¬"
-                    : key === "documents" ? "╫₧╫í╫₧╫¢╫ש╫¥"
-                    : key === "aerial_images" ? "╫ª╫ש╫£╫ץ╫₧╫ש ╫נ╫ץ╫ץ╫ש╫¿"
-                    : key === "plan_georef" ? "╫ע╫ש╫נ╫ץ╫¿╫ñ╫¿╫á╫í"
+                    key === "gushim" ? "גושים"
+                    : key === "parcels" ? "חלקות"
+                    : key === "plans" ? "תוכניות ייחודיות"
+                    : key === "documents" ? "מסמכים"
+                    : key === "aerial_images" ? "צילומי אוויר"
+                    : key === "plan_georef" ? "גיאורפרנס"
                     : key
                   }
                   value={String(val)}
@@ -959,18 +959,18 @@ function SettingsTab() {
         {/* Data status */}
         {config?.data_available && (
           <div className="border rounded-lg p-3">
-            <h3 className="text-sm font-medium mb-2">╫í╫ר╫ר╫ץ╫í ╫á╫¬╫ץ╫á╫ש╫¥</h3>
+            <h3 className="text-sm font-medium mb-2">סטטוס נתונים</h3>
             <div className="space-y-1 text-xs">
-              <StatusRow label="╫₧╫í╫ף ╫á╫¬╫ץ╫á╫ש╫¥" ok={config.data_available.database} />
-              <StatusRow label="╫¬╫ץ╫¢╫á╫ש╫ץ╫¬" ok={config.data_available.plans} />
-              <StatusRow label="╫ª╫ש╫£╫ץ╫₧╫ש ╫נ╫ץ╫ץ╫ש╫¿" ok={config.data_available.aerial} />
+              <StatusRow label="מסד נתונים" ok={config.data_available.database} />
+              <StatusRow label="תוכניות" ok={config.data_available.plans} />
+              <StatusRow label="צילומי אוויר" ok={config.data_available.aerial} />
             </div>
           </div>
         )}
 
         {/* Version */}
         <p className="text-[11px] text-muted-foreground text-center">
-          ╫ע╫¿╫í╫פ 2.0.0 ┬╖ FastAPI + React + Leaflet
+          גרסה 2.0.0 · FastAPI + React + Leaflet
         </p>
       </div>
     </ScrollArea>
@@ -991,7 +991,7 @@ function StatusRow({ label, ok }: { label: string; ok: boolean }) {
     <div className="flex items-center justify-between">
       <span className="text-muted-foreground">{label}</span>
       <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full", ok ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
-        {ok ? "╫צ╫₧╫ש╫ƒ" : "╫ק╫í╫¿"}
+        {ok ? "זמין" : "חסר"}
       </span>
     </div>
   );

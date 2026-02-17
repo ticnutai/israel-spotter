@@ -12,48 +12,48 @@ export interface MapLayerOption {
 export const MAP_LAYERS: MapLayerOption[] = [
   {
     id: "osm",
-    label: "╫₧╫ñ╫פ ╫¿╫ע╫ש╫£╫פ",
+    label: "מפה רגילה",
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   },
   {
     id: "govmap",
-    label: "GovMap ╫º╫ף╫í╫ר╫¿",
+    label: "GovMap קדסטר",
     url: "https://tiles.govmap.gov.il/KADASTR/{z}/{x}/{y}.png",
-    attribution: '&copy; ╫₧╫ñ╫ץ╫¬ ╫₧╫₧╫⌐╫£╫¬╫ש╫ץ╫¬ - ╫₧╫¿╫¢╫צ ╫פ╫₧╫ש╫ñ╫ץ╫ש ╫פ╫ש╫⌐╫¿╫נ╫£╫ש',
+    attribution: '&copy; מפות ממשלתיות - מרכז המיפוי הישראלי',
     maxZoom: 20,
   },
   {
     id: "govmap-streets",
-    label: "GovMap ╫¿╫ק╫ץ╫ס╫ץ╫¬",
+    label: "GovMap רחובות",
     url: "https://tiles.govmap.gov.il/israelhybrid/{z}/{x}/{y}.png",
-    attribution: '&copy; ╫₧╫ñ╫ץ╫¬ ╫₧╫₧╫⌐╫£╫¬╫ש╫ץ╫¬ - ╫₧╫¿╫¢╫צ ╫פ╫₧╫ש╫ñ╫ץ╫ש ╫פ╫ש╫⌐╫¿╫נ╫£╫ש',
+    attribution: '&copy; מפות ממשלתיות - מרכז המיפוי הישראלי',
     maxZoom: 20,
   },
   {
     id: "esri-satellite",
-    label: "╫ª╫ש╫£╫ץ╫¥ ╫נ╫ץ╫ץ╫ש╫¿",
+    label: "צילום אוויר",
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attribution: '&copy; Esri, Maxar, Earthstar Geographics',
     maxZoom: 19,
   },
   {
     id: "esri-hybrid",
-    label: "╫ª╫ש╫£╫ץ╫¥ + ╫¢╫ש╫¬╫ץ╫ס",
+    label: "צילום + כיתוב",
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attribution: '&copy; Esri, Maxar, Earthstar Geographics',
     maxZoom: 19,
   },
   {
     id: "esri-streets",
-    label: "╫¿╫ק╫ץ╫ס╫ץ╫¬ ╫₧╫ñ╫ץ╫¿╫ר╫ש╫¥",
+    label: "רחובות מפורטים",
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
     attribution: '&copy; Esri',
     maxZoom: 19,
   },
   {
     id: "topo",
-    label: "╫ר╫ץ╫ñ╫ץ╫ע╫¿╫ñ╫ש╫¬",
+    label: "טופוגרפית",
     url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
     attribution: '&copy; OpenTopoMap',
     maxZoom: 17,
@@ -86,7 +86,7 @@ export function MapLayerSwitcher({ activeLayerId, onLayerChange }: MapLayerSwitc
       <button
         onClick={() => setOpen(!open)}
         className="bg-card/95 backdrop-blur border rounded-lg shadow-lg p-2.5 hover:bg-accent transition-colors"
-        title="╫⌐╫¢╫ס╫ץ╫¬ ╫₧╫ñ╫פ"
+        title="שכבות מפה"
       >
         <Layers className="h-5 w-5" />
       </button>

@@ -1,5 +1,5 @@
 /**
- * PlanTimeline.tsx Γאף Visual timeline of plans by gush
+ * PlanTimeline.tsx – Visual timeline of plans by gush
  * Uses recharts for horizontal timeline visualization
  */
 
@@ -42,7 +42,7 @@ export function PlanTimeline() {
       const data = await getPlans();
       setPlans(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "╫⌐╫ע╫ש╫נ╫פ ╫ס╫ר╫ó╫ש╫á╫¬ ╫¬╫ץ╫¢╫á╫ש╫ץ╫¬");
+      setError(err instanceof Error ? err.message : "שגיאה בטעינת תוכניות");
     } finally {
       setLoading(false);
     }
@@ -75,7 +75,7 @@ export function PlanTimeline() {
   const grouped = useMemo(() => {
     const groups: Record<string, PlanSummary[]> = {};
     filteredPlans.forEach((p) => {
-      const type = p.plan_type || "╫£╫נ ╫₧╫í╫ץ╫ץ╫ע";
+      const type = p.plan_type || "לא מסווג";
       if (!groups[type]) groups[type] = [];
       groups[type].push(p);
     });
@@ -102,22 +102,22 @@ export function PlanTimeline() {
   function statusColor(status: string | null) {
     if (!status) return "bg-gray-100 text-gray-600";
     const s = status.toLowerCase();
-    if (s.includes("╫נ╫ץ╫⌐╫¿") || s.includes("approved") || s.includes("╫¬╫º╫ú"))
+    if (s.includes("אושר") || s.includes("approved") || s.includes("תקף"))
       return "bg-green-100 text-green-700";
-    if (s.includes("╫פ╫ñ╫º╫ף") || s.includes("deposit"))
+    if (s.includes("הפקד") || s.includes("deposit"))
       return "bg-blue-100 text-blue-700";
-    if (s.includes("╫ס╫¬╫פ╫£╫ש╫ת") || s.includes("process"))
+    if (s.includes("בתהליך") || s.includes("process"))
       return "bg-yellow-100 text-yellow-700";
-    if (s.includes("╫ס╫ש╫ר╫ץ╫£") || s.includes("cancel"))
+    if (s.includes("ביטול") || s.includes("cancel"))
       return "bg-red-100 text-red-700";
     return "bg-gray-100 text-gray-600";
   }
 
   // Plan type icon color
   function typeColor(type: string) {
-    if (type.includes("╫₧╫¬╫נ╫¿") || type.includes("outline")) return "border-blue-400";
-    if (type.includes("╫₧╫ñ╫ץ╫¿╫ר") || type.includes("detail")) return "border-green-400";
-    if (type.includes("╫á╫º╫ץ╫ף") || type.includes("point")) return "border-orange-400";
+    if (type.includes("מתאר") || type.includes("outline")) return "border-blue-400";
+    if (type.includes("מפורט") || type.includes("detail")) return "border-green-400";
+    if (type.includes("נקוד") || type.includes("point")) return "border-orange-400";
     return "border-gray-300";
   }
 
@@ -134,7 +134,7 @@ export function PlanTimeline() {
       <div className="px-3 py-6 text-center">
         <p className="text-sm text-red-500">{error}</p>
         <Button variant="outline" size="sm" className="mt-2" onClick={loadPlans}>
-          ╫á╫í╫פ ╫⌐╫ץ╫ס
+          נסה שוב
         </Button>
       </div>
     );
@@ -151,10 +151,10 @@ export function PlanTimeline() {
             value={filterGush ?? ""}
             onChange={(e) => setFilterGush(e.target.value ? Number(e.target.value) : null)}
           >
-            <option value="">╫¢╫£ ╫פ╫ע╫ץ╫⌐╫ש╫¥ ({plans.length} ╫¬╫ץ╫¢╫á╫ש╫ץ╫¬)</option>
+            <option value="">כל הגושים ({plans.length} תוכניות)</option>
             {gushNumbers.map((g) => (
               <option key={g} value={g}>
-                ╫ע╫ץ╫⌐ {g}
+                גוש {g}
               </option>
             ))}
           </select>
@@ -162,12 +162,12 @@ export function PlanTimeline() {
 
         {/* Summary stats */}
         <div className="flex gap-3 text-[11px] text-muted-foreground">
-          <span>{filteredPlans.length} ╫¬╫ץ╫¢╫á╫ש╫ץ╫¬</span>
-          <span>Γאó</span>
-          <span>{Object.keys(grouped).length} ╫í╫ץ╫ע╫ש╫¥</span>
-          <span>Γאó</span>
+          <span>{filteredPlans.length} תוכניות</span>
+          <span>•</span>
+          <span>{Object.keys(grouped).length} סוגים</span>
+          <span>•</span>
           <span>
-            {filteredPlans.reduce((s, p) => s + (p.doc_count || 0), 0)} ╫₧╫í╫₧╫¢╫ש╫¥
+            {filteredPlans.reduce((s, p) => s + (p.doc_count || 0), 0)} מסמכים
           </span>
         </div>
       </div>
@@ -235,12 +235,12 @@ export function PlanTimeline() {
                         )}
                         {plan.doc_count > 0 && (
                           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                            {plan.doc_count} ╫₧╫í╫₧╫¢╫ש╫¥
+                            {plan.doc_count} מסמכים
                           </span>
                         )}
                         {plan.gush_list && (
                           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                            ╫ע╫ץ╫⌐╫ש╫¥: {plan.gush_list}
+                            גושים: {plan.gush_list}
                           </span>
                         )}
                       </div>
@@ -251,7 +251,7 @@ export function PlanTimeline() {
                           {loadingDocs === plan.plan_number ? (
                             <div className="flex items-center gap-2 text-[11px] text-muted-foreground py-1">
                               <Loader2 className="h-3 w-3 animate-spin" />
-                              ╫ר╫ץ╫ó╫ƒ ╫₧╫í╫₧╫¢╫ש╫¥...
+                              טוען מסמכים...
                             </div>
                           ) : planDocs[plan.plan_number]?.length ? (
                             planDocs[plan.plan_number].map((doc) => (
@@ -270,7 +270,7 @@ export function PlanTimeline() {
                             ))
                           ) : (
                             <p className="text-[11px] text-muted-foreground">
-                              ╫נ╫ש╫ƒ ╫₧╫í╫₧╫¢╫ש╫¥ ╫ñ╫¿╫ר╫á╫ש╫ש╫¥
+                              אין מסמכים פרטניים
                             </p>
                           )}
 
@@ -292,8 +292,8 @@ export function PlanTimeline() {
             <div className="text-center py-8">
               <Clock className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
               <p className="text-sm text-muted-foreground">
-                ╫£╫נ ╫á╫₧╫ª╫נ╫ץ ╫¬╫ץ╫¢╫á╫ש╫ץ╫¬
-                {filterGush ? ` ╫£╫ע╫ץ╫⌐ ${filterGush}` : ""}
+                לא נמצאו תוכניות
+                {filterGush ? ` לגוש ${filterGush}` : ""}
               </p>
             </div>
           )}

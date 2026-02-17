@@ -1,5 +1,5 @@
 /**
- * StatsCharts.tsx Γאף Statistical analysis with charts
+ * StatsCharts.tsx – Statistical analysis with charts
  * Uses recharts for bar/pie/area charts
  */
 
@@ -43,10 +43,10 @@ const COLORS = [
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  plans: "╫¬╫ץ╫¢╫á╫ש╫ץ╫¬",
-  permits: "╫פ╫ש╫¬╫¿╫ש╫¥",
-  aerial: "╫ª╫ש╫£╫ץ╫₧╫ש ╫נ╫ץ╫ץ╫ש╫¿",
-  other: "╫נ╫ק╫¿",
+  plans: "תוכניות",
+  permits: "היתרים",
+  aerial: "צילומי אוויר",
+  other: "אחר",
 };
 
 const FILE_TYPE_LABELS: Record<string, string> = {
@@ -72,7 +72,7 @@ export function StatsCharts() {
       const data = await getDocumentStats();
       setStats(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "╫⌐╫ע╫ש╫נ╫פ ╫ס╫ר╫ó╫ש╫á╫¬ ╫á╫¬╫ץ╫á╫ש╫¥");
+      setError(err instanceof Error ? err.message : "שגיאה בטעינת נתונים");
     } finally {
       setLoading(false);
     }
@@ -107,9 +107,9 @@ export function StatsCharts() {
       .sort((a, b) => b.plan_count + b.permit_count - (a.plan_count + a.permit_count))
       .map((g) => ({
         name: String(g.gush),
-        ╫¬╫ץ╫¢╫á╫ש╫ץ╫¬: g.plan_count,
-        ╫פ╫ש╫¬╫¿╫ש╫¥: g.permit_count,
-        ╫ק╫£╫º╫ץ╫¬: g.parcel_count,
+        תוכניות: g.plan_count,
+        היתרים: g.permit_count,
+        חלקות: g.parcel_count,
       }));
   }, [stats]);
 
@@ -126,7 +126,7 @@ export function StatsCharts() {
       <div className="px-3 py-6 text-center">
         <p className="text-sm text-red-500">{error}</p>
         <Button variant="outline" size="sm" className="mt-2" onClick={load}>
-          ╫á╫í╫פ ╫⌐╫ץ╫ס
+          נסה שוב
         </Button>
       </div>
     );
@@ -141,19 +141,19 @@ export function StatsCharts() {
           {/* Summary cards */}
           <div className="grid grid-cols-3 gap-2">
             <StatCard
-              label="╫í╫פ╫┤╫¢ ╫₧╫í╫₧╫¢╫ש╫¥"
+              label="סה״כ מסמכים"
               value={stats.total}
               icon={<BarChart3 className="h-4 w-4" />}
               color="text-blue-600"
             />
             <StatCard
-              label="╫¬╫⌐╫¿╫ש╫ר╫ש╫¥"
+              label="תשריטים"
               value={stats.tashrit_count}
               icon={<PieChartIcon className="h-4 w-4" />}
               color="text-green-600"
             />
             <StatCard
-              label="╫ע╫נ╫ץ-╫¿╫ñ╫¿╫á╫í"
+              label="גאו-רפרנס"
               value={stats.georef_count}
               icon={<TrendingUp className="h-4 w-4" />}
               color="text-violet-600"
@@ -161,7 +161,7 @@ export function StatsCharts() {
           </div>
 
           {/* Category pie chart */}
-          <ChartSection title="╫פ╫¬╫ñ╫£╫ע╫ץ╫¬ ╫£╫ñ╫ש ╫º╫ר╫ע╫ץ╫¿╫ש╫פ">
+          <ChartSection title="התפלגות לפי קטגוריה">
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
@@ -181,14 +181,14 @@ export function StatsCharts() {
                 </Pie>
                 <Tooltip
                   contentStyle={{ fontSize: 12, direction: "rtl" }}
-                  formatter={(value: number) => [value, "╫₧╫í╫₧╫¢╫ש╫¥"]}
+                  formatter={(value: number) => [value, "מסמכים"]}
                 />
               </PieChart>
             </ResponsiveContainer>
           </ChartSection>
 
           {/* Gush bar chart */}
-          <ChartSection title="╫₧╫í╫₧╫¢╫ש╫¥ ╫£╫ñ╫ש ╫ע╫ץ╫⌐">
+          <ChartSection title="מסמכים לפי גוש">
             <ResponsiveContainer width="100%" height={Math.max(200, gushData.length * 28)}>
               <BarChart
                 data={gushData}
@@ -206,8 +206,8 @@ export function StatsCharts() {
                 <Tooltip
                   contentStyle={{ fontSize: 11, direction: "rtl" }}
                 />
-                <Bar dataKey="╫¬╫ץ╫¢╫á╫ש╫ץ╫¬" fill="#3b82f6" stackId="a" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="╫פ╫ש╫¬╫¿╫ש╫¥" fill="#22c55e" stackId="a" radius={[0, 2, 2, 0]} />
+                <Bar dataKey="תוכניות" fill="#3b82f6" stackId="a" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="היתרים" fill="#22c55e" stackId="a" radius={[0, 2, 2, 0]} />
                 <Legend
                   wrapperStyle={{ fontSize: 11, direction: "rtl" }}
                   iconSize={10}
@@ -217,7 +217,7 @@ export function StatsCharts() {
           </ChartSection>
 
           {/* File type bar chart */}
-          <ChartSection title="╫פ╫¬╫ñ╫£╫ע╫ץ╫¬ ╫£╫ñ╫ש ╫í╫ץ╫ע ╫º╫ץ╫ס╫Ñ">
+          <ChartSection title="התפלגות לפי סוג קובץ">
             <ResponsiveContainer width="100%" height={180}>
               <BarChart
                 data={fileTypeData}
@@ -228,7 +228,7 @@ export function StatsCharts() {
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip
                   contentStyle={{ fontSize: 11, direction: "rtl" }}
-                  formatter={(value: number) => [value, "╫º╫ס╫ª╫ש╫¥"]}
+                  formatter={(value: number) => [value, "קבצים"]}
                 />
                 <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]}>
                   {fileTypeData.map((_, i) => (
@@ -243,7 +243,7 @@ export function StatsCharts() {
           <div className="text-center pt-2 pb-4">
             <Button variant="ghost" size="sm" onClick={load} className="text-xs">
               <RefreshCw className="h-3.5 w-3.5 ml-1" />
-              ╫¿╫ó╫á╫ƒ ╫á╫¬╫ץ╫á╫ש╫¥
+              רענן נתונים
             </Button>
           </div>
         </div>

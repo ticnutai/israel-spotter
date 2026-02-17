@@ -8,8 +8,8 @@ interface MapMeasureProps {
 }
 
 function formatDistance(meters: number): string {
-  if (meters < 1000) return `${Math.round(meters)} ╫₧'`;
-  return `${(meters / 1000).toFixed(2)} ╫º"╫₧`;
+  if (meters < 1000) return `${Math.round(meters)} מ'`;
+  return `${(meters / 1000).toFixed(2)} ק"מ`;
 }
 
 export function MapMeasure({ map }: MapMeasureProps) {
@@ -152,7 +152,7 @@ export function MapMeasure({ map }: MapMeasureProps) {
         variant={active ? "default" : "outline"}
         onClick={toggleActive}
         className="h-9 w-9 shadow-md"
-        title="╫₧╫ף╫ש╫ף╫¬ ╫₧╫¿╫ק╫º"
+        title="מדידת מרחק"
       >
         <Ruler className="h-4 w-4" />
       </Button>
@@ -160,7 +160,7 @@ export function MapMeasure({ map }: MapMeasureProps) {
       {active && (
         <div className="bg-card border rounded-lg shadow-lg p-3 min-w-[160px]">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-muted-foreground">╫₧╫ף╫ש╫ף╫¬ ╫₧╫¿╫ק╫º</span>
+            <span className="text-xs font-medium text-muted-foreground">מדידת מרחק</span>
             <button onClick={toggleActive} className="text-muted-foreground hover:text-foreground">
               <X className="h-3.5 w-3.5" />
             </button>
@@ -171,17 +171,17 @@ export function MapMeasure({ map }: MapMeasureProps) {
           </div>
 
           <div className="text-xs text-muted-foreground mb-2">
-            {points.length === 0 ? "╫£╫ק╫Ñ ╫ó╫£ ╫פ╫₧╫ñ╫פ ╫£╫פ╫¬╫ק╫£╫פ" : `${points.length} ╫á╫º╫ץ╫ף╫ץ╫¬`}
+            {points.length === 0 ? "לחץ על המפה להתחלה" : `${points.length} נקודות`}
           </div>
 
           <div className="flex gap-1">
             <Button size="sm" variant="outline" onClick={undoLast} disabled={points.length === 0} className="h-7 text-xs flex-1 gap-1">
               <Undo2 className="h-3 w-3" />
-              ╫ס╫ר╫£
+              בטל
             </Button>
             <Button size="sm" variant="outline" onClick={clearMeasure} disabled={points.length === 0} className="h-7 text-xs flex-1 gap-1">
               <Trash2 className="h-3 w-3" />
-              ╫á╫º╫פ
+              נקה
             </Button>
           </div>
         </div>

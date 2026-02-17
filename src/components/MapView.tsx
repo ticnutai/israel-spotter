@@ -20,7 +20,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// ΓפאΓפא Error boundary to catch Leaflet tile errors ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+// ── Error boundary to catch Leaflet tile errors ──────────────────────────────
 class MapErrorBoundary extends Component<
   { children: ReactNode },
   { hasError: boolean; error: string }
@@ -37,7 +37,7 @@ class MapErrorBoundary extends Component<
       return (
         <div className="h-full w-full flex items-center justify-center bg-muted/30">
           <div className="text-center p-6">
-            <p className="text-sm text-destructive mb-2">╫⌐╫ע╫ש╫נ╫פ ╫ס╫ר╫ó╫ש╫á╫¬ ╫פ╫₧╫ñ╫פ</p>
+            <p className="text-sm text-destructive mb-2">שגיאה בטעינת המפה</p>
             <p className="text-xs text-muted-foreground mb-3">{this.state.error}</p>
             <button
               className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md"
@@ -46,7 +46,7 @@ class MapErrorBoundary extends Component<
                 window.location.reload();
               }}
             >
-              ╫ר╫ó╫ƒ ╫₧╫ק╫ף╫⌐
+              טען מחדש
             </button>
           </div>
         </div>
@@ -56,7 +56,7 @@ class MapErrorBoundary extends Component<
   }
 }
 
-// ΓפאΓפא Helper: validate coordinates are finite numbers ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+// ── Helper: validate coordinates are finite numbers ──────────────────────────
 function isValidLatLng(lat: number, lng: number): boolean {
   return (
     Number.isFinite(lat) &&
@@ -86,7 +86,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan }:
   const [activeLayerId, setActiveLayerId] = useState("osm");
   const [mapReady, setMapReady] = useState(false);
 
-  // Initialize map Γאף wait until container has non-zero dimensions
+  // Initialize map – wait until container has non-zero dimensions
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
@@ -105,7 +105,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan }:
           zoomControl: false,
         });
 
-        // Safe initial view Γאף Kfar Chabad center
+        // Safe initial view – Kfar Chabad center
         map.setView([31.9604, 34.8536], 14);
 
         L.control.zoom({ position: "topleft" }).addTo(map);

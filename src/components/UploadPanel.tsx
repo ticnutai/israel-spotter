@@ -1,5 +1,5 @@
 /**
- * UploadPanel.tsx Γאף File upload component for maps, aerial photos, documents
+ * UploadPanel.tsx – File upload component for maps, aerial photos, documents
  */
 
 import { useState, useRef, useCallback } from "react";
@@ -93,7 +93,7 @@ export function UploadPanel() {
         newResults.push({
           name: file.name,
           ok: false,
-          error: err instanceof Error ? err.message : "╫⌐╫ע╫ש╫נ╫פ",
+          error: err instanceof Error ? err.message : "שגיאה",
         });
       }
     }
@@ -146,17 +146,17 @@ export function UploadPanel() {
             />
             <FileUp className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground">
-              ╫ע╫¿╫ץ╫¿ ╫º╫ס╫ª╫ש╫¥ ╫£╫¢╫נ╫ƒ ╫נ╫ץ ╫£╫ק╫Ñ ╫£╫ס╫ק╫ש╫¿╫פ
+              גרור קבצים לכאן או לחץ לבחירה
             </p>
             <p className="text-[11px] text-muted-foreground mt-1">
-              PDF, ╫¬╫₧╫ץ╫á╫ץ╫¬, DWF ╫ץ╫ó╫ץ╫ף
+              PDF, תמונות, DWF ועוד
             </p>
           </div>
 
           {/* Selected files */}
           {files.length > 0 && (
             <div className="space-y-1">
-              <p className="text-xs font-medium">{files.length} ╫º╫ס╫ª╫ש╫¥ ╫á╫ס╫ק╫¿╫ץ:</p>
+              <p className="text-xs font-medium">{files.length} קבצים נבחרו:</p>
               {files.map((f, i) => (
                 <div
                   key={i}
@@ -179,7 +179,7 @@ export function UploadPanel() {
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label className="text-xs">╫₧╫í╫ñ╫¿ ╫ע╫ץ╫⌐ *</Label>
+                <Label className="text-xs">מספר גוש *</Label>
                 <Input
                   type="number"
                   placeholder="6260"
@@ -190,10 +190,10 @@ export function UploadPanel() {
                 />
               </div>
               <div>
-                <Label className="text-xs">╫₧╫í╫ñ╫¿ ╫ק╫£╫º╫פ</Label>
+                <Label className="text-xs">מספר חלקה</Label>
                 <Input
                   type="number"
-                  placeholder="0 = ╫£╫£╫נ"
+                  placeholder="0 = ללא"
                   value={helka}
                   onChange={(e) => setHelka(e.target.value)}
                   className="h-8 text-xs"
@@ -204,22 +204,22 @@ export function UploadPanel() {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label className="text-xs">╫º╫ר╫ע╫ץ╫¿╫ש╫פ</Label>
+                <Label className="text-xs">קטגוריה</Label>
                 <select
                   className="w-full h-8 rounded-md border bg-background px-2 text-xs"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                 >
-                  <option value="plans">╫¬╫ץ╫¢╫á╫ש╫¬</option>
-                  <option value="permits">╫פ╫ש╫¬╫¿</option>
-                  <option value="aerial">╫ª╫ש╫£╫ץ╫¥ ╫נ╫ץ╫ץ╫ש╫¿</option>
-                  <option value="other">╫נ╫ק╫¿</option>
+                  <option value="plans">תוכנית</option>
+                  <option value="permits">היתר</option>
+                  <option value="aerial">צילום אוויר</option>
+                  <option value="other">אחר</option>
                 </select>
               </div>
               <div>
-                <Label className="text-xs">╫₧╫í╫ñ╫¿ ╫¬╫ץ╫¢╫á╫ש╫¬</Label>
+                <Label className="text-xs">מספר תוכנית</Label>
                 <Input
-                  placeholder="╫נ╫ץ╫ñ╫ª╫ש╫ץ╫á╫£╫ש"
+                  placeholder="אופציונלי"
                   value={planNumber}
                   onChange={(e) => setPlanNumber(e.target.value)}
                   className="h-8 text-xs"
@@ -229,9 +229,9 @@ export function UploadPanel() {
             </div>
 
             <div>
-              <Label className="text-xs">╫¢╫ץ╫¬╫¿╫¬ (╫נ╫ץ╫ñ╫ª╫ש╫ץ╫á╫£╫ש)</Label>
+              <Label className="text-xs">כותרת (אופציונלי)</Label>
               <Input
-                placeholder="╫⌐╫¥ ╫¬╫ש╫נ╫ץ╫¿╫ש ╫£╫º╫ץ╫ס╫Ñ"
+                placeholder="שם תיאורי לקובץ"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="h-8 text-xs"
@@ -245,7 +245,7 @@ export function UploadPanel() {
                 onChange={(e) => setIsTashrit(e.target.checked)}
                 className="rounded border-input"
               />
-              ╫í╫₧╫ƒ ╫¢╫¬╫⌐╫¿╫ש╫ר (╫á╫ש╫¬╫ƒ ╫£╫פ╫ª╫ש╫ע ╫ó╫£ ╫פ╫₧╫ñ╫פ)
+              סמן כתשריט (ניתן להציג על המפה)
             </label>
 
             <Button
@@ -258,14 +258,14 @@ export function UploadPanel() {
               ) : (
                 <Upload className="h-4 w-4 ml-2" />
               )}
-              ╫פ╫ó╫£╫פ {files.length > 0 ? `${files.length} ╫º╫ס╫ª╫ש╫¥` : ""}
+              העלה {files.length > 0 ? `${files.length} קבצים` : ""}
             </Button>
           </div>
 
           {/* Results */}
           {results.length > 0 && (
             <div className="space-y-1">
-              <p className="text-xs font-medium">╫¬╫ץ╫ª╫נ╫ץ╫¬ ╫פ╫ó╫£╫נ╫פ:</p>
+              <p className="text-xs font-medium">תוצאות העלאה:</p>
               {results.map((r, i) => (
                 <div
                   key={i}
@@ -289,7 +289,7 @@ export function UploadPanel() {
           {/* Recent uploads */}
           {recentUploads.length > 0 && (
             <div className="border-t pt-3">
-              <p className="text-xs font-medium mb-2">╫פ╫ó╫£╫נ╫ץ╫¬ ╫נ╫ק╫¿╫ץ╫á╫ץ╫¬:</p>
+              <p className="text-xs font-medium mb-2">העלאות אחרונות:</p>
               <div className="space-y-1">
                 {recentUploads.map((u) => (
                   <div
@@ -300,9 +300,9 @@ export function UploadPanel() {
                     <div className="flex-1 min-w-0">
                       <p className="truncate">{u.title}</p>
                       <p className="text-[10px] text-muted-foreground">
-                        ╫ע╫ץ╫⌐ {u.gush}
-                        {u.helka > 0 && ` ┬╖ ╫ק╫£╫º╫פ ${u.helka}`}
-                        {u.plan_number && ` ┬╖ ${u.plan_number}`}
+                        גוש {u.gush}
+                        {u.helka > 0 && ` · חלקה ${u.helka}`}
+                        {u.plan_number && ` · ${u.plan_number}`}
                       </p>
                     </div>
                     <a

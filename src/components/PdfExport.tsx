@@ -1,5 +1,5 @@
 /**
- * PdfExport.tsx Γאף Export current map view as PDF
+ * PdfExport.tsx – Export current map view as PDF
  * Uses html-to-image + jsPDF
  */
 
@@ -27,7 +27,7 @@ const PAGE_SIZES: Record<PageSize, { label: string; mm: [number, number] }> = {
 };
 
 export function PdfExport() {
-  const [title, setTitle] = useState("╫¢╫ñ╫¿ ╫ק╫ס\"╫ף Γאף ╫₧╫ñ╫פ");
+  const [title, setTitle] = useState("כפר חב\"ד – מפה");
   const [pageSize, setPageSize] = useState<PageSize>("a4");
   const [orientation, setOrientation] = useState<Orientation>("landscape");
   const [includeDate, setIncludeDate] = useState(true);
@@ -48,7 +48,7 @@ export function PdfExport() {
 
       // Find the Leaflet map container
       const mapEl = document.querySelector(".leaflet-container") as HTMLElement | null;
-      if (!mapEl) throw new Error("╫£╫נ ╫á╫₧╫ª╫נ ╫₧╫ש╫¢╫£ ╫₧╫ñ╫פ");
+      if (!mapEl) throw new Error("לא נמצא מיכל מפה");
 
       // Capture map as PNG
       const dataUrl = await toPng(mapEl, {
@@ -100,11 +100,11 @@ export function PdfExport() {
       let drawY = imgY;
 
       if (mapAspect > pdfAspect) {
-        // Map is wider Γזע fit to width
+        // Map is wider → fit to width
         drawH = imgW / mapAspect;
         drawY = imgY + (imgH - drawH) / 2;
       } else {
-        // Map is taller Γזע fit to height
+        // Map is taller → fit to height
         drawW = imgH * mapAspect;
         drawX = margin + (imgW - drawW) / 2;
       }
@@ -126,12 +126,12 @@ export function PdfExport() {
           minute: "2-digit",
         });
         pdf.text(
-          `╫á╫ץ╫ª╫¿: ${dateStr} ${timeStr}`,
+          `נוצר: ${dateStr} ${timeStr}`,
           pdfW - margin,
           pdfH - margin,
           { align: "right" },
         );
-        pdf.text("╫₧╫ש╫ף╫ó Γאף ╫₧╫ó╫¿╫¢╫¬ ╫₧╫ש╫ף╫ó ╫ף╫ש╫ע╫ש╫ר╫£╫ש╫¬ ╫נ╫ץ╫¿╫ס╫á╫ש╫¬", margin, pdfH - margin);
+        pdf.text("מידע – מערכת מידע דיגיטלית אורבנית", margin, pdfH - margin);
       }
 
       // Legend summary
@@ -139,7 +139,7 @@ export function PdfExport() {
         pdf.setFontSize(7);
         pdf.setTextColor(100);
         const legendY = drawY + drawH + 3;
-        pdf.text("╫₧╫º╫ץ╫¿: ╫₧╫ó╫¿╫¢╫¬ ╫₧╫ש╫ף╫ó ╫¢╫ñ╫¿ ╫ק╫ס\"╫ף | SDAN / GovMap", margin, legendY);
+        pdf.text("מקור: מערכת מידע כפר חב\"ד | SDAN / GovMap", margin, legendY);
       }
 
       // Download
@@ -150,7 +150,7 @@ export function PdfExport() {
       setTimeout(() => setStatus("idle"), 3000);
     } catch (err) {
       console.error("PDF export failed:", err);
-      setErrorMsg(err instanceof Error ? err.message : "╫⌐╫ע╫ש╫נ╫פ ╫ס╫ש╫ש╫ª╫ץ╫נ");
+      setErrorMsg(err instanceof Error ? err.message : "שגיאה בייצוא");
       setStatus("error");
     } finally {
       setExporting(false);
@@ -163,7 +163,7 @@ export function PdfExport() {
     try {
       const { toPng } = await import("html-to-image");
       const mapEl = document.querySelector(".leaflet-container") as HTMLElement | null;
-      if (!mapEl) throw new Error("╫£╫נ ╫á╫₧╫ª╫נ ╫₧╫ש╫¢╫£ ╫₧╫ñ╫פ");
+      if (!mapEl) throw new Error("לא נמצא מיכל מפה");
 
       const dataUrl = await toPng(mapEl, {
         cacheBust: true,
@@ -182,7 +182,7 @@ export function PdfExport() {
       setStatus("success");
       setTimeout(() => setStatus("idle"), 3000);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "╫⌐╫ע╫ש╫נ╫פ");
+      setErrorMsg(err instanceof Error ? err.message : "שגיאה");
       setStatus("error");
     } finally {
       setExporting(false);
@@ -192,7 +192,7 @@ export function PdfExport() {
   return (
     <div className="px-3 py-3 space-y-4">
       <div>
-        <Label className="text-xs">╫¢╫ץ╫¬╫¿╫¬ ╫פ╫₧╫ñ╫פ</Label>
+        <Label className="text-xs">כותרת המפה</Label>
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -202,7 +202,7 @@ export function PdfExport() {
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <Label className="text-xs">╫ע╫ץ╫ף╫£ ╫ף╫ú</Label>
+          <Label className="text-xs">גודל דף</Label>
           <select
             className="w-full h-8 rounded-md border bg-background px-2 text-xs"
             value={pageSize}
@@ -216,14 +216,14 @@ export function PdfExport() {
           </select>
         </div>
         <div>
-          <Label className="text-xs">╫¢╫ש╫ץ╫ץ╫ƒ</Label>
+          <Label className="text-xs">כיוון</Label>
           <select
             className="w-full h-8 rounded-md border bg-background px-2 text-xs"
             value={orientation}
             onChange={(e) => setOrientation(e.target.value as Orientation)}
           >
-            <option value="landscape">╫£╫¿╫ץ╫ק╫ס</option>
-            <option value="portrait">╫£╫נ╫ץ╫¿╫ת</option>
+            <option value="landscape">לרוחב</option>
+            <option value="portrait">לאורך</option>
           </select>
         </div>
       </div>
@@ -236,7 +236,7 @@ export function PdfExport() {
             onChange={(e) => setIncludeDate(e.target.checked)}
             className="rounded border-input"
           />
-          ╫פ╫ץ╫í╫ú ╫¬╫נ╫¿╫ש╫ת ╫ץ╫⌐╫ó╫פ
+          הוסף תאריך ושעה
         </label>
         <label className="flex items-center gap-2 text-xs cursor-pointer">
           <input
@@ -245,7 +245,7 @@ export function PdfExport() {
             onChange={(e) => setIncludeLegend(e.target.checked)}
             className="rounded border-input"
           />
-          ╫פ╫ץ╫í╫ú ╫⌐╫ץ╫¿╫¬ ╫₧╫º╫ץ╫¿/╫₧╫º╫¿╫נ
+          הוסף שורת מקור/מקרא
         </label>
       </div>
 
@@ -261,7 +261,7 @@ export function PdfExport() {
           ) : (
             <Printer className="h-4 w-4 ml-2" />
           )}
-          ╫ש╫ש╫ª╫ץ╫נ PDF
+          ייצוא PDF
         </Button>
 
         <Button
@@ -275,7 +275,7 @@ export function PdfExport() {
           ) : (
             <ImageIcon className="h-4 w-4 ml-2" />
           )}
-          ╫ש╫ש╫ª╫ץ╫נ PNG
+          ייצוא PNG
         </Button>
       </div>
 
@@ -283,7 +283,7 @@ export function PdfExport() {
       {status === "success" && (
         <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 rounded px-3 py-2">
           <CheckCircle2 className="h-4 w-4" />
-          ╫פ╫º╫ץ╫ס╫Ñ ╫פ╫ץ╫¿╫ף ╫ס╫פ╫ª╫£╫ק╫פ!
+          הקובץ הורד בהצלחה!
         </div>
       )}
 
@@ -295,8 +295,8 @@ export function PdfExport() {
       )}
 
       <p className="text-[11px] text-muted-foreground">
-        ╫פ╫ש╫ש╫ª╫ץ╫נ ╫₧╫ª╫£╫¥ ╫נ╫¬ ╫¬╫ª╫ץ╫ע╫¬ ╫פ╫₧╫ñ╫פ ╫פ╫á╫ץ╫¢╫ק╫ש╫¬ ╫¢╫ץ╫£╫£ ╫⌐╫¢╫ס╫ץ╫¬ ╫ñ╫ó╫ש╫£╫ץ╫¬.
-        ╫£╫¬╫ץ╫ª╫נ╫פ ╫פ╫ר╫ץ╫ס╫פ ╫ס╫ש╫ץ╫¬╫¿, ╫¢╫ץ╫ץ╫ƒ ╫נ╫¬ ╫פ╫₧╫ñ╫פ ╫£╫ñ╫á╫ש ╫פ╫ש╫ש╫ª╫ץ╫נ.
+        הייצוא מצלם את תצוגת המפה הנוכחית כולל שכבות פעילות.
+        לתוצאה הטובה ביותר, כוון את המפה לפני הייצוא.
       </p>
     </div>
   );
