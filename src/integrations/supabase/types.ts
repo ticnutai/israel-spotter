@@ -7,155 +7,304 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
-      gushim: {
+      documents: {
         Row: {
-          gush_id: number
-          gush_name: string | null
-          region: string | null
-          area_dunam: number | null
-          created_at: string | null
+          category: string
+          downloaded_at: string | null
+          file_name: string | null
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          gush: number
+          helka: number
+          id: number
+          is_georef: number | null
+          is_tashrit: number | null
+          plan_number: string | null
+          title: string
         }
         Insert: {
-          gush_id: number
-          gush_name?: string | null
-          region?: string | null
-          area_dunam?: number | null
-          created_at?: string | null
+          category: string
+          downloaded_at?: string | null
+          file_name?: string | null
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          gush: number
+          helka: number
+          id?: number
+          is_georef?: number | null
+          is_tashrit?: number | null
+          plan_number?: string | null
+          title: string
         }
         Update: {
-          gush_id?: number
-          gush_name?: string | null
-          region?: string | null
-          area_dunam?: number | null
-          created_at?: string | null
+          category?: string
+          downloaded_at?: string | null
+          file_name?: string | null
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          gush?: number
+          helka?: number
+          id?: number
+          is_georef?: number | null
+          is_tashrit?: number | null
+          plan_number?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_gush_fkey"
+            columns: ["gush"]
+            isOneToOne: false
+            referencedRelation: "gushim"
+            referencedColumns: ["gush"]
+          },
+        ]
+      }
+      gis_layers: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_type: string
+          geojson: Json | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_type: string
+          geojson?: Json | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_type?: string
+          geojson?: Json | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      gushim: {
+        Row: {
+          area_type: string | null
+          gush: number
+          name: string | null
+          notes: string | null
+          parcel_count: number | null
+          permit_count: number | null
+          plan_count: number | null
+        }
+        Insert: {
+          area_type?: string | null
+          gush: number
+          name?: string | null
+          notes?: string | null
+          parcel_count?: number | null
+          permit_count?: number | null
+          plan_count?: number | null
+        }
+        Update: {
+          area_type?: string | null
+          gush?: number
+          name?: string | null
+          notes?: string | null
+          parcel_count?: number | null
+          permit_count?: number | null
+          plan_count?: number | null
         }
         Relationships: []
       }
       parcels: {
         Row: {
+          doc_count: number | null
+          gush: number
+          has_tashrit: number | null
+          helka: number
           id: number
-          gush_id: number
-          parcel_num: string
-          area_sqm: number | null
-          land_use: string | null
-          owner_type: string | null
-          created_at: string | null
+          notes: string | null
+          permit_count: number | null
+          plan_count: number | null
         }
         Insert: {
+          doc_count?: number | null
+          gush: number
+          has_tashrit?: number | null
+          helka: number
           id?: number
-          gush_id: number
-          parcel_num: string
-          area_sqm?: number | null
-          land_use?: string | null
-          owner_type?: string | null
-          created_at?: string | null
+          notes?: string | null
+          permit_count?: number | null
+          plan_count?: number | null
         }
         Update: {
+          doc_count?: number | null
+          gush?: number
+          has_tashrit?: number | null
+          helka?: number
           id?: number
-          gush_id?: number
-          parcel_num?: string
-          area_sqm?: number | null
-          land_use?: string | null
-          owner_type?: string | null
-          created_at?: string | null
+          notes?: string | null
+          permit_count?: number | null
+          plan_count?: number | null
         }
-        Relationships: []
-      }
-      plans: {
-        Row: {
-          plan_id: string
-          plan_name: string | null
-          plan_type: string | null
-          status: string | null
-          approval_date: string | null
-          gush_id: number | null
-          created_at: string | null
-        }
-        Insert: {
-          plan_id: string
-          plan_name?: string | null
-          plan_type?: string | null
-          status?: string | null
-          approval_date?: string | null
-          gush_id?: number | null
-          created_at?: string | null
-        }
-        Update: {
-          plan_id?: string
-          plan_name?: string | null
-          plan_type?: string | null
-          status?: string | null
-          approval_date?: string | null
-          gush_id?: number | null
-          created_at?: string | null
-        }
-        Relationships: []
-      }
-      documents: {
-        Row: {
-          id: number
-          plan_id: string | null
-          doc_type: string | null
-          file_name: string | null
-          file_path: string | null
-          page_count: number | null
-          file_size_kb: number | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: number
-          plan_id?: string | null
-          doc_type?: string | null
-          file_name?: string | null
-          file_path?: string | null
-          page_count?: number | null
-          file_size_kb?: number | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: number
-          plan_id?: string | null
-          doc_type?: string | null
-          file_name?: string | null
-          file_path?: string | null
-          page_count?: number | null
-          file_size_kb?: number | null
-          created_at?: string | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "parcels_gush_fkey"
+            columns: ["gush"]
+            isOneToOne: false
+            referencedRelation: "gushim"
+            referencedColumns: ["gush"]
+          },
+        ]
       }
       plan_georef: {
         Row: {
-          id: number
-          plan_id: string | null
-          bbox_json: string | null
-          center_x: number | null
-          center_y: number | null
+          bbox_max_x: number | null
+          bbox_max_y: number | null
+          bbox_min_x: number | null
+          bbox_min_y: number | null
           crs: string | null
-          created_at: string | null
+          document_id: number | null
+          id: number
+          image_path: string
+          method: string | null
+          notes: string | null
+          origin_x: number | null
+          origin_y: number | null
+          pixel_size_x: number | null
+          pixel_size_y: number | null
         }
         Insert: {
-          id?: number
-          plan_id?: string | null
-          bbox_json?: string | null
-          center_x?: number | null
-          center_y?: number | null
+          bbox_max_x?: number | null
+          bbox_max_y?: number | null
+          bbox_min_x?: number | null
+          bbox_min_y?: number | null
           crs?: string | null
-          created_at?: string | null
+          document_id?: number | null
+          id?: number
+          image_path: string
+          method?: string | null
+          notes?: string | null
+          origin_x?: number | null
+          origin_y?: number | null
+          pixel_size_x?: number | null
+          pixel_size_y?: number | null
         }
         Update: {
-          id?: number
-          plan_id?: string | null
-          bbox_json?: string | null
-          center_x?: number | null
-          center_y?: number | null
+          bbox_max_x?: number | null
+          bbox_max_y?: number | null
+          bbox_min_x?: number | null
+          bbox_min_y?: number | null
           crs?: string | null
-          created_at?: string | null
+          document_id?: number | null
+          id?: number
+          image_path?: string
+          method?: string | null
+          notes?: string | null
+          origin_x?: number | null
+          origin_y?: number | null
+          pixel_size_x?: number | null
+          pixel_size_y?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_georef_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          doc_count: number | null
+          gush_list: string | null
+          id: number
+          notes: string | null
+          plan_name: string | null
+          plan_number: string
+          plan_type: string | null
+          status: string | null
+        }
+        Insert: {
+          doc_count?: number | null
+          gush_list?: string | null
+          id?: number
+          notes?: string | null
+          plan_name?: string | null
+          plan_number: string
+          plan_type?: string | null
+          status?: string | null
+        }
+        Update: {
+          doc_count?: number | null
+          gush_list?: string | null
+          id?: number
+          notes?: string | null
+          plan_name?: string | null
+          plan_number?: string
+          plan_type?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -164,10 +313,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -294,6 +449,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
