@@ -1,37 +1,64 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { SearchPanel } from "@/components/SearchPanel";
 import { MapView } from "@/components/MapView";
 import { MapLegend } from "@/components/MapLegend";
-import { AppSidebar } from "@/components/AppSidebar";
-import { useGISLayers } from "@/hooks/use-gis-layers";
+import { SmartSidebar } from "@/components/SmartSidebar";
 import type { GeoResult } from "@/lib/geocode";
 import type { BoundaryResult } from "@/lib/boundaries";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { searchByGushHelka } from "@/lib/geocode";
+import { fetchBoundaries } from "@/lib/boundaries";
 
 const Index = () => {
   const [result, setResult] = useState<GeoResult | null>(null);
   const [boundaries, setBoundaries] = useState<BoundaryResult | null>(null);
-  const gis = useGISLayers();
+  const [aerialYear, setAerialYear] = useState<string | null>(null);
+  const [planPath, setPlanPath] = useState<string | null>(null);
+
+  const handleSelectGush = useCallback(async (gush: number) => {
+    try {
+      // Search for block only (no specific helka)
+      const res = await searchByGushHelka(gush);
+      setResult(res);
+      const bounds = await fetchBoundaries(gush);
+      setBoundaries(bounds);
+    } catch {
+      // If not found, still try to get at least block boundaries
+      try {
+        const bounds = await fetchBoundaries(gush);
+        setBoundaries(bounds);
+      } catch { /* ignore */ }
+    }
+  }, []);
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen w-full">
-        <AppSidebar
-          onResult={setResult}
-          onBoundaries={setBoundaries}
-          gis={gis}
-        />
-        <div className="flex-1 relative">
-          {/* Floating sidebar trigger */}
-          <div className="absolute top-4 right-4 z-[1000]">
-            <SidebarTrigger className="bg-background/95 backdrop-blur gold-border gold-glow shadow-lg h-10 w-10" />
-          </div>
-          <MapView result={result} boundaries={boundaries} gisLayers={gis.layers} />
+    <div className="flex flex-row-reverse h-screen bg-background" dir="rtl">
+      {/* Smart Sidebar Γאף right side with auto-hide + pin */}
+      <SmartSidebar
+        onSelectGush={handleSelectGush}
+        onSelectAerialYear={setAerialYear}
+        onSelectPlanImage={setPlanPath}
+      />
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar with search */}
+        <div className="border-b">
+          <SearchPanel onResult={setResult} onBoundaries={setBoundaries} />
+        </div>
+
+        {/* Map */}
+        <div className="flex-1 relative min-h-0">
+          <MapView
+            result={result}
+            boundaries={boundaries}
+            aerialYear={aerialYear}
+            planPath={planPath}
+            onClearPlan={() => setPlanPath(null)}
+          />
           {boundaries && <MapLegend />}
         </div>
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 

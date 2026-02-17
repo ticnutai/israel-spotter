@@ -8,8 +8,8 @@ interface MapMeasureProps {
 }
 
 function formatDistance(meters: number): string {
-  if (meters < 1000) return `${Math.round(meters)} מ'`;
-  return `${(meters / 1000).toFixed(2)} ק"מ`;
+  if (meters < 1000) return `${Math.round(meters)} ╫₧'`;
+  return `${(meters / 1000).toFixed(2)} ╫º"╫₧`;
 }
 
 export function MapMeasure({ map }: MapMeasureProps) {
@@ -146,13 +146,13 @@ export function MapMeasure({ map }: MapMeasureProps) {
   }, [map]);
 
   return (
-    <div className="absolute top-14 left-3 z-[1000] flex flex-col gap-2" dir="rtl">
+    <div className="absolute top-14 right-3 z-[1000] flex flex-col gap-2" dir="rtl">
       <Button
         size="icon"
         variant={active ? "default" : "outline"}
         onClick={toggleActive}
-        className="h-9 w-9 shadow-md gold-border gold-glow"
-        title="מדידת מרחק"
+        className="h-9 w-9 shadow-md"
+        title="╫₧╫ף╫ש╫ף╫¬ ╫₧╫¿╫ק╫º"
       >
         <Ruler className="h-4 w-4" />
       </Button>
@@ -160,7 +160,7 @@ export function MapMeasure({ map }: MapMeasureProps) {
       {active && (
         <div className="bg-card border rounded-lg shadow-lg p-3 min-w-[160px]">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-muted-foreground">מדידת מרחק</span>
+            <span className="text-xs font-medium text-muted-foreground">╫₧╫ף╫ש╫ף╫¬ ╫₧╫¿╫ק╫º</span>
             <button onClick={toggleActive} className="text-muted-foreground hover:text-foreground">
               <X className="h-3.5 w-3.5" />
             </button>
@@ -171,17 +171,17 @@ export function MapMeasure({ map }: MapMeasureProps) {
           </div>
 
           <div className="text-xs text-muted-foreground mb-2">
-            {points.length === 0 ? "לחץ על המפה להתחלה" : `${points.length} נקודות`}
+            {points.length === 0 ? "╫£╫ק╫Ñ ╫ó╫£ ╫פ╫₧╫ñ╫פ ╫£╫פ╫¬╫ק╫£╫פ" : `${points.length} ╫á╫º╫ץ╫ף╫ץ╫¬`}
           </div>
 
           <div className="flex gap-1">
             <Button size="sm" variant="outline" onClick={undoLast} disabled={points.length === 0} className="h-7 text-xs flex-1 gap-1">
               <Undo2 className="h-3 w-3" />
-              בטל
+              ╫ס╫ר╫£
             </Button>
             <Button size="sm" variant="outline" onClick={clearMeasure} disabled={points.length === 0} className="h-7 text-xs flex-1 gap-1">
               <Trash2 className="h-3 w-3" />
-              נקה
+              ╫á╫º╫פ
             </Button>
           </div>
         </div>

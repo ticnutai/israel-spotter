@@ -28,9 +28,17 @@ async function queryArcGIS(url: string, where: string): Promise<GeoJSON.Geometry
   return data.features[0].geometry;
 }
 
-export async function fetchBoundaries(gush: number, helka: number): Promise<BoundaryResult> {
+/**
+ * Fetch boundaries for a gush (block) and optionally a helka (parcel).
+ * If helka is omitted or 0, only the block geometry is returned.
+ */
+export async function fetchBoundaries(gush: number, helka?: number): Promise<BoundaryResult> {
+  const hasHelka = helka !== undefined && helka > 0;
+
   const [parcelGeometry, blockGeometry] = await Promise.all([
-    queryArcGIS(PARCEL_SERVICE_URL, `GUSH_NUM=${gush} AND PARCEL=${helka}`),
+    hasHelka
+      ? queryArcGIS(PARCEL_SERVICE_URL, `GUSH_NUM=${gush} AND PARCEL=${helka}`)
+      : Promise.resolve(null),
     queryArcGIS(BLOCK_SERVICE_URL, `GUSH_NUM=${gush}`),
   ]);
 

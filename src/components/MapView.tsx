@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, Component, type ReactNode } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { GeoResult } from "@/lib/geocode";
 import type { BoundaryResult } from "@/lib/boundaries";
-import type { GISLayer } from "@/hooks/use-gis-layers";
 import { MapLayerSwitcher, MAP_LAYERS, LABELS_LAYER_URL, type MapLayerOption } from "./MapLayerSwitcher";
 import { MapMeasure } from "./MapMeasure";
+import { AerialOverlay } from "./AerialOverlay";
+import { PlanOverlay } from "./PlanOverlay";
 
 // Fix default marker icons for Leaflet + bundler
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -19,41 +20,133 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
+// ΓפאΓפא Error boundary to catch Leaflet tile errors ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+class MapErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; error: string }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: "" };
+  }
+  static getDerivedStateFromError(err: Error) {
+    return { hasError: true, error: err.message };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-full w-full flex items-center justify-center bg-muted/30">
+          <div className="text-center p-6">
+            <p className="text-sm text-destructive mb-2">╫⌐╫ע╫ש╫נ╫פ ╫ס╫ר╫ó╫ש╫á╫¬ ╫פ╫₧╫ñ╫פ</p>
+            <p className="text-xs text-muted-foreground mb-3">{this.state.error}</p>
+            <button
+              className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md"
+              onClick={() => {
+                this.setState({ hasError: false, error: "" });
+                window.location.reload();
+              }}
+            >
+              ╫ר╫ó╫ƒ ╫₧╫ק╫ף╫⌐
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ΓפאΓפא Helper: validate coordinates are finite numbers ΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפאΓפא
+function isValidLatLng(lat: number, lng: number): boolean {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
+}
+
 interface MapViewProps {
   result: GeoResult | null;
   boundaries: BoundaryResult | null;
-  gisLayers?: GISLayer[];
+  aerialYear?: string | null;
+  planPath?: string | null;
+  onClearPlan?: () => void;
 }
 
-export function MapView({ result, boundaries, gisLayers = [] }: MapViewProps) {
+function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const boundaryLayerRef = useRef<L.LayerGroup | null>(null);
-  const gisLayerGroupRef = useRef<Map<string, L.GeoJSON>>(new Map());
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const labelsLayerRef = useRef<L.TileLayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeLayerId, setActiveLayerId] = useState("osm");
   const [mapReady, setMapReady] = useState(false);
 
-  // Initialize map
+  // Initialize map Γאף wait until container has non-zero dimensions
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const map = L.map(containerRef.current).setView([31.5, 34.8], 8);
-    const defaultLayer = MAP_LAYERS[0];
-    const tile = L.tileLayer(defaultLayer.url, {
-      attribution: defaultLayer.attribution,
-      maxZoom: defaultLayer.maxZoom,
-    }).addTo(map);
+    const el = containerRef.current;
 
-    tileLayerRef.current = tile;
-    mapRef.current = map;
-    setMapReady(true);
+    function tryInit() {
+      if (!el || mapRef.current) return;
+      // Guard: Leaflet crashes with "infinite tiles" if container has zero size
+      if (el.clientWidth === 0 || el.clientHeight === 0) {
+        requestAnimationFrame(tryInit);
+        return;
+      }
+
+      try {
+        const map = L.map(el, {
+          zoomControl: false,
+        });
+
+        // Safe initial view Γאף Kfar Chabad center
+        map.setView([31.9604, 34.8536], 14);
+
+        L.control.zoom({ position: "topleft" }).addTo(map);
+
+        const defaultLayer = MAP_LAYERS[0];
+        const tile = L.tileLayer(defaultLayer.url, {
+          attribution: defaultLayer.attribution,
+          maxZoom: defaultLayer.maxZoom ?? 19,
+        }).addTo(map);
+
+        tileLayerRef.current = tile;
+        mapRef.current = map;
+
+        setTimeout(() => {
+          map.invalidateSize();
+          setMapReady(true);
+        }, 200);
+
+        // Handle container resize (e.g. sidebar toggle)
+        const ro = new ResizeObserver(() => {
+          map.invalidateSize();
+        });
+        ro.observe(el);
+
+        // Store cleanup ref
+        (el as any).__ro = ro;
+      } catch (err) {
+        console.error("Map init failed:", err);
+      }
+    }
+
+    // Kick off init (may defer via rAF if container size is 0)
+    requestAnimationFrame(tryInit);
 
     return () => {
-      map.remove();
-      mapRef.current = null;
+      const ro = (el as any).__ro as ResizeObserver | undefined;
+      if (ro) ro.disconnect();
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
     };
   }, []);
 
@@ -84,18 +177,26 @@ export function MapView({ result, boundaries, gisLayers = [] }: MapViewProps) {
   // Update marker on result change
   useEffect(() => {
     if (!mapRef.current || !result) return;
+    if (!isValidLatLng(result.lat, result.lng)) {
+      console.warn("Invalid result coordinates:", result);
+      return;
+    }
 
     if (markerRef.current) {
       markerRef.current.remove();
     }
 
-    const marker = L.marker([result.lat, result.lng])
-      .addTo(mapRef.current)
-      .bindPopup(`<div dir="rtl" style="text-align:right;font-size:14px;">${result.label}</div>`)
-      .openPopup();
+    try {
+      const marker = L.marker([result.lat, result.lng])
+        .addTo(mapRef.current)
+        .bindPopup(`<div dir="rtl" style="text-align:right;font-size:14px;">${result.label}</div>`)
+        .openPopup();
 
-    markerRef.current = marker;
-    mapRef.current.setView([result.lat, result.lng], 16);
+      markerRef.current = marker;
+      mapRef.current.setView([result.lat, result.lng], 16);
+    } catch (err) {
+      console.error("Failed to set marker/view:", err);
+    }
   }, [result]);
 
   // Update boundary layers
@@ -133,60 +234,48 @@ export function MapView({ result, boundaries, gisLayers = [] }: MapViewProps) {
         },
       }).addTo(layerGroup);
 
-      mapRef.current.fitBounds(parcelLayer.getBounds(), { padding: [50, 50] });
+      try {
+        const bounds = parcelLayer.getBounds();
+        if (bounds.isValid()) {
+          mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+        }
+      } catch { /* ignore invalid bounds */ }
+    } else if (boundaries.blockGeometry) {
+      // If only block geometry, fit to that
+      try {
+        const blockLayer = L.geoJSON(boundaries.blockGeometry as any);
+        const bounds = blockLayer.getBounds();
+        if (bounds.isValid()) {
+          mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+        }
+      } catch { /* ignore */ }
     }
 
     boundaryLayerRef.current = layerGroup;
   }, [boundaries]);
 
-  // Update GIS layers
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    // Remove layers no longer present
-    gisLayerGroupRef.current.forEach((layer, id) => {
-      if (!gisLayers.find((l) => l.id === id)) {
-        layer.remove();
-        gisLayerGroupRef.current.delete(id);
-      }
-    });
-
-    gisLayers.forEach((gl) => {
-      const existing = gisLayerGroupRef.current.get(gl.id);
-
-      if (existing) {
-        // Toggle visibility
-        if (gl.visible && !mapRef.current!.hasLayer(existing)) {
-          existing.addTo(mapRef.current!);
-        } else if (!gl.visible && mapRef.current!.hasLayer(existing)) {
-          existing.remove();
-        }
-      } else if (gl.visible && gl.geojson) {
-        const layer = L.geoJSON(gl.geojson as any, {
-          style: {
-            color: "#16a34a",
-            weight: 2,
-            fillColor: "#22c55e",
-            fillOpacity: 0.15,
-          },
-          onEachFeature: (feature, layer) => {
-            if (feature.properties?.name) {
-              layer.bindPopup(
-                `<div dir="rtl" style="text-align:right;">${feature.properties.name}</div>`
-              );
-            }
-          },
-        }).addTo(mapRef.current!);
-        gisLayerGroupRef.current.set(gl.id, layer);
-      }
-    });
-  }, [gisLayers]);
-
   return (
-    <div className="w-full h-full relative">
-      <div ref={containerRef} className="absolute inset-0" />
+    <div className="h-full w-full relative">
+      <div ref={containerRef} className="absolute inset-0 z-0" />
       <MapLayerSwitcher activeLayerId={activeLayerId} onLayerChange={handleLayerChange} />
       {mapReady && <MapMeasure map={mapRef.current} />}
+      {mapReady && <AerialOverlay map={mapRef.current} year={aerialYear ?? null} />}
+      {mapReady && (
+        <PlanOverlay
+          map={mapRef.current}
+          planPath={planPath ?? null}
+          onClose={onClearPlan ?? (() => {})}
+        />
+      )}
     </div>
+  );
+}
+
+// Wrap with error boundary so Leaflet crashes don't kill the entire app
+export function MapView(props: MapViewProps) {
+  return (
+    <MapErrorBoundary>
+      <MapViewInner {...props} />
+    </MapErrorBoundary>
   );
 }
