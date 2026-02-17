@@ -1,35 +1,48 @@
 
 
-## Israeli Cadastral & Address Location Finder
+# הוספת העלאת קבצי GIS עם שמירה בענן (Lovable Cloud)
 
-A clean, focused tool for finding locations in Israel by cadastral block/parcel numbers or street address, displayed on an interactive map.
+## שלב 1: הפעלת Lovable Cloud (Supabase)
+- הפעלת Supabase מובנה בפרויקט
 
-### Page Layout
-- **Search panel** at the top with two search modes (tabs):
-  1. **Gush & Helka** – Two input fields for block number and parcel number
-  2. **Address** – A single text input for a residential address
-- **Interactive map** filling the rest of the screen below, powered by OpenStreetMap via Leaflet
-- A "Search" button that queries the GovMap API and drops a pin on the found location
+## שלב 2: הגדרת בסיס נתונים ואחסון
+- יצירת **Storage Bucket** בשם `gis-files` לאחסון הקבצים (Shapefile, GeoJSON, KML, GPX)
+- יצירת טבלת **`gis_layers`** במסד הנתונים לשמירת מטא-דאטה:
+  - שם הקובץ, סוג, תאריך העלאה, נתיב באחסון
+- הגדרת הרשאות RLS מתאימות
 
-### Search by Gush & Helka
-- User enters a Gush (block) number and Helka (parcel) number
-- The app calls GovMap's cadastral API to resolve the parcel to geographic coordinates
-- The map zooms to that location and places a marker with a popup showing the Gush/Helka info
+## שלב 3: רכיב העלאת קבצים
+- יצירת קומפוננטת `GISUploader` עם:
+  - כפתור העלאה צף על המפה
+  - תמיכה בפורמטים: GeoJSON, KML, GPX, Shapefile (.zip)
+  - סרגל התקדמות בזמן העלאה
+  - רשימת שכבות שהועלו עם אפשרות הצגה/הסתרה/מחיקה
 
-### Search by Address
-- User enters a street address in Hebrew or English
-- The app uses GovMap's geocoding service to resolve the address to coordinates
-- The map zooms in and places a marker with the address in a popup
+## שלב 4: הצגת שכבות על המפה
+- פירוק קבצי GeoJSON/KML/GPX והצגתם כשכבות על מפת Leaflet
+- אפשרות להפעיל ולכבות כל שכבה בנפרד
+- שמירת השכבות בענן כך שיהיו זמינות בכל כניסה
 
-### Map Features
-- Interactive OpenStreetMap with zoom, pan, and scroll controls
-- Marker with popup showing the searched Gush/Helka or address
-- Map automatically centers and zooms to fit the result
-- Clean, full-width map for easy viewing
+## פרטים טכניים
 
-### Design
-- Simple, modern Hebrew-friendly interface (RTL support)
-- Minimal UI – just the search bar and the map
-- Mobile-responsive layout so it works on phones too
-- Clear error messages if a location isn't found
+### טבלת מטא-דאטה
+```sql
+CREATE TABLE gis_layers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  file_type TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  geojson JSONB,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+### קבצים שייווצרו/יערכו
+- **חדש**: `src/components/GISUploader.tsx` - רכיב העלאה וניהול שכבות
+- **חדש**: `src/hooks/use-gis-layers.ts` - hook לניהול שכבות GIS מול Supabase
+- **חדש**: `src/lib/gis-parser.ts` - פירוק קבצי KML/GPX ל-GeoJSON
+- **עריכה**: `src/components/MapView.tsx` - הצגת שכבות GIS על המפה
+
+### ספריות נדרשות
+- `@tmcw/togeojson` - להמרת KML/GPX ל-GeoJSON
 
