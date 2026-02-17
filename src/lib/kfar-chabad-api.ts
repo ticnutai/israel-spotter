@@ -24,16 +24,17 @@ async function supabaseGet<T>(table: string, params?: string): Promise<T[]> {
 }
 
 async function supabaseCount(table: string): Promise<number> {
-  const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&head=true`;
+  const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&limit=1`;
   const res = await fetch(url, {
-    method: "HEAD",
     headers: {
       apikey: SUPABASE_KEY,
       Authorization: `Bearer ${SUPABASE_KEY}`,
       Prefer: "count=exact",
     },
   });
-  return parseInt(res.headers.get("content-range")?.split("/")[1] || "0", 10);
+  if (!res.ok) throw new Error(`Supabase count error ${res.status}`);
+  const range = res.headers.get("content-range") || "";
+  return parseInt(range.split("/").pop() || "0", 10);
 }
 
 // --------------- Types ---------------
@@ -179,8 +180,8 @@ export async function getConfig(): Promise<KfarChabadConfig> {
     () => fetchJSON(`${API_BASE}/config`),
     async () => {
       // Build config from Supabase data
-      const gushim = await supabaseGet<{ gush_id: number }>("gushim", "select=gush_id");
-      const gushIds = gushim.map(g => g.gush_id);
+      const gushim = await supabaseGet<{ gush: number }>("gushim", "select=gush");
+      const gushIds = gushim.map(g => g.gush);
       const [gushCount, parcelCount, planCount, docCount, georefCount] = await Promise.all([
         supabaseCount("gushim"),
         supabaseCount("parcels"),
@@ -216,16 +217,8 @@ export async function getGushim(): Promise<GushInfo[]> {
       return data.gushim;
     },
     async () => {
-      const rows = await supabaseGet<any>("gushim", "select=*&order=gush_id");
-      return rows.map(r => ({
-        gush: r.gush_id,
-        name: r.gush_name || "",
-        area_type: r.region || "",
-        plan_count: 0,
-        permit_count: 0,
-        parcel_count: 0,
-        notes: null,
-      }));
+      const rows = await supabaseGet<GushInfo>("gushim", "select=*&order=gush");
+      return rows;
     }
   );
 }
@@ -234,12 +227,12 @@ export async function getGush(gush: number): Promise<{ gush: GushInfo; parcels: 
   return withFallback(
     () => fetchJSON(`${API_BASE}/gushim/${gush}`),
     async () => {
-      const gushRows = await supabaseGet<any>("gushim", `select=*&gush_id=eq.${gush}`);
-      const parcelRows = await supabaseGet<any>("parcels", `select=*&gush_id=eq.${gush}&order=parcel_num`);
-      const g = gushRows[0] || { gush_id: gush, gush_name: "", region: "" };
+      const gushRows = await supabaseGet<GushInfo>("gushim", `select=*&gush=eq.${gush}`);
+      const parcelRows = await supabaseGet<ParcelInfo>("parcels", `select=*&gush=eq.${gush}&order=helka`);
+      const g = gushRows[0] || { gush, name: "", area_type: "", plan_count: 0, permit_count: 0, parcel_count: 0, notes: null };
       return {
-        gush: { gush: g.gush_id, name: g.gush_name || "", area_type: g.region || "", plan_count: 0, permit_count: 0, parcel_count: parcelRows.length, notes: null },
-        parcels: parcelRows.map((r: any) => ({ id: r.id, gush: r.gush_id, helka: parseInt(r.parcel_num) || 0, plan_count: 0, permit_count: 0, doc_count: 0, has_tashrit: 0, notes: null })),
+        gush: g,
+        parcels: parcelRows,
       };
     }
   );
@@ -252,8 +245,8 @@ export async function getGushParcels(gush: number): Promise<ParcelInfo[]> {
       return data.parcels;
     },
     async () => {
-      const rows = await supabaseGet<any>("parcels", `select=*&gush_id=eq.${gush}&order=parcel_num`);
-      return rows.map((r: any) => ({ id: r.id, gush: r.gush_id, helka: parseInt(r.parcel_num) || 0, plan_count: 0, permit_count: 0, doc_count: 0, has_tashrit: 0, notes: null }));
+      const rows = await supabaseGet<ParcelInfo>("parcels", `select=*&gush=eq.${gush}&order=helka`);
+      return rows;
     }
   );
 }
@@ -268,9 +261,8 @@ export async function getParcelDocuments(gush: number, helka: number): Promise<{
   return withFallback(
     () => fetchJSON(`${API_BASE}/gushim/${gush}/${helka}/documents`),
     async () => {
-      const docs = await supabaseGet<any>("documents", `select=*&plan_id=not.is.null`);
-      // Filter by plan_id that matches gush (simplified - return all docs for now)
-      return { gush, helka, total: docs.length, by_plan: [], documents: docs.map(mapDocument) };
+      const docs = await supabaseGet<DocumentRecord>("documents", `select=*&gush=eq.${gush}&helka=eq.${helka}`);
+      return { gush, helka, total: docs.length, by_plan: [], documents: docs };
     }
   );
 }
@@ -285,9 +277,9 @@ export async function getPlans(gush?: number): Promise<PlanSummary[]> {
       return data.plans;
     },
     async () => {
-      const filter = gush ? `&gush_id=eq.${gush}` : "";
-      const rows = await supabaseGet<any>("plans", `select=*${filter}&order=plan_id`);
-      return rows.map(mapPlan);
+      const filter = gush ? `&gush_list=ilike.*${gush}*` : "";
+      const rows = await supabaseGet<PlanSummary>("plans", `select=*${filter}&order=plan_number`);
+      return rows;
     }
   );
 }
@@ -300,16 +292,19 @@ export async function getPlanDetail(planNumber: string): Promise<{
   return withFallback(
     () => fetchJSON(`${API_BASE}/plans/${encodeURIComponent(planNumber)}`),
     async () => {
-      const [plans, docs, georefs] = await Promise.all([
-        supabaseGet<any>("plans", `select=*&plan_id=eq.${encodeURIComponent(planNumber)}`),
-        supabaseGet<any>("documents", `select=*&plan_id=eq.${encodeURIComponent(planNumber)}`),
-        supabaseGet<any>("plan_georef", `select=*&plan_id=eq.${encodeURIComponent(planNumber)}`),
+      const [plans, docs] = await Promise.all([
+        supabaseGet<PlanSummary>("plans", `select=*&plan_number=eq.${encodeURIComponent(planNumber)}`),
+        supabaseGet<DocumentRecord>("documents", `select=*&plan_number=eq.${encodeURIComponent(planNumber)}`),
       ]);
-      return {
-        plan: plans[0] ? mapPlan(plans[0]) : { id: 0, plan_number: planNumber, plan_name: "", plan_type: "", status: "", doc_count: docs.length, gush_list: null, notes: null },
-        documents: docs.map(mapDocument),
-        georef: georefs.map(mapGeoref),
-      };
+      const plan = plans[0] || { id: 0, plan_number: planNumber, plan_name: null, status: null, plan_type: null, doc_count: docs.length, gush_list: null, notes: null };
+      // Get georef entries for documents of this plan
+      const docIds = docs.map(d => d.id);
+      let georefs: GeorefEntry[] = [];
+      if (docIds.length > 0) {
+        const georefRows = await supabaseGet<any>("plan_georef", `select=*&document_id=in.(${docIds.join(",")})`);
+        georefs = georefRows.map(mapGeoref);
+      }
+      return { plan, documents: docs, georef: georefs };
     }
   );
 }
@@ -341,14 +336,18 @@ export async function getDocuments(params?: {
     },
     async () => {
       let filter = "select=*";
-      if (params?.plan_number) filter += `&plan_id=eq.${encodeURIComponent(params.plan_number)}`;
+      if (params?.category) filter += `&category=eq.${encodeURIComponent(params.category)}`;
+      if (params?.gush) filter += `&gush=eq.${params.gush}`;
+      if (params?.helka !== undefined) filter += `&helka=eq.${params.helka}`;
+      if (params?.plan_number) filter += `&plan_number=eq.${encodeURIComponent(params.plan_number)}`;
+      if (params?.file_type) filter += `&file_type=eq.${encodeURIComponent(params.file_type)}`;
       if (params?.search) filter += `&file_name=ilike.*${encodeURIComponent(params.search)}*`;
       const limit = params?.limit || 50;
       const offset = params?.offset || 0;
       filter += `&limit=${limit}&offset=${offset}&order=id`;
-      const rows = await supabaseGet<any>("documents", filter);
+      const rows = await supabaseGet<DocumentRecord>("documents", filter);
       const total = await supabaseCount("documents");
-      return { documents: rows.map(mapDocument), total };
+      return { documents: rows, total };
     }
   );
 }
@@ -358,15 +357,30 @@ export async function getDocumentStats(): Promise<DocumentStats> {
     () => fetchJSON(`${API_BASE}/documents/stats`),
     async () => {
       const total = await supabaseCount("documents");
-      const docs = await supabaseGet<any>("documents", "select=doc_type,file_size_kb");
-      const by_type: Record<string, number> = {};
-      let total_size = 0;
+      const [docs, gushim] = await Promise.all([
+        supabaseGet<any>("documents", "select=category,file_size,file_type,is_tashrit,is_georef"),
+        supabaseGet<any>("gushim", "select=gush,plan_count,permit_count,parcel_count"),
+      ]);
+      const by_category: Record<string, number> = {};
+      const by_file_type: Record<string, number> = {};
+      let tashrit_count = 0;
+      let georef_count = 0;
       docs.forEach((d: any) => {
-        const t = d.doc_type || "unknown";
-        by_type[t] = (by_type[t] || 0) + 1;
-        total_size += d.file_size_kb || 0;
+        const cat = d.category || "unknown";
+        by_category[cat] = (by_category[cat] || 0) + 1;
+        const ft = d.file_type || "unknown";
+        by_file_type[ft] = (by_file_type[ft] || 0) + 1;
+        if (d.is_tashrit) tashrit_count++;
+        if (d.is_georef) georef_count++;
       });
-      return { total, by_category: by_type, by_gush: [], by_file_type: by_type, tashrit_count: 0, georef_count: 0 };
+      return {
+        total,
+        by_category,
+        by_gush: gushim.map((g: any) => ({ gush: g.gush, plan_count: g.plan_count || 0, permit_count: g.permit_count || 0, parcel_count: g.parcel_count || 0 })),
+        by_file_type,
+        tashrit_count,
+        georef_count,
+      };
     }
   );
 }
@@ -471,8 +485,8 @@ export async function getPlansForTimeline(): Promise<PlanSummary[]> {
       return data.plans;
     },
     async () => {
-      const rows = await supabaseGet<any>("plans", "select=*&order=plan_id");
-      return rows.map(mapPlan);
+      const rows = await supabaseGet<PlanSummary>("plans", "select=*&order=plan_number");
+      return rows;
     }
   );
 }
@@ -482,11 +496,11 @@ export async function getPlansForTimeline(): Promise<PlanSummary[]> {
 function mapPlan(r: any): PlanSummary {
   return {
     id: r.id || 0,
-    plan_number: r.plan_id || r.plan_number || "",
-    plan_name: r.plan_name || "",
-    plan_type: r.plan_type || "",
-    status: r.status || "",
-    doc_count: 0,
+    plan_number: r.plan_number || "",
+    plan_name: r.plan_name || null,
+    status: r.status || null,
+    plan_type: r.plan_type || null,
+    doc_count: r.doc_count || 0,
     gush_list: r.gush_list || null,
     notes: r.notes || null,
   };
@@ -497,13 +511,13 @@ function mapDocument(r: any): DocumentRecord {
     id: r.id,
     gush: r.gush || 0,
     helka: r.helka || 0,
-    plan_number: r.plan_id || r.plan_number || null,
-    category: r.doc_type || r.category || "",
+    plan_number: r.plan_number || null,
     title: r.title || r.file_name || "",
-    file_name: r.file_name || "",
-    file_type: r.file_type || (r.file_name || "").split(".").pop() || "",
     file_path: r.file_path || "",
-    file_size: r.file_size || r.file_size_kb || 0,
+    file_name: r.file_name || "",
+    file_size: r.file_size || 0,
+    file_type: r.file_type || "",
+    category: r.category || "",
     is_tashrit: r.is_tashrit || 0,
     is_georef: r.is_georef || 0,
     downloaded_at: r.downloaded_at || null,
@@ -525,9 +539,9 @@ function mapGeoref(r: any): GeorefEntry {
     bbox_max_y: r.bbox_max_y || 0,
     crs: r.crs || "EPSG:2039",
     method: r.method || "",
-    file_name: r.file_name || null,
-    plan_number: r.plan_id || r.plan_number || null,
-    gush: r.gush || null,
-    helka: r.helka || null,
+    file_name: null,
+    plan_number: null,
+    gush: null,
+    helka: null,
   };
 }
