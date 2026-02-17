@@ -120,11 +120,11 @@ export default function Auth() {
               <form onSubmit={handleLogin} className="space-y-4 mt-4">
                 <div>
                   <Label htmlFor="login-email">אימייל</Label>
-                  <Input id="login-email" type="email" value={email} onChange={e => setEmail(e.target.value)} dir="ltr" required className="border-accent/30 focus-visible:ring-accent" />
+                  <Input id="login-email" type="email" value={email} onChange={e => setEmail(e.target.value)} dir="ltr" required className="border-accent/30 focus-visible:ring-accent text-right" />
                 </div>
                 <div>
                   <Label htmlFor="login-password">סיסמה</Label>
-                  <Input id="login-password" type="password" value={password} onChange={e => setPassword(e.target.value)} dir="ltr" required className="border-accent/30 focus-visible:ring-accent" />
+                  <Input id="login-password" type="password" value={password} onChange={e => setPassword(e.target.value)} dir="ltr" required className="border-accent/30 focus-visible:ring-accent text-right" />
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox id="remember" checked={rememberMe} onCheckedChange={(c) => setRememberMe(!!c)} />
@@ -141,15 +141,15 @@ export default function Auth() {
               <form onSubmit={handleSignup} className="space-y-4 mt-4">
                 <div>
                   <Label htmlFor="signup-name">שם תצוגה</Label>
-                  <Input id="signup-name" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="אופציונלי" className="border-accent/30 focus-visible:ring-accent" />
+                  <Input id="signup-name" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="אופציונלי" className="border-accent/30 focus-visible:ring-accent text-right" />
                 </div>
                 <div>
                   <Label htmlFor="signup-email">אימייל</Label>
-                  <Input id="signup-email" type="email" value={email} onChange={e => setEmail(e.target.value)} dir="ltr" required className="border-accent/30 focus-visible:ring-accent" />
+                  <Input id="signup-email" type="email" value={email} onChange={e => setEmail(e.target.value)} dir="ltr" required className="border-accent/30 focus-visible:ring-accent text-right" />
                 </div>
                 <div>
                   <Label htmlFor="signup-password">סיסמה</Label>
-                  <Input id="signup-password" type="password" value={password} onChange={e => setPassword(e.target.value)} dir="ltr" minLength={6} required className="border-accent/30 focus-visible:ring-accent" />
+                  <Input id="signup-password" type="password" value={password} onChange={e => setPassword(e.target.value)} dir="ltr" minLength={6} required className="border-accent/30 focus-visible:ring-accent text-right" />
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox id="remember-signup" checked={rememberMe} onCheckedChange={(c) => setRememberMe(!!c)} />
