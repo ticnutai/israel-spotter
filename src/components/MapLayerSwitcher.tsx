@@ -17,6 +17,20 @@ export const MAP_LAYERS: MapLayerOption[] = [
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   },
   {
+    id: "govmap",
+    label: "GovMap קדסטר",
+    url: "https://tiles.govmap.gov.il/KADASTR/{z}/{x}/{y}.png",
+    attribution: '&copy; מפות ממשלתיות - מרכז המיפוי הישראלי',
+    maxZoom: 20,
+  },
+  {
+    id: "govmap-streets",
+    label: "GovMap רחובות",
+    url: "https://tiles.govmap.gov.il/israelhybrid/{z}/{x}/{y}.png",
+    attribution: '&copy; מפות ממשלתיות - מרכז המיפוי הישראלי',
+    maxZoom: 20,
+  },
+  {
     id: "esri-satellite",
     label: "צילום אוויר",
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -28,6 +42,13 @@ export const MAP_LAYERS: MapLayerOption[] = [
     label: "צילום + כיתוב",
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attribution: '&copy; Esri, Maxar, Earthstar Geographics',
+    maxZoom: 19,
+  },
+  {
+    id: "esri-streets",
+    label: "רחובות מפורטים",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+    attribution: '&copy; Esri',
     maxZoom: 19,
   },
   {
