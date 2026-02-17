@@ -38,6 +38,26 @@ export default function Auth() {
     if (user) navigate("/", { replace: true });
   }, [user, navigate]);
 
+  // Auto-login if saved credentials exist
+  useEffect(() => {
+    const tryAutoLogin = async () => {
+      const creds = getSavedCredentials();
+      if (creds?.email && creds?.password && !user && !loading) {
+        setLoading(true);
+        const { error } = await supabase.auth.signInWithPassword({
+          email: creds.email,
+          password: creds.password,
+        });
+        if (error) {
+          localStorage.removeItem(STORAGE_KEY);
+          setError("הכניסה האוטומטית נכשלה, נסה שוב");
+        }
+        setLoading(false);
+      }
+    };
+    tryAutoLogin();
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
