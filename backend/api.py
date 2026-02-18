@@ -154,8 +154,12 @@ async def get_config():
     if conn:
         try:
             summary = {}
-            for t in ["gushim", "parcels", "plans", "documents", "aerial_images", "plan_georef"]:
-                summary[t] = conn.execute(f"SELECT COUNT(*) c FROM {t}").fetchone()["c"]
+            for t in ["gushim", "parcels", "plans", "documents", "aerial_images",
+                      "plan_georef", "permits", "permit_documents", "taba_outlines", "plan_blocks"]:
+                try:
+                    summary[t] = conn.execute(f"SELECT COUNT(*) c FROM {t}").fetchone()["c"]
+                except Exception:
+                    summary[t] = 0
         finally:
             conn.close()
     else:
@@ -349,161 +353,276 @@ async def get_plan_detail(plan_number: str):
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#  LOCAL PLANS & PERMITS  (from kfar_chabad_data folder on disk)
+#  PARCEL INFO  (DB-powered – replaces filesystem scanning for speed)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-def _scan_plan_folder(folder: Path) -> list[dict]:
-    """Scan a plans/{gush}_{helka}/ folder and return list of plan info dicts."""
-    results = []
-    if not folder.is_dir():
-        return results
-    for plan_dir in sorted(folder.iterdir()):
-        if not plan_dir.is_dir():
-            continue
-        plan_name = plan_dir.name
-        files = []
-        for f in sorted(plan_dir.iterdir()):
-            if f.is_file():
-                ext = f.suffix.lower()
-                try:
-                    rel = str(f.relative_to(BASE_DIR)).replace("\\", "/")
-                except ValueError:
-                    rel = str(f).replace("\\", "/")
-                files.append({
-                    "name": f.name,
-                    "size": f.stat().st_size,
-                    "type": ext.lstrip("."),
-                    "path": rel,
-                })
-        if files:
-            results.append({
-                "plan_name": plan_name,
-                "file_count": len(files),
-                "files": files,
-                "has_tashrit": any(
-                    "תשריט" in f["name"] for f in files
-                ),
-                "has_takanon": any(
-                    "תקנון" in f["name"] for f in files
-                ),
-                "has_pdf": any(f["type"] == "pdf" for f in files),
-                "has_image": any(f["type"] in ("jpg", "jpeg", "png", "tif", "tiff") for f in files),
-            })
-    return results
-
-
-def _scan_permit_folder(folder: Path) -> list[dict]:
-    """Scan a permits/{gush}_{helka}/ folder and return list of permit info dicts."""
-    results = []
-    if not folder.is_dir():
-        return results
-    for permit_dir in sorted(folder.iterdir()):
-        if not permit_dir.is_dir():
-            continue
-        permit_id = permit_dir.name
-        files = []
-        for f in sorted(permit_dir.iterdir()):
-            if f.is_file():
-                ext = f.suffix.lower()
-                try:
-                    rel = str(f.relative_to(BASE_DIR)).replace("\\", "/")
-                except ValueError:
-                    rel = str(f).replace("\\", "/")
-                files.append({
-                    "name": f.name,
-                    "size": f.stat().st_size,
-                    "type": ext.lstrip("."),
-                    "path": rel,
-                })
-        results.append({
-            "permit_id": permit_id,
-            "file_count": len(files),
-            "files": files,
-        })
-    return results
-
 
 @app.get("/api/local-plans/{gush}/{helka}")
 async def get_local_plans_for_parcel(gush: int, helka: int):
-    """Get plans and permits from local filesystem for a specific parcel."""
-    folder_name = f"{gush}_{helka}"
+    """Fast DB query: plans, permits, parcel detail, and TABA outlines for a parcel."""
+    conn = get_db()
+    if not conn:
+        raise HTTPException(503, "Requires local database – run: python backend/import_all_data.py")
 
-    plans = _scan_plan_folder(PLANS_DIR / folder_name)
-    permits = _scan_permit_folder(PERMITS_DIR / folder_name)
+    try:
+        # ── Parcel detail ──
+        parcel_row = conn.execute(
+            "SELECT * FROM parcels WHERE gush = ? AND helka = ?", (gush, helka)
+        ).fetchone()
+        parcel_detail = dict(parcel_row) if parcel_row else None
 
-    # Also load parcel details from JSON if available
-    parcel_detail = None
-    details_file = PARCEL_DETAILS_DIR / f"gush_{gush}_details.json"
-    if details_file.is_file():
-        try:
-            data = json.loads(details_file.read_text(encoding="utf-8"))
-            for p in data.get("parcels", []):
-                if p.get("helka") == helka:
-                    parcel_detail = p
-                    break
-        except Exception:
-            pass
+        # ── Plans covering this parcel (via plan_blocks linkage) ──
+        plan_rows = conn.execute("""
+            SELECT DISTINCT p.*
+            FROM plans p
+            JOIN plan_blocks pb ON pb.plan_number = p.plan_number
+            WHERE pb.gush = ? AND (pb.helka = ? OR pb.helka IS NULL)
+            ORDER BY p.plan_number
+        """, (gush, helka)).fetchall()
+        plans_list = []
+        for pr in plan_rows:
+            p = dict(pr)
+            # Get documents for this plan
+            doc_rows = conn.execute(
+                "SELECT file_name, file_size, file_type, file_path, title, "
+                "is_tashrit, is_takanon, subcategory FROM documents "
+                "WHERE plan_number = ? ORDER BY file_name",
+                (p["plan_number"],)
+            ).fetchall()
+            files = [{
+                "name": d["file_name"],
+                "size": d["file_size"],
+                "type": d["file_type"],
+                "path": d["file_path"],
+                "title": d["title"],
+            } for d in doc_rows]
+            plans_list.append({
+                "plan_name": p["plan_number"],
+                "plan_display_name": p["plan_name"],
+                "entity_subtype": p.get("entity_subtype"),
+                "main_status": p.get("main_status") or p.get("status"),
+                "status_date": p.get("status_date"),
+                "area_dunam": p.get("area_dunam"),
+                "authority": p.get("authority"),
+                "goals": p.get("goals"),
+                "city_county": p.get("city_county"),
+                "file_count": len(files),
+                "files": files,
+                "has_tashrit": any(d["is_tashrit"] for d in doc_rows),
+                "has_takanon": any(d["is_takanon"] for d in doc_rows),
+                "has_pdf": any(d["file_type"] == "pdf" for d in doc_rows),
+                "has_image": any(d["file_type"] in ("jpg", "jpeg", "png", "tif", "tiff", "image") for d in doc_rows),
+            })
 
-    return {
-        "gush": gush,
-        "helka": helka,
-        "plans": plans,
-        "permits": permits,
-        "parcel_detail": parcel_detail,
-        "plan_count": len(plans),
-        "permit_count": len(permits),
-    }
+        # ── Also add plans from documents table (local_scan plans) ──
+        local_doc_rows = conn.execute(
+            "SELECT DISTINCT plan_number FROM documents "
+            "WHERE gush = ? AND helka = ? AND subcategory = 'local_scan' "
+            "AND plan_number IS NOT NULL",
+            (gush, helka)
+        ).fetchall()
+        existing_plan_numbers = {p["plan_name"] for p in plans_list}
+        for ldr in local_doc_rows:
+            pn = ldr["plan_number"]
+            if pn in existing_plan_numbers:
+                continue
+            doc_rows = conn.execute(
+                "SELECT file_name, file_size, file_type, file_path, title, "
+                "is_tashrit, is_takanon, subcategory FROM documents "
+                "WHERE gush = ? AND helka = ? AND plan_number = ? ORDER BY file_name",
+                (gush, helka, pn)
+            ).fetchall()
+            files = [{
+                "name": d["file_name"],
+                "size": d["file_size"],
+                "type": d["file_type"],
+                "path": d["file_path"],
+                "title": d["title"],
+            } for d in doc_rows]
+            plans_list.append({
+                "plan_name": pn,
+                "plan_display_name": None,
+                "entity_subtype": None,
+                "main_status": None,
+                "status_date": None,
+                "area_dunam": None,
+                "authority": None,
+                "goals": None,
+                "city_county": None,
+                "file_count": len(files),
+                "files": files,
+                "has_tashrit": any(d["is_tashrit"] for d in doc_rows),
+                "has_takanon": any(d["is_takanon"] for d in doc_rows),
+                "has_pdf": any(d["file_type"] == "pdf" for d in doc_rows),
+                "has_image": any(d["file_type"] in ("jpg", "jpeg", "png", "tif", "tiff", "image") for d in doc_rows),
+            })
+
+        # ── Permits ──
+        permit_rows = conn.execute(
+            "SELECT p.*, pd.file_name, pd.file_path, pd.file_size, pd.file_type "
+            "FROM permits p "
+            "LEFT JOIN permit_documents pd ON pd.permit_id = p.id "
+            "WHERE p.gush = ? AND p.helka = ? "
+            "ORDER BY p.permit_id, pd.file_name",
+            (gush, helka)
+        ).fetchall()
+        permits_map: dict[str, dict] = {}
+        for pr in permit_rows:
+            pid = pr["permit_id"]
+            if pid not in permits_map:
+                permits_map[pid] = {"permit_id": pid, "file_count": 0, "files": []}
+            if pr["file_name"]:
+                permits_map[pid]["files"].append({
+                    "name": pr["file_name"],
+                    "size": pr["file_size"],
+                    "type": pr["file_type"] or "",
+                    "path": pr["file_path"],
+                })
+                permits_map[pid]["file_count"] = len(permits_map[pid]["files"])
+        permits_list = list(permits_map.values())
+
+        # ── TABA outlines covering this gush ──
+        taba_rows = conn.execute(
+            "SELECT pl_number, pl_name, entity_subtype, status, area_dunam, "
+            "land_use, plan_county, pl_url, main_status "
+            "FROM taba_outlines WHERE pl_number IN "
+            "(SELECT plan_number FROM plan_blocks WHERE gush = ? AND (helka = ? OR helka IS NULL)) "
+            "ORDER BY pl_number",
+            (gush, helka)
+        ).fetchall()
+        # If none found via plan_blocks, get all TABA for this area
+        if not taba_rows:
+            taba_rows = conn.execute(
+                "SELECT pl_number, pl_name, entity_subtype, status, area_dunam, "
+                "land_use, plan_county, pl_url, depositing_date as main_status "
+                "FROM taba_outlines ORDER BY pl_number"
+            ).fetchall()
+        taba_list = [dict(t) for t in taba_rows]
+
+        return {
+            "gush": gush,
+            "helka": helka,
+            "plans": plans_list,
+            "permits": permits_list,
+            "taba_outlines": taba_list,
+            "parcel_detail": parcel_detail,
+            "plan_count": len(plans_list),
+            "permit_count": len(permits_list),
+            "taba_count": len(taba_list),
+        }
+    finally:
+        conn.close()
 
 
 @app.get("/api/local-plans/{gush}")
 async def get_local_plans_for_gush(gush: int):
-    """Get all plans across all helkot for a specific gush."""
-    all_plans: dict[int, list[dict]] = {}
-    all_permits: dict[int, list[dict]] = {}
+    """Fast DB query: all plans/permits across all helkot for a gush."""
+    conn = get_db()
+    if not conn:
+        raise HTTPException(503, "Requires local database")
+    try:
+        # Plans covering this gush
+        plan_rows = conn.execute("""
+            SELECT DISTINCT p.plan_number, p.plan_name, p.main_status,
+                   p.entity_subtype, p.area_dunam, p.doc_count
+            FROM plans p
+            JOIN plan_blocks pb ON pb.plan_number = p.plan_number
+            WHERE pb.gush = ?
+            ORDER BY p.plan_number
+        """, (gush,)).fetchall()
 
-    if PLANS_DIR.is_dir():
-        for folder in sorted(PLANS_DIR.iterdir()):
-            if folder.is_dir() and folder.name.startswith(f"{gush}_"):
-                try:
-                    h = int(folder.name.split("_", 1)[1])
-                except ValueError:
-                    continue
-                plans = _scan_plan_folder(folder)
-                if plans:
-                    all_plans[h] = plans
+        # Permits in this gush
+        permit_rows = conn.execute(
+            "SELECT permit_id, helka, file_count FROM permits WHERE gush = ? ORDER BY helka, permit_id",
+            (gush,)
+        ).fetchall()
 
-    if PERMITS_DIR.is_dir():
-        for folder in sorted(PERMITS_DIR.iterdir()):
-            if folder.is_dir() and folder.name.startswith(f"{gush}_"):
-                try:
-                    h = int(folder.name.split("_", 1)[1])
-                except ValueError:
-                    continue
-                permits = _scan_permit_folder(folder)
-                if permits:
-                    all_permits[h] = permits
+        return {
+            "gush": gush,
+            "plans": [dict(r) for r in plan_rows],
+            "permits": [dict(r) for r in permit_rows],
+            "total_plans": len(plan_rows),
+            "total_permits": len(permit_rows),
+        }
+    finally:
+        conn.close()
 
-    return {
-        "gush": gush,
-        "plans_by_helka": all_plans,
-        "permits_by_helka": all_permits,
-        "total_plans": sum(len(v) for v in all_plans.values()),
-        "total_permits": sum(len(v) for v in all_permits.values()),
-    }
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  TABA  (Planning outlines)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+@app.get("/api/taba")
+async def list_taba():
+    """List all TABA planning outlines (without geometry)."""
+    conn = get_db()
+    if not conn:
+        return {"outlines": [], "total": 0}
+    try:
+        rows = conn.execute(
+            "SELECT id, pl_number, pl_name, entity_subtype, status, area_dunam, "
+            "land_use, district, jurisdiction, plan_county, pl_url, "
+            "depositing_date, last_update "
+            "FROM taba_outlines ORDER BY pl_number"
+        ).fetchall()
+        return {"outlines": [dict(r) for r in rows], "total": len(rows)}
+    finally:
+        conn.close()
+
+
+@app.get("/api/taba/geojson")
+async def taba_geojson():
+    """Return TABA outlines as GeoJSON FeatureCollection for map display."""
+    conn = get_db()
+    if not conn:
+        # Fall back to file
+        taba_file = DATA_DIR / "taba_kfar_chabad.geojson"
+        if taba_file.exists():
+            with open(taba_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return {"type": "FeatureCollection", "features": []}
+    try:
+        rows = conn.execute(
+            "SELECT geometry_json, properties_json FROM taba_outlines"
+        ).fetchall()
+        features = []
+        for r in rows:
+            geom = json.loads(r["geometry_json"]) if r["geometry_json"] else None
+            props = json.loads(r["properties_json"]) if r["properties_json"] else {}
+            if geom:
+                features.append({"type": "Feature", "geometry": geom, "properties": props})
+        return {"type": "FeatureCollection", "features": features}
+    finally:
+        conn.close()
 
 
 @app.get("/api/local-file/{file_path:path}")
 async def serve_local_file(file_path: str):
-    """Serve a file from kfar_chabad_data (plans, permits, etc)."""
+    """Serve a file from kfar_chabad_data or docs (plans, permits, etc)."""
     full = BASE_DIR / file_path
-    # Security: must be under DATA_DIR
+    # Security: must be under DATA_DIR or GIS_DIR
     try:
-        full.resolve().relative_to(DATA_DIR.resolve())
-    except ValueError:
+        resolved = full.resolve()
+        if not (resolved.is_relative_to(DATA_DIR.resolve()) or
+                resolved.is_relative_to(GIS_DIR.resolve())):
+            raise ValueError
+    except (ValueError, AttributeError):
         raise HTTPException(403, "Access denied")
     if not full.is_file():
         raise HTTPException(404, "File not found")
-    return FileResponse(full, filename=full.name)
+    ext = full.suffix.lower()
+    media_map = {
+        ".pdf": "application/pdf",
+        ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+        ".png": "image/png", ".tif": "image/tiff",
+        ".dwg": "application/octet-stream",
+        ".dwfx": "application/octet-stream",
+        ".kml": "application/vnd.google-earth.kml+xml",
+        ".zip": "application/zip",
+        ".doc": "application/msword",
+        ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".xls": "application/vnd.ms-excel",
+    }
+    return FileResponse(full, media_type=media_map.get(ext, "application/octet-stream"), filename=full.name)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -957,10 +1076,10 @@ async def list_uploads(
 
 @app.delete("/api/uploads/{doc_id}")
 async def delete_upload(doc_id: int):
-    if not conn:
-        raise HTTPException(503, "Delete requires local database")
     """Delete an uploaded document from DB and disk."""
     conn = get_db()
+    if not conn:
+        raise HTTPException(503, "Delete requires local database")
     try:
         row = conn.execute("SELECT * FROM documents WHERE id = ?", (doc_id,)).fetchone()
         if not row:

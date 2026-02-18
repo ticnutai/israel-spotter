@@ -37,7 +37,7 @@ import {
   type PlanSummary,
   type DocumentRecord,
   type LocalPlansResponse,
-
+  type TabaOutline,
 } from "@/lib/kfar-chabad-api";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchParcels } from "@/hooks/use-watch-parcels";
@@ -270,7 +270,7 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
               <Skeleton className="h-10 rounded-lg" />
               <Skeleton className="h-10 rounded-lg" />
             </div>
-          ) : localPlansData && (localPlansData.plan_count > 0 || localPlansData.permit_count > 0) ? (
+          ) : localPlansData && (localPlansData.plan_count > 0 || localPlansData.permit_count > 0 || localPlansData.taba_count > 0) ? (
             <LocalPlansSection
               data={localPlansData}
               onShowPlan={onShowPlan}
@@ -699,11 +699,23 @@ function LocalPlansSection({
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{plan.plan_name}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        {plan.file_count} קבצים
-                      </p>
+                      {plan.plan_display_name && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                          {plan.plan_display_name}
+                        </p>
+                      )}
+                      {!plan.plan_display_name && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {plan.file_count} קבצים
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
+                      {plan.main_status && (
+                        <Badge className={`text-[10px] px-1.5 py-0 ${statusColor(plan.main_status)}`}>
+                          {plan.main_status}
+                        </Badge>
+                      )}
                       {plan.has_tashrit && (
                         <Badge className="text-[10px] px-1.5 py-0 bg-purple-100 text-purple-700">
                           תשריט
@@ -723,39 +735,137 @@ function LocalPlansSection({
                   </button>
 
                   {isExpanded && (
-                    <div className="border-t px-3 py-2 bg-muted/30 space-y-1">
-                      {plan.files.map((file) => (
-                        <div
-                          key={file.path}
-                          className="flex items-center gap-2 py-0.5"
-                        >
-                          {fileTypeIcon(file.type)}
-                          <a
-                            href={getLocalFileUrl(file.path)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:underline flex-1 min-w-0 truncate"
-                          >
-                            {file.name}
-                          </a>
-                          <span className="text-[10px] text-muted-foreground shrink-0">
-                            {formatBytes(file.size)}
-                          </span>
-                          {(file.type === "jpg" || file.type === "jpeg" || file.type === "png") && onShowPlan && (
-                            <button
-                              onClick={() => onShowPlan(file.path)}
-                              className="text-[10px] text-teal-600 hover:underline shrink-0"
-                            >
-                              הצג במפה
-                            </button>
+                    <div className="border-t px-3 py-2 bg-muted/30 space-y-2">
+                      {/* Plan metadata */}
+                      {(plan.entity_subtype || plan.authority || plan.area_dunam || plan.status_date) && (
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] mb-2 pb-2 border-b">
+                          {plan.entity_subtype && (
+                            <>
+                              <span className="text-muted-foreground">סוג תוכנית</span>
+                              <span className="font-medium">{plan.entity_subtype}</span>
+                            </>
+                          )}
+                          {plan.authority && (
+                            <>
+                              <span className="text-muted-foreground">סמכות</span>
+                              <span className="font-medium">{plan.authority}</span>
+                            </>
+                          )}
+                          {plan.area_dunam != null && (
+                            <>
+                              <span className="text-muted-foreground">שטח</span>
+                              <span className="font-medium">{plan.area_dunam} דונם</span>
+                            </>
+                          )}
+                          {plan.status_date && (
+                            <>
+                              <span className="text-muted-foreground">תאריך סטטוס</span>
+                              <span className="font-medium">{plan.status_date}</span>
+                            </>
+                          )}
+                          {plan.city_county && (
+                            <>
+                              <span className="text-muted-foreground">ישוב</span>
+                              <span className="font-medium">{plan.city_county}</span>
+                            </>
                           )}
                         </div>
-                      ))}
+                      )}
+                      {plan.goals && (
+                        <p className="text-[11px] text-muted-foreground mb-2 pb-2 border-b leading-relaxed">
+                          {plan.goals}
+                        </p>
+                      )}
+                      {/* Files */}
+                      {plan.files.length > 0 ? (
+                        <div className="space-y-1">
+                          <p className="text-[11px] text-muted-foreground font-medium">{plan.file_count} קבצים:</p>
+                          {plan.files.map((file) => (
+                            <div
+                              key={file.path}
+                              className="flex items-center gap-2 py-0.5"
+                            >
+                              {fileTypeIcon(file.type)}
+                              <a
+                                href={getLocalFileUrl(file.path)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 hover:underline flex-1 min-w-0 truncate"
+                              >
+                                {file.title || file.name}
+                              </a>
+                              <span className="text-[10px] text-muted-foreground shrink-0">
+                                {formatBytes(file.size)}
+                              </span>
+                              {(file.type === "jpg" || file.type === "jpeg" || file.type === "png") && onShowPlan && (
+                                <button
+                                  onClick={() => onShowPlan(file.path)}
+                                  className="text-[10px] text-teal-600 hover:underline shrink-0"
+                                >
+                                  הצג במפה
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">אין קבצים זמינים</p>
+                      )}
                     </div>
                   )}
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* TABA Outlines */}
+      {data.taba_outlines && data.taba_outlines.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Globe className="h-4 w-4 text-teal-600" />
+            <h3 className="text-sm font-semibold">קווי תב&quot;ע</h3>
+            <Badge variant="outline" className="text-xs">{data.taba_outlines.length}</Badge>
+          </div>
+
+          <div className="space-y-1.5">
+            {data.taba_outlines.map((taba: TabaOutline, i: number) => (
+              <div key={taba.pl_number || i} className="rounded-lg border bg-card p-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">
+                      {taba.pl_number || "ללא מספר"}
+                    </p>
+                    {taba.pl_name && (
+                      <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                        {taba.pl_name}
+                      </p>
+                    )}
+                  </div>
+                  {taba.status && (
+                    <Badge className={`text-[10px] px-1.5 py-0 shrink-0 ${statusColor(taba.status)}`}>
+                      {taba.status}
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1.5 text-[11px] text-muted-foreground">
+                  {taba.entity_subtype && <span>{taba.entity_subtype}</span>}
+                  {taba.area_dunam != null && <span>{taba.area_dunam} דונם</span>}
+                  {taba.land_use && <span className="truncate max-w-[200px]">{taba.land_use}</span>}
+                </div>
+                {taba.pl_url && (
+                  <a
+                    href={taba.pl_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] text-blue-600 hover:underline mt-1 inline-block"
+                  >
+                    צפייה באתר iPlan ←
+                  </a>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -830,7 +940,7 @@ function LocalPlansSection({
         </div>
       )}
 
-      {/* Parcel detail from local data */}
+      {/* Parcel detail from DB */}
       {data.parcel_detail && (
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -841,13 +951,13 @@ function LocalPlansSection({
             {data.parcel_detail.legal_area_sqm != null && (
               <>
                 <span className="text-muted-foreground">שטח רשום</span>
-                <span className="font-medium">{data.parcel_detail.legal_area_sqm.toLocaleString("he-IL")} מ&quot;ר</span>
+                <span className="font-medium">{formatArea(data.parcel_detail.legal_area_sqm)}</span>
               </>
             )}
-            {data.parcel_detail.status && (
+            {data.parcel_detail.status_text && (
               <>
                 <span className="text-muted-foreground">סטטוס</span>
-                <span className="font-medium">{data.parcel_detail.status}</span>
+                <span className="font-medium">{data.parcel_detail.status_text}</span>
               </>
             )}
             {data.parcel_detail.municipality && (
@@ -866,6 +976,18 @@ function LocalPlansSection({
               <>
                 <span className="text-muted-foreground">מחוז</span>
                 <span className="font-medium">{data.parcel_detail.region}</span>
+              </>
+            )}
+            {data.parcel_detail.plan_count > 0 && (
+              <>
+                <span className="text-muted-foreground">תוכניות</span>
+                <span className="font-medium">{data.parcel_detail.plan_count}</span>
+              </>
+            )}
+            {data.parcel_detail.doc_count > 0 && (
+              <>
+                <span className="text-muted-foreground">מסמכים</span>
+                <span className="font-medium">{data.parcel_detail.doc_count}</span>
               </>
             )}
           </div>

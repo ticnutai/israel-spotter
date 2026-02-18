@@ -546,17 +546,26 @@ function mapGeoref(r: any): GeorefEntry {
   };
 }
 
-// ─── Local Plans & Permits (from disk) ───────────────────────────────────────
+// ─── Local Plans & Permits (DB-powered) ─────────────────────────────────────
 
 export interface LocalPlanFile {
   name: string;
   size: number;
   type: string;
   path: string;
+  title?: string;
 }
 
 export interface LocalPlan {
   plan_name: string;
+  plan_display_name: string | null;
+  entity_subtype: string | null;
+  main_status: string | null;
+  status_date: string | null;
+  area_dunam: number | null;
+  authority: string | null;
+  goals: string | null;
+  city_county: string | null;
   file_count: number;
   files: LocalPlanFile[];
   has_tashrit: boolean;
@@ -571,17 +580,33 @@ export interface LocalPermit {
   files: LocalPlanFile[];
 }
 
+export interface TabaOutline {
+  pl_number: string | null;
+  pl_name: string | null;
+  entity_subtype: string | null;
+  status: string | null;
+  area_dunam: number | null;
+  land_use: string | null;
+  plan_county: string | null;
+  pl_url: string | null;
+  main_status: string | null;
+}
+
 export interface LocalParcelDetail {
   gush: number;
   helka: number;
-  gush_helka: string;
   legal_area_sqm: number | null;
-  status: string;
-  municipality: string;
-  county: string;
-  region: string;
-  centroid_lat: number;
-  centroid_lng: number;
+  shape_area_sqm: number | null;
+  status_text: string | null;
+  municipality: string | null;
+  county: string | null;
+  region: string | null;
+  centroid_lat: number | null;
+  centroid_lng: number | null;
+  update_date: string | null;
+  plan_count: number;
+  permit_count: number;
+  doc_count: number;
 }
 
 export interface LocalPlansResponse {
@@ -589,9 +614,11 @@ export interface LocalPlansResponse {
   helka: number;
   plans: LocalPlan[];
   permits: LocalPermit[];
+  taba_outlines: TabaOutline[];
   parcel_detail: LocalParcelDetail | null;
   plan_count: number;
   permit_count: number;
+  taba_count: number;
 }
 
 export async function getLocalPlans(gush: number, helka: number): Promise<LocalPlansResponse> {
