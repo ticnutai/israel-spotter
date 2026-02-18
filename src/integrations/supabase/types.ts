@@ -70,6 +70,33 @@ export type Database = {
           },
         ]
       }
+      favorites: {
+        Row: {
+          created_at: string
+          gush: number
+          helka: number
+          id: string
+          label: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          gush: number
+          helka: number
+          id?: string
+          label?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          gush?: number
+          helka?: number
+          id?: string
+          label?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       gis_layers: {
         Row: {
           created_at: string
@@ -304,6 +331,33 @@ export type Database = {
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      watch_parcels: {
+        Row: {
+          created_at: string
+          gush: number
+          helka: number
+          id: string
+          notify_email: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          gush: number
+          helka: number
+          id?: string
+          notify_email?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          gush?: number
+          helka?: number
+          id?: string
+          notify_email?: boolean
           user_id?: string
         }
         Relationships: []
