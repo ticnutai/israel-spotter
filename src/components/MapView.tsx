@@ -5,6 +5,7 @@ import type { GeoResult } from "@/lib/geocode";
 import type { BoundaryResult } from "@/lib/boundaries";
 import { MapLayerSwitcher, MAP_LAYERS, LABELS_LAYER_URL, type MapLayerOption } from "./MapLayerSwitcher";
 import { MapMeasure } from "./MapMeasure";
+import { ScaleBarControl } from "./ScaleBarControl";
 import { AerialOverlay } from "./AerialOverlay";
 import { PlanOverlay } from "./PlanOverlay";
 
@@ -313,6 +314,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
       <div ref={containerRef} className="absolute inset-0 z-0" />
       <MapLayerSwitcher activeLayerId={activeLayerId} onLayerChange={handleLayerChange} />
       {mapReady && <MapMeasure map={mapRef.current} />}
+      {mapReady && <ScaleBarControl map={mapRef.current} />}
       {mapReady && <AerialOverlay map={mapRef.current} year={aerialYear ?? null} />}
       {mapReady && (
         <PlanOverlay
