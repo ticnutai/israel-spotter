@@ -146,7 +146,7 @@ export function MapMeasure({ map }: MapMeasureProps) {
   }, [map]);
 
   return (
-    <div className="absolute top-14 right-3 z-[1000] flex flex-col gap-2" dir="rtl">
+    <div className="absolute top-[60px] right-3 z-[999] flex flex-col gap-2" dir="rtl">
       <Button
         size="icon"
         variant={active ? "default" : "outline"}

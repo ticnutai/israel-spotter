@@ -243,7 +243,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
 
     const layerGroup = L.layerGroup().addTo(mapRef.current);
 
-    if (boundaries.blockGeometry) {
+    if (boundaries.blockGeometry && !boundaries.parcelGeometry) {
       L.geoJSON(boundaries.blockGeometry as any, {
         style: {
           color: "#2563eb",

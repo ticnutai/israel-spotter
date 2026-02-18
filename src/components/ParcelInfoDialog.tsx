@@ -53,6 +53,10 @@ interface Props {
   onShowPlan?: (path: string) => void;
 }
 
+const MIN_DIALOG_WIDTH = 340;
+const MAX_DIALOG_WIDTH = 700;
+const DEFAULT_DIALOG_WIDTH = 460;
+
 // ── Category helpers ─────────────────────────────────────────────────────────
 
 const CATEGORY_META: Record<string, { icon: React.ReactNode; label: string }> = {
@@ -102,8 +106,37 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   const [localPlansData, setLocalPlansData] = useState<LocalPlansResponse | null>(null);
   const [loadingLocalPlans, setLoadingLocalPlans] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const [dialogWidth, setDialogWidth] = useState(() => {
+    const saved = localStorage.getItem("parcel-dialog-width");
+    return saved ? Number(saved) : DEFAULT_DIALOG_WIDTH;
+  });
+  const [isResizing, setIsResizing] = useState(false);
   const { isFavorite, addFavorite, removeFavorite, favorites, isLoggedIn: favLoggedIn } = useFavorites();
   const { isWatching, addWatch, removeWatch, watches, isLoggedIn: watchLoggedIn } = useWatchParcels();
+
+  // Persist dialog width
+  useEffect(() => {
+    localStorage.setItem("parcel-dialog-width", String(dialogWidth));
+  }, [dialogWidth]);
+
+  // Resize handler
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    const startX = e.clientX;
+    const startWidth = dialogWidth;
+    const onMouseMove = (ev: MouseEvent) => {
+      const delta = startX - ev.clientX;
+      setDialogWidth(Math.min(MAX_DIALOG_WIDTH, Math.max(MIN_DIALOG_WIDTH, startWidth + delta)));
+    };
+    const onMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }, [dialogWidth]);
 
   // Fetch supplementary DB data (may return empty – that's OK)
   const fetchDbData = useCallback(async (gush: number, helka: number) => {
@@ -170,11 +203,23 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
     <div
       ref={panelRef}
       className={cn(
-        "fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] md:w-[460px] bg-background border-l shadow-2xl flex flex-col transition-transform duration-300 ease-in-out",
+        "fixed inset-y-0 right-0 z-50 bg-background border-l shadow-2xl flex flex-row",
+        !isResizing && "transition-transform duration-300 ease-in-out",
         open ? "translate-x-0" : "translate-x-full pointer-events-none"
       )}
+      style={{ width: dialogWidth }}
       dir="rtl"
     >
+      {/* ═══ Resize Handle ═══ */}
+      <div
+        className="w-3 h-full flex items-center justify-center cursor-col-resize shrink-0 group hover:bg-blue-50/50 transition-colors"
+        onMouseDown={handleResizeStart}
+      >
+        <div className="w-1 h-10 rounded-full bg-muted-foreground/30 group-hover:bg-blue-500/60 transition-colors" />
+      </div>
+
+      {/* ═══ Panel Content ═══ */}
+      <div className="flex-1 min-w-0 flex flex-col">
       {/* ═══ Header ═══ */}
       <div className="px-5 pt-5 pb-3 border-b bg-gradient-to-l from-blue-50 to-white dark:from-blue-950 dark:to-background flex flex-col relative">
         <button
@@ -260,8 +305,8 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
 
           <Separator />
 
-          {/* ─── Local Plans & Permits (מקומי) ─── */}
-          {loadingLocalPlans ? (
+          {/* ─── Plans, Permits & Documents (unified) ─── */}
+          {(loadingLocalPlans || loadingDb) ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-1">
                 <Layers className="h-4 w-4" />
@@ -271,102 +316,85 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
               <Skeleton className="h-10 rounded-lg" />
               <Skeleton className="h-10 rounded-lg" />
             </div>
-          ) : localPlansData && (localPlansData.plan_count > 0 || localPlansData.permit_count > 0 || localPlansData.taba_count > 0) ? (
-            <LocalPlansSection
-              data={localPlansData}
-              onShowPlan={onShowPlan}
-            />
           ) : (
-            <div className="rounded-lg border border-dashed p-3 text-center text-muted-foreground">
-              <Layers className="h-5 w-5 mx-auto mb-1 opacity-50" />
-              <p className="text-sm">לא נמצאו תוכניות או היתרים לחלקה זו</p>
-            </div>
-          )}
+            <>
+              {/* Local plans (DB-powered, primary source) */}
+              {localPlansData && (localPlansData.plan_count > 0 || localPlansData.permit_count > 0 || localPlansData.taba_count > 0) && (
+                <LocalPlansSection
+                  data={localPlansData}
+                  onShowPlan={onShowPlan}
+                />
+              )}
 
-          <Separator />
-
-          {/* ─── DB Planning Data ─── */}
-          {loadingDb ? (
-            <LoadingSkeleton />
-          ) : (
-              <>
-                {/* Quick stats from DB */}
-                {(plans.length > 0 || documents.length > 0) && (
-                  <QuickStats
-                    parcelInfo={parcelInfo}
-                    docCount={documents.length}
-                    planCount={plans.length}
-                  />
-                )}
-
-                {/* Plans section */}
-                {plans.length > 0 && (
-                  <Section
-                    icon={<Layers className="h-4 w-4" />}
-                    title="תוכניות"
-                    count={plans.length}
-                  >
-                    <div className="space-y-2">
-                      {plans.map((plan) => (
-                        <PlanCard
-                          key={plan.plan_number}
-                          plan={plan}
-                          expanded={expandedPlans.has(plan.plan_number)}
-                          onToggle={() => togglePlan(plan.plan_number)}
-                          documents={documents.filter(
-                            (d) => d.plan_number === plan.plan_number
-                          )}
-                        />
-                      ))}
-                    </div>
-                  </Section>
-                )}
-
-                {/* Documents by category */}
-                {Object.keys(docsByCategory).length > 0 && (
-                  <Section
-                    icon={<FileText className="h-4 w-4" />}
-                    title="מסמכים לפי קטגוריה"
-                    count={documents.length}
-                  >
-                    <div className="space-y-3">
-                      {Object.entries(docsByCategory).map(([cat, docs]) => {
-                        const meta = categoryMeta(cat);
-                        return (
-                          <div key={cat}>
-                            <div className="flex items-center gap-2 mb-1.5">
-                              {meta.icon}
-                              <span className="text-sm font-medium">{meta.label}</span>
-                              <Badge variant="secondary" className="text-xs">
-                                {docs.length}
-                              </Badge>
-                            </div>
-                            <div className="space-y-1 mr-6">
-                              {docs.map((doc) => (
-                                <DocRow key={doc.id} doc={doc} />
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </Section>
-                )}
-
-                {/* No DB data state */}
-                {!loadingDb && documents.length === 0 && plans.length === 0 && (
-                  <div className="rounded-lg border border-dashed p-4 text-center text-muted-foreground">
-                    <Info className="h-6 w-6 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">לא נמצאו תוכניות או מסמכים</p>
-                    <p className="text-xs mt-1 opacity-75">
-                      ייתכן שגוש {data?.gush} אינו במאגר המידע התכנוני המקומי
-                    </p>
+              {/* Supabase fallback plans (when local backend unavailable) */}
+              {(!localPlansData || localPlansData.plan_count === 0) && plans.length > 0 && (
+                <Section
+                  icon={<Layers className="h-4 w-4" />}
+                  title="תוכניות"
+                  count={plans.length}
+                >
+                  <div className="space-y-2">
+                    {plans.map((plan) => (
+                      <PlanCard
+                        key={plan.plan_number}
+                        plan={plan}
+                        expanded={expandedPlans.has(plan.plan_number)}
+                        onToggle={() => togglePlan(plan.plan_number)}
+                        documents={documents.filter(
+                          (d) => d.plan_number === plan.plan_number
+                        )}
+                      />
+                    ))}
                   </div>
-                )}
-              </>
-            )}
+                </Section>
+              )}
+
+              {/* Documents by category (Supabase fallback) */}
+              {(!localPlansData || localPlansData.plan_count === 0) && Object.keys(docsByCategory).length > 0 && (
+                <Section
+                  icon={<FileText className="h-4 w-4" />}
+                  title="מסמכים לפי קטגוריה"
+                  count={documents.length}
+                >
+                  <div className="space-y-3">
+                    {Object.entries(docsByCategory).map(([cat, docs]) => {
+                      const meta = categoryMeta(cat);
+                      return (
+                        <div key={cat}>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            {meta.icon}
+                            <span className="text-sm font-medium">{meta.label}</span>
+                            <Badge variant="secondary" className="text-xs">
+                              {docs.length}
+                            </Badge>
+                          </div>
+                          <div className="space-y-1 mr-6">
+                            {docs.map((doc) => (
+                              <DocRow key={doc.id} doc={doc} />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Section>
+              )}
+
+              {/* No data at all */}
+              {(!localPlansData || (localPlansData.plan_count === 0 && localPlansData.permit_count === 0 && localPlansData.taba_count === 0)) && documents.length === 0 && plans.length === 0 && (
+                <div className="rounded-lg border border-dashed p-4 text-center text-muted-foreground">
+                  <Info className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">לא נמצאו תוכניות או מסמכים</p>
+                  <p className="text-xs mt-1 opacity-75">
+                    ייתכן שגוש {data?.gush} אינו במאגר המידע התכנוני המקומי
+                  </p>
+                </div>
+              )}
+            </>
+          )}
           </div>
         </ScrollArea>
+      </div>
       </div>
   );
 }
