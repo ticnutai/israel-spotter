@@ -136,6 +136,10 @@ export function SmartSidebar({
     return () => window.removeEventListener("mousemove", handleEdgeMove);
   }, [pinned, hovered]);
 
+  // Gold color constants
+  const goldColor = "hsl(43 56% 52%)";
+  const goldBorder = `1px solid ${goldColor}`;
+
   // ── Render ──
   return (
     <TooltipProvider delayDuration={200}>
@@ -146,19 +150,25 @@ export function SmartSidebar({
           "transition-all duration-300 ease-in-out",
         )}
         style={{
-          width: isOpen ? RAIL_WIDTH + PANEL_WIDTH : RAIL_WIDTH,
+          width: isOpen ? RAIL_WIDTH + PANEL_WIDTH : 0,
         }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         dir="rtl"
       >
-        {/* ── Icon Rail (always visible) ── */}
+        {/* ── Icon Rail ── */}
         <div
           className={cn(
-            "flex flex-col items-center py-2 border-l bg-card/95 backdrop-blur-sm",
-            "shrink-0 z-10",
+            "flex flex-col items-center py-2 shrink-0 z-10",
+            "transition-all duration-300 ease-in-out",
           )}
-          style={{ width: RAIL_WIDTH }}
+          style={{
+            width: isOpen ? RAIL_WIDTH : 0,
+            opacity: isOpen ? 1 : 0,
+            overflow: "hidden",
+            backgroundColor: "hsl(0 0% 100%)",
+            borderLeft: goldBorder,
+          }}
         >
           {/* Tab icons */}
           <div className="flex-1 flex flex-col items-center gap-1 mt-1">
@@ -173,10 +183,11 @@ export function SmartSidebar({
                     className={cn(
                       "w-10 h-10 rounded-lg flex items-center justify-center",
                       "transition-colors relative",
-                      activeTab === tab.id
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "hover:bg-accent text-muted-foreground hover:text-foreground",
                     )}
+                    style={{
+                      color: activeTab === tab.id ? "hsl(0 0% 100%)" : goldColor,
+                      backgroundColor: activeTab === tab.id ? goldColor : "transparent",
+                    }}
                   >
                     {tab.icon}
                     {tab.badge && tab.badge > 0 && (
@@ -202,12 +213,8 @@ export function SmartSidebar({
                     setPinned(!pinned);
                     if (!pinned) setHovered(false);
                   }}
-                  className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
-                    pinned
-                      ? "text-primary hover:bg-primary/10"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                  )}
+                  className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
+                  style={{ color: goldColor }}
                 >
                   {pinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
                 </button>
@@ -222,16 +229,24 @@ export function SmartSidebar({
         {/* ── Panel Content (slides in/out) ── */}
         <div
           className={cn(
-            "h-full overflow-hidden flex flex-col bg-card border-l",
+            "h-full overflow-hidden flex flex-col",
             "transition-all duration-300 ease-in-out",
           )}
           style={{
             width: isOpen ? PANEL_WIDTH : 0,
             opacity: isOpen ? 1 : 0,
+            backgroundColor: "hsl(0 0% 100%)",
+            borderLeft: goldBorder,
           }}
         >
           {/* Panel header */}
-          <div className="shrink-0 border-b px-3 py-2 flex items-center justify-between bg-primary/5">
+          <div
+            className="shrink-0 px-3 py-2 flex items-center justify-between"
+            style={{
+              borderBottom: goldBorder,
+              color: goldColor,
+            }}
+          >
             <div className="flex items-center gap-2">
               {SIDEBAR_TABS.find((t) => t.id === activeTab)?.icon}
               <span className="font-semibold text-sm">
@@ -241,7 +256,8 @@ export function SmartSidebar({
             {!pinned && (
               <button
                 onClick={() => setHovered(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="transition-colors"
+                style={{ color: goldColor }}
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -249,7 +265,7 @@ export function SmartSidebar({
           </div>
 
           {/* Tab content */}
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-hidden sidebar-gold-content" dir="rtl">
             {activeTab === "data" && (
               <DataTab
                 onSelectGush={onSelectGush}
