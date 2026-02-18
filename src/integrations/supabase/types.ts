@@ -195,6 +195,92 @@ export type Database = {
           },
         ]
       }
+      permit_documents: {
+        Row: {
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: number
+          permit_id: number
+        }
+        Insert: {
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: number
+          permit_id: number
+        }
+        Update: {
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: number
+          permit_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permit_documents_permit_id_fkey"
+            columns: ["permit_id"]
+            isOneToOne: false
+            referencedRelation: "permits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permits: {
+        Row: {
+          file_count: number | null
+          gush: number
+          helka: number
+          id: number
+          permit_id: string
+        }
+        Insert: {
+          file_count?: number | null
+          gush: number
+          helka: number
+          id?: number
+          permit_id: string
+        }
+        Update: {
+          file_count?: number | null
+          gush?: number
+          helka?: number
+          id?: number
+          permit_id?: string
+        }
+        Relationships: []
+      }
+      plan_blocks: {
+        Row: {
+          block_type: string | null
+          gush: number
+          helka: number | null
+          id: number
+          is_partial: number | null
+          plan_number: string
+        }
+        Insert: {
+          block_type?: string | null
+          gush: number
+          helka?: number | null
+          id?: number
+          is_partial?: number | null
+          plan_number: string
+        }
+        Update: {
+          block_type?: string | null
+          gush?: number
+          helka?: number | null
+          id?: number
+          is_partial?: number | null
+          plan_number?: string
+        }
+        Relationships: []
+      }
       plan_georef: {
         Row: {
           bbox_max_x: number | null
@@ -314,6 +400,66 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      taba_outlines: {
+        Row: {
+          area_dunam: number | null
+          depositing_date: string | null
+          district: string | null
+          entity_subtype: string | null
+          geometry_json: string | null
+          id: number
+          jurisdiction: string | null
+          land_use: string | null
+          last_update: string | null
+          mp_id: number | null
+          objectid: number | null
+          pl_name: string | null
+          pl_number: string | null
+          pl_url: string | null
+          plan_county: string | null
+          properties_json: string | null
+          status: string | null
+        }
+        Insert: {
+          area_dunam?: number | null
+          depositing_date?: string | null
+          district?: string | null
+          entity_subtype?: string | null
+          geometry_json?: string | null
+          id?: number
+          jurisdiction?: string | null
+          land_use?: string | null
+          last_update?: string | null
+          mp_id?: number | null
+          objectid?: number | null
+          pl_name?: string | null
+          pl_number?: string | null
+          pl_url?: string | null
+          plan_county?: string | null
+          properties_json?: string | null
+          status?: string | null
+        }
+        Update: {
+          area_dunam?: number | null
+          depositing_date?: string | null
+          district?: string | null
+          entity_subtype?: string | null
+          geometry_json?: string | null
+          id?: number
+          jurisdiction?: string | null
+          land_use?: string | null
+          last_update?: string | null
+          mp_id?: number | null
+          objectid?: number | null
+          pl_name?: string | null
+          pl_number?: string | null
+          pl_url?: string | null
+          plan_county?: string | null
+          properties_json?: string | null
+          status?: string | null
         }
         Relationships: []
       }
