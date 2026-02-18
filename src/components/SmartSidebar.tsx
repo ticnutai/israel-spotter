@@ -20,7 +20,6 @@ import {
   ChevronRight,
   Upload,
   Layers,
-  Map,
   Info,
   Globe,
   Ruler,

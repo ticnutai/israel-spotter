@@ -22,7 +22,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = BASE_DIR / "backend"
-FRONTEND_DIR = BASE_DIR / "frontend"
+FRONTEND_DIR = BASE_DIR  # Frontend (vite/src) is at project root
 VENV_PYTHON = BASE_DIR / ".venv" / "Scripts" / "python.exe"
 VENV_UVICORN = BASE_DIR / ".venv" / "Scripts" / "uvicorn.exe"
 

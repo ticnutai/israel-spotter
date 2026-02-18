@@ -28,11 +28,11 @@ $backendJob = Start-Process -PassThru -NoNewWindow -FilePath "$root\.venv\Script
 
 Start-Sleep -Seconds 2
 
-# Start frontend (Vite :8080)
+# Start frontend (Vite :3002)
 Write-Host '[2/2] Starting frontend (vite :3002)...' -ForegroundColor Green
 $frontendJob = Start-Process -PassThru -NoNewWindow -FilePath 'npm' `
     -ArgumentList 'run', 'dev' `
-    -WorkingDirectory "$root\frontend"
+    -WorkingDirectory $root
 
 Start-Sleep -Seconds 2
 
