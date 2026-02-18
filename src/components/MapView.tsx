@@ -74,9 +74,10 @@ interface MapViewProps {
   aerialYear?: string | null;
   planPath?: string | null;
   onClearPlan?: () => void;
+  onMapClick?: (lat: number, lng: number) => void;
 }
 
-function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan }: MapViewProps) {
+function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, onMapClick }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const boundaryLayerRef = useRef<L.LayerGroup | null>(null);
@@ -173,6 +174,24 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan }:
       }).addTo(mapRef.current);
     }
   }, []);
+
+  // Map click → reverse-geocode parcel
+  const onMapClickRef = useRef(onMapClick);
+  onMapClickRef.current = onMapClick;
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const handler = (e: L.LeafletMouseEvent) => {
+      if (onMapClickRef.current) {
+        onMapClickRef.current(e.latlng.lat, e.latlng.lng);
+      }
+    };
+
+    map.on("click", handler);
+    return () => { map.off("click", handler); };
+  }, [mapReady]);
 
   // Update marker on result change
   useEffect(() => {

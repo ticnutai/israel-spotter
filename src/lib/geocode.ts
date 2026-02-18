@@ -103,7 +103,44 @@ export async function searchByGushHelka(
   }
 }
 
-// ── Search by address (Photon / Komoot) ──────────────────────────────────────
+// ── Reverse geocode: point → Gush+Helka (hit-test Survey of Israel parcels) ──
+export interface ReverseParcelResult {
+  gush: number;
+  helka: number;
+  lat: number;
+  lng: number;
+}
+
+export async function reverseGeocodeParcel(lat: number, lng: number): Promise<ReverseParcelResult | null> {
+  // Query parcel layer with a point geometry
+  const params = new URLSearchParams({
+    geometry: `${lng},${lat}`,
+    geometryType: "esriGeometryPoint",
+    spatialRel: "esriSpatialRelIntersects",
+    inSR: "4326",
+    outSR: "4326",
+    returnGeometry: "false",
+    outFields: "GUSH_NUM,PARCEL",
+    f: "json",
+  });
+
+  try {
+    const response = await fetch(`${PARCEL_SERVICE_URL}?${params}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data?.features || data.features.length === 0) return null;
+
+    const attrs = data.features[0].attributes;
+    const gush = attrs.GUSH_NUM;
+    const helka = attrs.PARCEL;
+    if (!gush || !helka) return null;
+
+    return { gush, helka, lat, lng };
+  } catch {
+    return null;
+  }
+}
+
 export async function searchByAddress(address: string): Promise<GeoResult> {
   // Try Photon first
   const query = encodeURIComponent(address + ", ישראל");

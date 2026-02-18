@@ -3,16 +3,20 @@ import { SearchPanel } from "@/components/SearchPanel";
 import { MapView } from "@/components/MapView";
 import { MapLegend } from "@/components/MapLegend";
 import { SmartSidebar } from "@/components/SmartSidebar";
+import { ParcelInfoDialog, type ParcelDialogData } from "@/components/ParcelInfoDialog";
 import type { GeoResult } from "@/lib/geocode";
 import type { BoundaryResult } from "@/lib/boundaries";
-import { searchByGushHelka } from "@/lib/geocode";
+import { searchByGushHelka, reverseGeocodeParcel } from "@/lib/geocode";
 import { fetchBoundaries } from "@/lib/boundaries";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [result, setResult] = useState<GeoResult | null>(null);
   const [boundaries, setBoundaries] = useState<BoundaryResult | null>(null);
   const [aerialYear, setAerialYear] = useState<string | null>(null);
   const [planPath, setPlanPath] = useState<string | null>(null);
+  const [parcelDialog, setParcelDialog] = useState<ParcelDialogData | null>(null);
+  const { toast } = useToast();
 
   const handleSelectGush = useCallback(async (gush: number) => {
     try {
@@ -29,6 +33,27 @@ const Index = () => {
       } catch { /* ignore */ }
     }
   }, []);
+
+  const handleMapClick = useCallback(async (lat: number, lng: number) => {
+    try {
+      const parcel = await reverseGeocodeParcel(lat, lng);
+      if (!parcel) {
+        toast({
+          title: "לא נמצאה חלקה",
+          description: "הנקודה שנבחרה אינה בתוך חלקה רשומה",
+          variant: "destructive",
+        });
+        return;
+      }
+      setParcelDialog(parcel);
+    } catch {
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לזהות חלקה בנקודה זו",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
 
   return (
     <div className="flex flex-row h-screen bg-background" dir="rtl">
@@ -54,8 +79,13 @@ const Index = () => {
             aerialYear={aerialYear}
             planPath={planPath}
             onClearPlan={() => setPlanPath(null)}
+            onMapClick={handleMapClick}
           />
           {boundaries && <MapLegend />}
+          <ParcelInfoDialog
+            data={parcelDialog}
+            onClose={() => setParcelDialog(null)}
+          />
         </div>
       </div>
     </div>
