@@ -75,12 +75,14 @@ interface MapViewProps {
   planPath?: string | null;
   onClearPlan?: () => void;
   onMapClick?: (lat: number, lng: number) => void;
+  highlightGeometry?: GeoJSON.Geometry | null;
 }
 
-function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, onMapClick }: MapViewProps) {
+function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, onMapClick, highlightGeometry }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const boundaryLayerRef = useRef<L.LayerGroup | null>(null);
+  const highlightLayerRef = useRef<L.GeoJSON | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const labelsLayerRef = useRef<L.TileLayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -272,6 +274,39 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
 
     boundaryLayerRef.current = layerGroup;
   }, [boundaries]);
+
+  // ── Highlight parcel polygon (from map click or URL deep-link) ──
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove previous highlight
+    if (highlightLayerRef.current) {
+      highlightLayerRef.current.remove();
+      highlightLayerRef.current = null;
+    }
+
+    if (!highlightGeometry) return;
+
+    const layer = L.geoJSON(highlightGeometry as any, {
+      style: {
+        color: "#f59e0b",
+        weight: 4,
+        fillColor: "#fbbf24",
+        fillOpacity: 0.25,
+        dashArray: "8 4",
+      },
+    }).addTo(mapRef.current);
+
+    // Fit map to highlighted parcel
+    try {
+      const bounds = layer.getBounds();
+      if (bounds.isValid()) {
+        mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 18 });
+      }
+    } catch { /* ignore invalid bounds */ }
+
+    highlightLayerRef.current = layer;
+  }, [highlightGeometry]);
 
   return (
     <div className="h-full w-full relative">

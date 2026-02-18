@@ -104,6 +104,50 @@ All colors MUST be HSL.
     direction: rtl;
     text-align: right;
   }
+
+  /* Ensure all inputs, labels, and form elements respect RTL */
+  input,
+  textarea,
+  select,
+  label,
+  button,
+  p,
+  h1, h2, h3, h4, h5, h6,
+  span,
+  div {
+    text-align: inherit;
+  }
+
+  /* Tabs should flow RTL */
+  [role="tablist"] {
+    direction: rtl;
+  }
+
+  /* Dialogs / Sheets / Popovers */
+  [role="dialog"],
+  [role="alertdialog"],
+  [data-radix-popper-content-wrapper] {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* Dropdowns & menus */
+  [role="menu"],
+  [role="listbox"] {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* Scrollbar on the left in RTL */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
 }
 
 /* ─── Leaflet RTL fixes ─── */
