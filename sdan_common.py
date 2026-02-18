@@ -14,6 +14,7 @@ Contains:
 import os
 import re
 import time
+import json
 import sqlite3
 from typing import List, Tuple, Dict, Optional
 from urllib.parse import urlparse
@@ -272,9 +273,153 @@ def open_db(path: str = "kfar_chabad_documents.db") -> sqlite3.Connection:
         CREATE INDEX IF NOT EXISTS idx_documents_plan ON documents(plan_number);
         CREATE INDEX IF NOT EXISTS idx_documents_category ON documents(category);
         CREATE INDEX IF NOT EXISTS idx_parcels_gush ON parcels(gush);
+
+        -- Rich metadata tables for plans and permits
+        CREATE TABLE IF NOT EXISTS plan_details (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            plan_number TEXT NOT NULL,
+            plan_name TEXT,
+            status TEXT,
+            status_date TEXT,
+            gush INTEGER,
+            helka INTEGER,
+            source_id TEXT,
+            scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(plan_number, gush, helka)
+        );
+        CREATE TABLE IF NOT EXISTS permit_details (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            request_number TEXT NOT NULL,
+            building_file TEXT,
+            submission_date TEXT,
+            applicant_name TEXT,
+            address TEXT,
+            gush INTEGER,
+            helka INTEGER,
+            source_id TEXT,
+            scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(request_number, gush, helka)
+        );
+        CREATE INDEX IF NOT EXISTS idx_plan_details_gush ON plan_details(gush);
+        CREATE INDEX IF NOT EXISTS idx_permit_details_gush ON permit_details(gush);
+        CREATE INDEX IF NOT EXISTS idx_permit_details_applicant ON permit_details(applicant_name);
     """)
     conn.commit()
     return conn
+
+
+# ─── Metadata extraction from result rows ───────────────────────────────────
+def extract_plan_metadata(row, gush: int, helka: int) -> Dict:
+    """Extract all metadata columns from a plans result row.
+
+    Plans table columns:
+      [0] icon-link, [1] plan_number, [2] plan_name,
+      [3] status, [4] status_date, [5] archive_button
+    """
+    cells = row.find_elements(By.TAG_NAME, "td")
+    if len(cells) < 5:
+        return {}
+    source_id = ""
+    try:
+        link = cells[0].find_element(By.CSS_SELECTOR, "a[href^='javascript:get']")
+        href = link.get_attribute("href") or ""
+        m = re.search(r'\((\d+)\)', href)
+        if m:
+            source_id = m.group(1)
+    except NoSuchElementException:
+        pass
+    return {
+        "plan_number": cells[1].text.strip(),
+        "plan_name": cells[2].text.strip(),
+        "status": cells[3].text.strip(),
+        "status_date": cells[4].text.strip(),
+        "source_id": source_id,
+        "gush": gush,
+        "helka": helka,
+    }
+
+
+def extract_permit_metadata(row, gush: int, helka: int) -> Dict:
+    """Extract all metadata columns from a permits result row.
+
+    Permits table columns:
+      [0] icon-link, [1] request_number, [2] building_file,
+      [3] submission_date, [4] applicant_name, [5] address,
+      [6] gush, [7] helka, [8] archive_button
+    """
+    cells = row.find_elements(By.TAG_NAME, "td")
+    if len(cells) < 8:
+        return {}
+    source_id = ""
+    try:
+        link = cells[0].find_element(By.CSS_SELECTOR, "a[href^='javascript:get']")
+        href = link.get_attribute("href") or ""
+        m = re.search(r'\((\d+)\)', href)
+        if m:
+            source_id = m.group(1)
+    except NoSuchElementException:
+        pass
+    return {
+        "request_number": cells[1].text.strip(),
+        "building_file": cells[2].text.strip(),
+        "submission_date": cells[3].text.strip(),
+        "applicant_name": cells[4].text.strip(),
+        "address": cells[5].text.strip(),
+        "gush": gush,
+        "helka": helka,
+        "source_id": source_id,
+    }
+
+
+def _save_row_metadata(conn: sqlite3.Connection, meta: Dict, category: str) -> None:
+    """Insert / update metadata into the appropriate detail table."""
+    if not meta:
+        return
+    if category == "plans":
+        conn.execute(
+            "INSERT OR REPLACE INTO plan_details "
+            "(plan_number, plan_name, status, status_date, gush, helka, source_id) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                meta.get("plan_number", ""),
+                meta.get("plan_name", ""),
+                meta.get("status", ""),
+                meta.get("status_date", ""),
+                meta.get("gush"),
+                meta.get("helka"),
+                meta.get("source_id", ""),
+            ),
+        )
+        # Also update the plans table with name and status
+        pnum = meta.get("plan_number", "")
+        if pnum:
+            conn.execute(
+                "INSERT OR IGNORE INTO plans (plan_number) VALUES (?)", (pnum,)
+            )
+            conn.execute(
+                "UPDATE plans SET plan_name=?, status=?, plan_type=? "
+                "WHERE plan_number=?",
+                (meta.get("plan_name", ""), meta.get("status", ""),
+                 meta.get("status", ""), pnum),
+            )
+    elif category == "permits":
+        conn.execute(
+            "INSERT OR REPLACE INTO permit_details "
+            "(request_number, building_file, submission_date, "
+            "applicant_name, address, gush, helka, source_id) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                meta.get("request_number", ""),
+                meta.get("building_file", ""),
+                meta.get("submission_date", ""),
+                meta.get("applicant_name", ""),
+                meta.get("address", ""),
+                meta.get("gush"),
+                meta.get("helka"),
+                meta.get("source_id", ""),
+            ),
+        )
+    conn.commit()
 
 
 # ─── Core download logic for one gush ───────────────────────────────────────
@@ -372,6 +517,31 @@ def _process_one_pair(
     )
     print(f"  [{category}] gush={gush} helka={helka}: {len(rows)} result(s)")
 
+    # ── First pass: extract metadata from every row before clicking modals ──
+    all_meta: list = []
+    for r in rows:
+        try:
+            if category == "plans":
+                meta = extract_plan_metadata(r, gush, helka)
+            else:
+                meta = extract_permit_metadata(r, gush, helka)
+            all_meta.append(meta)
+            _save_row_metadata(conn, meta, category)
+        except StaleElementReferenceException:
+            all_meta.append({})
+
+    # Save metadata JSON alongside documents
+    if all_meta:
+        meta_path = os.path.join(pair_dir, "metadata.json")
+        with open(meta_path, "w", encoding="utf-8") as mf:
+            json.dump(all_meta, mf, ensure_ascii=False, indent=2)
+        for m in all_meta:
+            if category == "plans" and m.get("plan_name"):
+                print(f"    📋 {m['plan_number']} – {m['plan_name']} [{m.get('status','')}]")
+            elif category == "permits" and m.get("applicant_name"):
+                print(f"    📋 {m['request_number']} – {m['applicant_name']} ({m.get('submission_date','')})")
+
+    # ── Second pass: iterate rows again to download documents ──
     for idx in range(len(rows)):
         rows = driver.find_elements(
             By.CSS_SELECTOR, "table#results-table tbody tr[role='row']"
@@ -379,15 +549,21 @@ def _process_one_pair(
         if idx >= len(rows):
             break
         row = rows[idx]
+        meta = all_meta[idx] if idx < len(all_meta) else {}
 
-        # Plan number
-        try:
-            plinks = row.find_elements(
-                By.CSS_SELECTOR, "td a[href^='javascript:get']"
-            )
-            plan_num = plinks[1].text.strip() if len(plinks) > 1 else "unknown"
-        except (IndexError, StaleElementReferenceException):
-            plan_num = f"row_{idx}"
+        # Plan / request number
+        if category == "plans":
+            plan_num = meta.get("plan_number", "")
+        else:
+            plan_num = meta.get("request_number", "")
+        if not plan_num:
+            try:
+                plinks = row.find_elements(
+                    By.CSS_SELECTOR, "td a[href^='javascript:get']"
+                )
+                plan_num = plinks[1].text.strip() if len(plinks) > 1 else "unknown"
+            except (IndexError, StaleElementReferenceException):
+                plan_num = f"row_{idx}"
 
         # Archive button
         try:
