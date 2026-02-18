@@ -25,7 +25,6 @@ import {
   Ruler,
   Clock,
   BarChart3,
-  GripVertical,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -36,7 +35,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { KfarChabadPanel } from "./KfarChabadPanel";
 import { UploadPanel } from "./UploadPanel";
 import type { ParsedGisLayer } from "@/lib/gis-parser";
 import { PdfExport } from "./PdfExport";
