@@ -8,6 +8,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   MapPin,
   FileText,
@@ -17,9 +18,14 @@ import {
   Layers,
   ChevronDown,
   ChevronUp,
-  ExternalLink,
-  X,
+  Ruler,
+  Building2,
+  MapPinned,
+  Shield,
+  Calendar,
+  Info,
 } from "lucide-react";
+import type { ReverseParcelResult } from "@/lib/geocode";
 import {
   getParcelDocuments,
   getPlans,
@@ -32,12 +38,8 @@ import {
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export interface ParcelDialogData {
-  gush: number;
-  helka: number;
-  lat: number;
-  lng: number;
-}
+/** The dialog receives the full ArcGIS result directly */
+export type ParcelDialogData = ReverseParcelResult;
 
 interface Props {
   data: ParcelDialogData | null;
@@ -46,18 +48,24 @@ interface Props {
 
 // ── Category helpers ─────────────────────────────────────────────────────────
 
-const CATEGORY_META: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
-  "תשריט": { icon: <Image className="h-4 w-4" />, label: "תשריטים", color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200" },
-  "תקנון": { icon: <ClipboardList className="h-4 w-4" />, label: "תקנונים", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" },
-  "נספח": { icon: <FileText className="h-4 w-4" />, label: "נספחים", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" },
-  "הוראות": { icon: <ClipboardList className="h-4 w-4" />, label: "הוראות", color: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" },
-  "החלטה": { icon: <FileText className="h-4 w-4" />, label: "החלטות", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" },
-  "גיאורפרנס": { icon: <Globe className="h-4 w-4" />, label: "גיאורפרנס", color: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200" },
-  "אחר": { icon: <FileText className="h-4 w-4" />, label: "אחר", color: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200" },
+const CATEGORY_META: Record<string, { icon: React.ReactNode; label: string }> = {
+  "תשריט": { icon: <Image className="h-4 w-4 text-purple-600" />, label: "תשריטים" },
+  "תקנון": { icon: <ClipboardList className="h-4 w-4 text-blue-600" />, label: "תקנונים" },
+  "נספח": { icon: <FileText className="h-4 w-4 text-green-600" />, label: "נספחים" },
+  "הוראות": { icon: <ClipboardList className="h-4 w-4 text-amber-600" />, label: "הוראות" },
+  "החלטה": { icon: <FileText className="h-4 w-4 text-red-600" />, label: "החלטות" },
+  "גיאורפרנס": { icon: <Globe className="h-4 w-4 text-teal-600" />, label: "גיאורפרנס" },
+  "אחר": { icon: <FileText className="h-4 w-4 text-gray-500" />, label: "אחר" },
 };
 
 function categoryMeta(cat: string) {
   return CATEGORY_META[cat] ?? CATEGORY_META["אחר"];
+}
+
+function formatArea(sqm: number | null): string {
+  if (sqm == null) return "—";
+  if (sqm >= 10_000) return `${(sqm / 10_000).toFixed(2)} דונם`;
+  return `${Math.round(sqm).toLocaleString("he-IL")} מ"ר`;
 }
 
 function formatFileSize(kb: number) {
@@ -77,15 +85,16 @@ function statusColor(status: string | null) {
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function ParcelInfoDialog({ data, onClose }: Props) {
-  const [loading, setLoading] = useState(false);
+  const [loadingDb, setLoadingDb] = useState(false);
   const [gushInfo, setGushInfo] = useState<GushInfo | null>(null);
   const [parcelInfo, setParcelInfo] = useState<ParcelInfo | null>(null);
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [plans, setPlans] = useState<PlanSummary[]>([]);
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
 
-  const fetchData = useCallback(async (gush: number, helka: number) => {
-    setLoading(true);
+  // Fetch supplementary DB data (may return empty – that's OK)
+  const fetchDbData = useCallback(async (gush: number, helka: number) => {
+    setLoadingDb(true);
     setGushInfo(null);
     setParcelInfo(null);
     setDocuments([]);
@@ -94,28 +103,30 @@ export function ParcelInfoDialog({ data, onClose }: Props) {
 
     try {
       const [gushData, docsData, plansData] = await Promise.all([
-        getGush(gush),
-        getParcelDocuments(gush, helka),
-        getPlans(gush),
+        getGush(gush).catch(() => null),
+        getParcelDocuments(gush, helka).catch(() => null),
+        getPlans(gush).catch(() => null),
       ]);
 
-      setGushInfo(gushData.gush);
-      const parcel = gushData.parcels.find((p) => p.helka === helka) ?? null;
-      setParcelInfo(parcel);
-      setDocuments(docsData.documents);
-      setPlans(plansData);
-    } catch (err) {
-      console.error("Failed to fetch parcel info:", err);
+      if (gushData) {
+        setGushInfo(gushData.gush);
+        const parcel = gushData.parcels.find((p) => p.helka === helka) ?? null;
+        setParcelInfo(parcel);
+      }
+      if (docsData) setDocuments(docsData.documents);
+      if (plansData) setPlans(plansData);
+    } catch {
+      // DB data is optional – ArcGIS data is still shown
     } finally {
-      setLoading(false);
+      setLoadingDb(false);
     }
   }, []);
 
   useEffect(() => {
     if (data) {
-      fetchData(data.gush, data.helka);
+      fetchDbData(data.gush, data.helka);
     }
-  }, [data, fetchData]);
+  }, [data, fetchDbData]);
 
   const togglePlan = (planNumber: string) => {
     setExpandedPlans((prev) => {
@@ -142,23 +153,31 @@ export function ParcelInfoDialog({ data, onClose }: Props) {
         className="w-[420px] sm:w-[460px] p-0 flex flex-col"
         dir="rtl"
       >
-        {/* Header */}
+        {/* ═══ Header ═══ */}
         <SheetHeader className="px-5 pt-5 pb-3 border-b bg-gradient-to-l from-blue-50 to-white dark:from-blue-950 dark:to-background">
           <div className="flex items-start gap-3">
-            <div className="rounded-lg bg-blue-600 text-white p-2 mt-0.5 shrink-0">
+            <div className="rounded-lg bg-blue-600 text-white p-2.5 mt-0.5 shrink-0">
               <MapPin className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
               <SheetTitle className="text-right text-lg font-bold leading-snug">
                 {data ? `גוש ${data.gush} · חלקה ${data.helka}` : "מידע תכנוני"}
               </SheetTitle>
-              {gushInfo && (
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  {gushInfo.name || "כפר חב״ד"} · {gushInfo.area_type || "מגורים"}
-                </p>
+              {data && (
+                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                  {data.status && (
+                    <Badge className="text-[11px] bg-green-100 text-green-800">{data.status}</Badge>
+                  )}
+                  {data.regionalMunicipality && (
+                    <Badge variant="outline" className="text-[11px]">{data.regionalMunicipality}</Badge>
+                  )}
+                  {data.region && (
+                    <Badge variant="outline" className="text-[11px]">מחוז {data.region}</Badge>
+                  )}
+                </div>
               )}
               {data && (
-                <p className="text-xs text-muted-foreground mt-1 font-mono">
+                <p className="text-xs text-muted-foreground mt-1.5 font-mono">
                   {data.lat.toFixed(5)}, {data.lng.toFixed(5)}
                 </p>
               )}
@@ -166,19 +185,28 @@ export function ParcelInfoDialog({ data, onClose }: Props) {
           </div>
         </SheetHeader>
 
-        {/* Body */}
+        {/* ═══ Body ═══ */}
         <ScrollArea className="flex-1">
           <div className="px-5 py-4 space-y-5">
-            {loading ? (
+
+            {/* ─── ArcGIS Parcel Details (always available) ─── */}
+            {data && <ParcelDetails data={data} />}
+
+            <Separator />
+
+            {/* ─── DB Planning Data ─── */}
+            {loadingDb ? (
               <LoadingSkeleton />
             ) : (
               <>
-                {/* Quick stats */}
-                <QuickStats
-                  parcelInfo={parcelInfo}
-                  docCount={documents.length}
-                  planCount={plans.length}
-                />
+                {/* Quick stats from DB */}
+                {(plans.length > 0 || documents.length > 0) && (
+                  <QuickStats
+                    parcelInfo={parcelInfo}
+                    docCount={documents.length}
+                    planCount={plans.length}
+                  />
+                )}
 
                 {/* Plans section */}
                 {plans.length > 0 && (
@@ -234,11 +262,14 @@ export function ParcelInfoDialog({ data, onClose }: Props) {
                   </Section>
                 )}
 
-                {/* Empty state */}
-                {!loading && documents.length === 0 && plans.length === 0 && (
-                  <div className="text-center py-10 text-muted-foreground">
-                    <FileText className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                    <p className="text-sm">לא נמצא מידע תכנוני עבור חלקה זו</p>
+                {/* No DB data state */}
+                {!loadingDb && documents.length === 0 && plans.length === 0 && (
+                  <div className="rounded-lg border border-dashed p-4 text-center text-muted-foreground">
+                    <Info className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">לא נמצאו תוכניות או מסמכים</p>
+                    <p className="text-xs mt-1 opacity-75">
+                      ייתכן שגוש {data?.gush} אינו במאגר המידע התכנוני המקומי
+                    </p>
                   </div>
                 )}
               </>
@@ -252,26 +283,121 @@ export function ParcelInfoDialog({ data, onClose }: Props) {
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
+/** Rich parcel info from ArcGIS Survey of Israel data */
+function ParcelDetails({ data }: { data: ParcelDialogData }) {
+  const items: { icon: React.ReactNode; label: string; value: string }[] = [];
+
+  // Area
+  if (data.legalArea || data.shapeArea) {
+    items.push({
+      icon: <Ruler className="h-4 w-4 text-orange-600" />,
+      label: "שטח רשום",
+      value: formatArea(data.legalArea),
+    });
+    if (data.shapeArea && data.legalArea && Math.abs(data.shapeArea - data.legalArea) > 10) {
+      items.push({
+        icon: <Ruler className="h-4 w-4 text-orange-400" />,
+        label: "שטח מדוד (GIS)",
+        value: formatArea(data.shapeArea),
+      });
+    }
+  }
+
+  // Gush/Helka
+  items.push({
+    icon: <MapPinned className="h-4 w-4 text-blue-600" />,
+    label: "גוש / חלקה",
+    value: data.gushHelka ?? `${data.gush}/${data.helka}`,
+  });
+
+  // Status
+  if (data.status) {
+    items.push({
+      icon: <Shield className="h-4 w-4 text-green-600" />,
+      label: "סטטוס רישום",
+      value: data.status,
+    });
+  }
+
+  // Locality
+  if (data.locality) {
+    items.push({
+      icon: <Building2 className="h-4 w-4 text-indigo-600" />,
+      label: "ישוב",
+      value: data.locality,
+    });
+  }
+
+  // Regional municipality
+  if (data.regionalMunicipality) {
+    items.push({
+      icon: <Building2 className="h-4 w-4 text-purple-600" />,
+      label: "מועצה אזורית",
+      value: data.regionalMunicipality,
+    });
+  }
+
+  // County
+  if (data.county) {
+    items.push({
+      icon: <MapPinned className="h-4 w-4 text-teal-600" />,
+      label: "נפה",
+      value: data.county,
+    });
+  }
+
+  // Region
+  if (data.region) {
+    items.push({
+      icon: <Globe className="h-4 w-4 text-sky-600" />,
+      label: "מחוז",
+      value: data.region,
+    });
+  }
+
+  // Update date
+  if (data.updateDate) {
+    const dateStr = data.updateDate.split(" ")[0];
+    items.push({
+      icon: <Calendar className="h-4 w-4 text-gray-500" />,
+      label: "עדכון אחרון",
+      value: dateStr,
+    });
+  }
+
+  return (
+    <div>
+      <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+        <MapPin className="h-4 w-4" />
+        פרטי חלקה (מדידות ישראל)
+      </h3>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+        {items.map((item, i) => (
+          <div key={i} className="flex items-start gap-2">
+            <span className="shrink-0 mt-0.5">{item.icon}</span>
+            <div className="min-w-0">
+              <p className="text-[11px] text-muted-foreground leading-tight">{item.label}</p>
+              <p className="text-sm font-medium leading-tight">{item.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function LoadingSkeleton() {
   return (
     <div className="space-y-4">
-      {/* Stats skeleton */}
       <div className="grid grid-cols-3 gap-3">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-16 rounded-lg" />
         ))}
       </div>
-      {/* Section skeleton */}
       <Skeleton className="h-5 w-24" />
       <div className="space-y-2">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-14 rounded-lg" />
-        ))}
-      </div>
-      <Skeleton className="h-5 w-32" />
-      <div className="space-y-2">
-        {[1, 2].map((i) => (
-          <Skeleton key={i} className="h-10 rounded-lg" />
         ))}
       </div>
     </div>
@@ -411,7 +537,7 @@ function PlanCard({
 function DocRow({ doc }: { doc: DocumentRecord }) {
   const meta = categoryMeta(doc.category);
   return (
-    <div className="flex items-center gap-2 py-1 px-2 rounded hover:bg-accent/40 transition-colors group">
+    <div className="flex items-center gap-2 py-1 px-2 rounded hover:bg-accent/40 transition-colors">
       <span className="shrink-0">{meta.icon}</span>
       <span className="flex-1 text-xs truncate">{doc.title || doc.file_name}</span>
       <span className="text-[10px] text-muted-foreground shrink-0">
