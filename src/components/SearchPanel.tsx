@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { searchByGushHelka, searchByAddress, type GeoResult } from "@/lib/geocod
 import { fetchBoundaries, type BoundaryResult } from "@/lib/boundaries";
 import { useSearchHistory, type SearchHistoryItem } from "@/hooks/use-search-history";
 import { useSavedSearches, type SavedSearch } from "@/hooks/use-saved-searches";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SearchPanelProps {
   onResult: (result: GeoResult) => void;
@@ -26,6 +27,29 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
   const [showSaved, setShowSaved] = useState(false);
   const { history, addEntry, clearHistory } = useSearchHistory();
   const { saved, addSaved, removeSaved, clearSaved } = useSavedSearches();
+
+  // Autocomplete for gush
+  const [gushSuggestions, setGushSuggestions] = useState<{ gush: number; name: string | null }[]>([]);
+  const [showGushSuggestions, setShowGushSuggestions] = useState(false);
+  const gushInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchGushSuggestions = useCallback(async (query: string) => {
+    if (!query || query.length < 2) { setGushSuggestions([]); return; }
+    try {
+      const { data } = await supabase
+        .from("gushim")
+        .select("gush, name")
+        .or(`gush.eq.${Number(query) || 0},name.ilike.%${query}%`)
+        .limit(8);
+      setGushSuggestions(data ?? []);
+      setShowGushSuggestions((data?.length ?? 0) > 0);
+    } catch { setGushSuggestions([]); }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => fetchGushSuggestions(gush), 250);
+    return () => clearTimeout(timer);
+  }, [gush, fetchGushSuggestions]);
 
   const handleGushHelkaSearch = async (g?: number, h?: number) => {
     const gushNum = g ?? Number(gush);
@@ -124,17 +148,41 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
 
         <TabsContent value="gush">
           <div className="flex flex-col sm:flex-row gap-3 items-end mt-3">
-            <div className="flex-1 w-full">
+            <div className="flex-1 w-full relative">
               <Label htmlFor="gush-input">מספר גוש</Label>
               <Input
+                ref={gushInputRef}
                 id="gush-input"
                 type="number"
                 placeholder="לדוגמה: 6158"
                 value={gush}
                 onChange={(e) => setGush(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleGushHelkaSearch()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") { setShowGushSuggestions(false); handleGushHelkaSearch(); }
+                }}
+                onFocus={() => gushSuggestions.length > 0 && setShowGushSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowGushSuggestions(false), 200)}
                 dir="ltr"
               />
+              {showGushSuggestions && gushSuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-card border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {gushSuggestions.map((s) => (
+                    <button
+                      key={s.gush}
+                      className="w-full text-right px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center gap-2"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setGush(String(s.gush));
+                        setShowGushSuggestions(false);
+                      }}
+                    >
+                      <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="font-medium">{s.gush}</span>
+                      {s.name && <span className="text-muted-foreground text-xs">– {s.name}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="flex-1 w-full">
               <Label htmlFor="helka-input">מספר חלקה (אופציונלי)</Label>

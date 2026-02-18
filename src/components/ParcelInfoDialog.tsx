@@ -3,6 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import {
   MapPin,
   FileText,
@@ -19,6 +20,9 @@ import {
   Calendar,
   Info,
   X,
+  Star,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReverseParcelResult } from "@/lib/geocode";
@@ -32,6 +36,8 @@ import {
   type PlanSummary,
   type DocumentRecord,
 } from "@/lib/kfar-chabad-api";
+import { useFavorites } from "@/hooks/use-favorites";
+import { useWatchParcels } from "@/hooks/use-watch-parcels";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -92,6 +98,8 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   const [govmapPlans, setGovmapPlans] = useState<GovMapPlan[]>([]);
   const [loadingGovmap, setLoadingGovmap] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const { isFavorite, addFavorite, removeFavorite, favorites, isLoggedIn: favLoggedIn } = useFavorites();
+  const { isWatching, addWatch, removeWatch, watches, isLoggedIn: watchLoggedIn } = useWatchParcels();
 
   // Fetch supplementary DB data (may return empty – that's OK)
   const fetchDbData = useCallback(async (gush: number, helka: number) => {
@@ -158,7 +166,7 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
     <div
       ref={panelRef}
       className={cn(
-        "fixed inset-y-0 right-0 z-50 w-[420px] sm:w-[460px] bg-background border-l shadow-2xl flex flex-col transition-transform duration-300 ease-in-out",
+        "fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] md:w-[460px] bg-background border-l shadow-2xl flex flex-col transition-transform duration-300 ease-in-out",
         open ? "translate-x-0" : "translate-x-full pointer-events-none"
       )}
       dir="rtl"
@@ -200,6 +208,43 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
             )}
           </div>
         </div>
+        {/* Favorite & Watch buttons */}
+        {data && (favLoggedIn || watchLoggedIn) && (
+          <div className="flex items-center gap-2 mt-2">
+            <Button
+              variant={isFavorite(data.gush, data.helka) ? "default" : "outline"}
+              size="sm"
+              className="h-7 text-xs gap-1"
+              onClick={() => {
+                if (isFavorite(data.gush, data.helka)) {
+                  const fav = favorites.find(f => f.gush === data.gush && f.helka === data.helka);
+                  if (fav) removeFavorite(fav.id);
+                } else {
+                  addFavorite(data.gush, data.helka);
+                }
+              }}
+            >
+              <Star className={cn("h-3.5 w-3.5", isFavorite(data.gush, data.helka) && "fill-current")} />
+              {isFavorite(data.gush, data.helka) ? "במועדפים" : "הוסף למועדפים"}
+            </Button>
+            <Button
+              variant={isWatching(data.gush, data.helka) ? "default" : "outline"}
+              size="sm"
+              className="h-7 text-xs gap-1"
+              onClick={() => {
+                if (isWatching(data.gush, data.helka)) {
+                  const w = watches.find(w => w.gush === data.gush && w.helka === data.helka);
+                  if (w) removeWatch(w.id);
+                } else {
+                  addWatch(data.gush, data.helka);
+                }
+              }}
+            >
+              {isWatching(data.gush, data.helka) ? <BellOff className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
+              {isWatching(data.gush, data.helka) ? "מנוטר" : "עקוב אחרי שינויים"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* ═══ Body ═══ */}

@@ -117,7 +117,19 @@ const Index = () => {
         {showSidebar && (
           <div className="fixed inset-0 z-50 flex" dir="rtl">
             <div className="absolute inset-0 bg-black/40" onClick={() => setShowSidebar(false)} />
-            <div className="relative z-10 w-[85vw] max-w-[380px] h-full bg-card shadow-xl overflow-y-auto">
+            <div
+              className="relative z-10 w-[85vw] max-w-[380px] h-full overflow-y-auto shadow-xl"
+              style={{
+                backgroundColor: 'hsl(0 0% 100%)',
+                border: '1px solid hsl(222.2 47.4% 11.2%)',
+              }}
+            >
+              <div className="p-3 border-b flex items-center justify-between" style={{ borderColor: 'hsl(222.2 47.4% 11.2%)' }}>
+                <span className="font-semibold text-sm" style={{ color: 'hsl(43 56% 52%)' }}>תפריט</span>
+                <button onClick={() => setShowSidebar(false)} className="text-muted-foreground hover:text-foreground">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
               <SmartSidebar
                 onSelectGush={(g) => { handleSelectGush(g); setShowSidebar(false); }}
                 onSelectAerialYear={(y) => { setAerialYear(y); setShowSidebar(false); }}
