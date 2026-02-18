@@ -244,3 +244,83 @@ export async function searchByAddress(address: string): Promise<GeoResult> {
 
   return { lat, lng, label: name };
 }
+
+// ── GovMap Plan Layers (TABA) – ArcGIS MapServer ─────────────────────────────
+
+const GOVMAP_AGS_BASE = "https://ags.govmap.gov.il/arcgis/rest/services";
+
+/** Plan layer definitions in GovMap */
+const PLAN_LAYERS = [
+  { url: `${GOVMAP_AGS_BASE}/PlanningPublic/Xplan/MapServer/0/query`, statusGroup: "מאושרת" },
+  { url: `${GOVMAP_AGS_BASE}/PlanningPublic/Xplan/MapServer/1/query`, statusGroup: "פעילה" },
+  { url: `${GOVMAP_AGS_BASE}/PlanningPublic/Xplan/MapServer/2/query`, statusGroup: "בהפקדה" },
+] as const;
+
+const PLAN_OUT_FIELDS = "PL_NUMBER,PLAN_NAME,STATION_DESC,PL_LANDUSE_STRING,PL_AREA_DUNAM,PL_BY_AUTH_OF,PL_DATE_8";
+
+export interface GovMapPlan {
+  planNumber: string;
+  planName: string | null;
+  status: string | null;
+  statusGroup: string;
+  landUse: string | null;
+  areaDunam: number | null;
+  authority: string | null;
+  date: string | null;
+}
+
+/** Query GovMap TABA layers for plans intersecting a parcel point */
+export async function queryPlansAtPoint(lat: number, lng: number): Promise<GovMapPlan[]> {
+  const geometry = JSON.stringify({
+    x: lng,
+    y: lat,
+    spatialReference: { wkid: 4326 },
+  });
+
+  const results: GovMapPlan[] = [];
+  const seen = new Set<string>();
+
+  const fetches = PLAN_LAYERS.map(async (layer) => {
+    const params = new URLSearchParams({
+      geometry,
+      geometryType: "esriGeometryPoint",
+      spatialRel: "esriSpatialRelIntersects",
+      inSR: "4326",
+      outSR: "4326",
+      outFields: PLAN_OUT_FIELDS,
+      returnGeometry: "false",
+      f: "json",
+      resultRecordCount: "50",
+    });
+
+    try {
+      const response = await fetch(`${layer.url}?${params}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      if (!data?.features) return;
+
+      for (const feat of data.features) {
+        const a = feat.attributes;
+        const num = a.PL_NUMBER?.trim();
+        if (!num || seen.has(num)) continue;
+        seen.add(num);
+
+        results.push({
+          planNumber: num,
+          planName: a.PLAN_NAME?.trim() || null,
+          status: a.STATION_DESC?.trim() || null,
+          statusGroup: layer.statusGroup,
+          landUse: a.PL_LANDUSE_STRING?.trim() || null,
+          areaDunam: a.PL_AREA_DUNAM ?? null,
+          authority: a.PL_BY_AUTH_OF?.trim() || null,
+          date: a.PL_DATE_8 ? new Date(a.PL_DATE_8).toLocaleDateString("he-IL") : null,
+        });
+      }
+    } catch {
+      // Ignore individual layer failures
+    }
+  });
+
+  await Promise.all(fetches);
+  return results;
+}

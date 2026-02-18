@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReverseParcelResult } from "@/lib/geocode";
+import { queryPlansAtPoint, type GovMapPlan } from "@/lib/geocode";
 import {
   getParcelDocuments,
   getPlans,
@@ -88,6 +89,8 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [plans, setPlans] = useState<PlanSummary[]>([]);
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
+  const [govmapPlans, setGovmapPlans] = useState<GovMapPlan[]>([]);
+  const [loadingGovmap, setLoadingGovmap] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Fetch supplementary DB data (may return empty – that's OK)
@@ -123,6 +126,13 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   useEffect(() => {
     if (data) {
       fetchDbData(data.gush, data.helka);
+      // Fetch GovMap plans spatially
+      setLoadingGovmap(true);
+      setGovmapPlans([]);
+      queryPlansAtPoint(data.lat, data.lng)
+        .then(setGovmapPlans)
+        .catch(() => {})
+        .finally(() => setLoadingGovmap(false));
     }
   }, [data, fetchDbData]);
 
@@ -198,6 +208,28 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
 
           {/* ─── ArcGIS Parcel Details (always available) ─── */}
           {data && <ParcelDetails data={data} />}
+
+          <Separator />
+
+          {/* ─── GovMap Plans (live spatial query) ─── */}
+          {loadingGovmap ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-1">
+                <Layers className="h-4 w-4" />
+                <span className="text-sm font-semibold">תוכניות החלות על החלקה</span>
+              </div>
+              <Skeleton className="h-10 rounded-lg" />
+              <Skeleton className="h-10 rounded-lg" />
+              <Skeleton className="h-10 rounded-lg" />
+            </div>
+          ) : govmapPlans.length > 0 ? (
+            <GovMapPlansSection plans={govmapPlans} />
+          ) : (
+            <div className="rounded-lg border border-dashed p-3 text-center text-muted-foreground">
+              <Layers className="h-5 w-5 mx-auto mb-1 opacity-50" />
+              <p className="text-sm">לא נמצאו תוכניות חלות על חלקה זו</p>
+            </div>
+          )}
 
           <Separator />
 
@@ -559,6 +591,130 @@ function DocRow({ doc }: { doc: DocumentRecord }) {
           GIS
         </Badge>
       )}
+    </div>
+  );
+}
+
+// ── GovMap Plans Section ─────────────────────────────────────────────────────
+
+function govmapStatusColor(statusGroup: string) {
+  if (statusGroup === "מאושרת") return "bg-green-100 text-green-800";
+  if (statusGroup === "פעילה") return "bg-blue-100 text-blue-800";
+  if (statusGroup === "בהפקדה") return "bg-yellow-100 text-yellow-800";
+  return "bg-gray-100 text-gray-700";
+}
+
+function GovMapPlansSection({ plans }: { plans: GovMapPlan[] }) {
+  const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
+
+  // Group by status
+  const grouped = plans.reduce<Record<string, GovMapPlan[]>>((acc, p) => {
+    const g = p.statusGroup;
+    (acc[g] ??= []).push(p);
+    return acc;
+  }, {});
+
+  const groupOrder = ["מאושרת", "פעילה", "בהפקדה"];
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <Layers className="h-4 w-4 text-blue-600" />
+        <h3 className="text-sm font-semibold">תוכניות החלות על החלקה</h3>
+        <Badge variant="outline" className="text-xs">{plans.length}</Badge>
+      </div>
+
+      <div className="space-y-3">
+        {groupOrder.map((group) => {
+          const items = grouped[group];
+          if (!items?.length) return null;
+          return (
+            <div key={group}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <Badge className={`text-[11px] px-2 py-0.5 ${govmapStatusColor(group)}`}>
+                  {group} ({items.length})
+                </Badge>
+              </div>
+              <div className="space-y-1.5">
+                {items.map((plan) => (
+                  <div
+                    key={plan.planNumber}
+                    className="rounded-lg border bg-card overflow-hidden"
+                  >
+                    <button
+                      onClick={() =>
+                        setExpandedPlan(
+                          expandedPlan === plan.planNumber ? null : plan.planNumber
+                        )
+                      }
+                      className="w-full flex items-center gap-2 px-3 py-2 text-right hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{plan.planNumber}</p>
+                        {plan.planName && (
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            {plan.planName}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {plan.status && (
+                          <Badge className={`text-[10px] px-1.5 py-0 ${statusColor(plan.status)}`}>
+                            {plan.status}
+                          </Badge>
+                        )}
+                        {expandedPlan === plan.planNumber ? (
+                          <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                        )}
+                      </div>
+                    </button>
+
+                    {expandedPlan === plan.planNumber && (
+                      <div className="border-t px-3 py-2 bg-muted/30 space-y-1 text-xs">
+                        {plan.landUse && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">ייעוד קרקע</span>
+                            <span className="font-medium text-left max-w-[60%] truncate">{plan.landUse}</span>
+                          </div>
+                        )}
+                        {plan.areaDunam != null && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">שטח (דונם)</span>
+                            <span className="font-medium">{plan.areaDunam.toLocaleString("he-IL")}</span>
+                          </div>
+                        )}
+                        {plan.authority && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">מוסד תכנון</span>
+                            <span className="font-medium">{plan.authority}</span>
+                          </div>
+                        )}
+                        {plan.date && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">תאריך</span>
+                            <span className="font-medium">{plan.date}</span>
+                          </div>
+                        )}
+                        <a
+                          href={`https://mavat.iplan.gov.il/SV4/1/${plan.planNumber}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-blue-600 hover:underline mt-1"
+                        >
+                          <Globe className="h-3 w-3" />
+                          צפייה במאבת
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
