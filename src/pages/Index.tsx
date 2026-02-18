@@ -11,6 +11,7 @@ import { searchByGushHelka, reverseGeocodeParcel } from "@/lib/geocode";
 import { fetchBoundaries } from "@/lib/boundaries";
 import type { ParsedGisLayer } from "@/lib/gis-parser";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,6 +23,8 @@ const Index = () => {
   const [highlightGeometry, setHighlightGeometry] = useState<GeoJSON.Geometry | null>(null);
   const [gisOverlay, setGisOverlay] = useState<GeoJSON.FeatureCollection | null>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
+  const [showSidebar, setShowSidebar] = useState(false);
 
   // ── URL deep-link: open parcel from ?gush=X&helka=Y ──
   useEffect(() => {
@@ -93,8 +96,68 @@ const Index = () => {
     }
   }, [toast, setSearchParams]);
 
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-[100dvh] bg-background overflow-x-hidden overflow-y-auto" dir="rtl">
+        {/* Top bar with search + sidebar toggle */}
+        <div className="border-b shrink-0 flex items-center gap-1 px-2">
+          <button
+            onClick={() => setShowSidebar(!showSidebar)}
+            className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center hover:bg-accent text-muted-foreground"
+            aria-label="תפריט"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div className="flex-1 min-w-0">
+            <SearchPanel onResult={setResult} onBoundaries={setBoundaries} />
+          </div>
+        </div>
+
+        {/* Sidebar overlay for mobile */}
+        {showSidebar && (
+          <div className="fixed inset-0 z-50 flex" dir="rtl">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowSidebar(false)} />
+            <div className="relative z-10 w-[85vw] max-w-[380px] h-full bg-card shadow-xl overflow-y-auto">
+              <SmartSidebar
+                onSelectGush={(g) => { handleSelectGush(g); setShowSidebar(false); }}
+                onSelectAerialYear={(y) => { setAerialYear(y); setShowSidebar(false); }}
+                onSelectPlanImage={(p) => { setPlanPath(p); setShowSidebar(false); }}
+                onShowGisLayer={(layer) => { setGisOverlay(layer ? layer.geojson : null); setShowSidebar(false); }}
+                defaultPinned={false}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Map – takes remaining space */}
+        <div className="flex-1 relative min-h-[300px]">
+          <MapView
+            result={result}
+            boundaries={boundaries}
+            aerialYear={aerialYear}
+            planPath={planPath}
+            onClearPlan={() => setPlanPath(null)}
+            onMapClick={handleMapClick}
+            highlightGeometry={highlightGeometry}
+            gisOverlay={gisOverlay}
+          />
+          {boundaries && <MapLegend />}
+          <ParcelInfoDialog
+            data={parcelDialog}
+            onClose={() => {
+              setParcelDialog(null);
+              setHighlightGeometry(null);
+              setSearchParams({}, { replace: true });
+            }}
+            onShowPlan={(path) => setPlanPath(path)}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-row h-screen bg-background" dir="rtl">
+    <div className="flex flex-row h-screen bg-background overflow-x-hidden" dir="rtl">
       {/* Smart Sidebar – right side with auto-hide + pin */}
       <SmartSidebar
         onSelectGush={handleSelectGush}

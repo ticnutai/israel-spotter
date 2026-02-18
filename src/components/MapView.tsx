@@ -333,8 +333,8 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
 
     const layer = L.geoJSON(gisOverlay as any, {
       style: (feature) => {
-        const layerName = feature?.properties?.layer ?? "0";
-        const hash = Array.from(layerName).reduce((s, c) => s + c.charCodeAt(0), 0);
+        const layerName = String(feature?.properties?.layer ?? "0");
+        const hash = Array.from(layerName).reduce((s: number, c: string) => s + c.charCodeAt(0), 0);
         const color = colors[hash % colors.length];
         return {
           color,
