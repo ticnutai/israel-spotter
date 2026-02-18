@@ -622,9 +622,140 @@ export interface LocalPlansResponse {
 }
 
 export async function getLocalPlans(gush: number, helka: number): Promise<LocalPlansResponse> {
-  const res = await fetch(`${API_BASE}/local-plans/${gush}/${helka}`);
-  if (!res.ok) throw new Error(`Failed to fetch local plans: ${res.status}`);
-  return res.json();
+  return withFallback(
+    async () => {
+      const res = await fetch(`${API_BASE}/local-plans/${gush}/${helka}`);
+      const ct = res.headers.get("content-type") || "";
+      if (!ct.includes("application/json")) {
+        _backendAvailable = false;
+        throw new Error("Backend returned non-JSON");
+      }
+      if (!res.ok) throw new Error(`Failed: ${res.status}`);
+      _backendAvailable = true;
+      return res.json();
+    },
+    async () => {
+      // Supabase cloud fallback – reconstruct LocalPlansResponse from cloud tables
+      // 1. Get parcel detail
+      const parcelRows = await supabaseGet<any>(
+        "parcels",
+        `select=*&gush=eq.${gush}&helka=eq.${helka}&limit=1`
+      );
+      const parcel = parcelRows[0] || null;
+      const parcelDetail: LocalParcelDetail | null = parcel
+        ? {
+            gush: parcel.gush,
+            helka: parcel.helka,
+            legal_area_sqm: parcel.legal_area_sqm ?? null,
+            shape_area_sqm: parcel.shape_area_sqm ?? null,
+            status_text: parcel.status_text ?? null,
+            municipality: parcel.municipality ?? null,
+            county: parcel.county ?? null,
+            region: parcel.region ?? null,
+            centroid_lat: parcel.centroid_lat ?? null,
+            centroid_lng: parcel.centroid_lng ?? null,
+            update_date: parcel.update_date ?? null,
+            plan_count: parcel.plan_count ?? 0,
+            permit_count: parcel.permit_count ?? 0,
+            doc_count: parcel.doc_count ?? 0,
+          }
+        : null;
+
+      // 2. Get plan_blocks for this gush/helka → plan_numbers
+      const planBlocks = await supabaseGet<{ plan_number: string }>(
+        "plan_blocks",
+        `select=plan_number&gush=eq.${gush}&helka=eq.${helka}`
+      );
+      const planNumbers = [...new Set(planBlocks.map((pb) => pb.plan_number))];
+
+      // 3. Get plans + documents for those plan_numbers
+      const plans: LocalPlan[] = [];
+      for (const pn of planNumbers) {
+        const [planRows, docRows] = await Promise.all([
+          supabaseGet<any>("plans", `select=*&plan_number=eq.${encodeURIComponent(pn)}&limit=1`),
+          supabaseGet<any>("documents", `select=*&plan_number=eq.${encodeURIComponent(pn)}`),
+        ]);
+        const plan = planRows[0];
+        if (!plan) continue;
+        const files: LocalPlanFile[] = docRows.map((d: any) => ({
+          name: d.file_name || d.title || "",
+          size: d.file_size || 0,
+          type: d.file_type || "",
+          path: d.file_path || "",
+          title: d.title || undefined,
+        }));
+        plans.push({
+          plan_name: pn,
+          plan_display_name: plan.plan_name || null,
+          entity_subtype: plan.entity_subtype || null,
+          main_status: plan.main_status || plan.status || null,
+          status_date: plan.status_date || null,
+          area_dunam: plan.area_dunam || null,
+          authority: plan.authority || null,
+          goals: plan.goals || null,
+          city_county: plan.city_county || null,
+          file_count: files.length,
+          files,
+          has_tashrit: files.some((f) => docRows.find((d: any) => d.file_name === f.name)?.is_tashrit),
+          has_takanon: files.some((f) => docRows.find((d: any) => d.file_name === f.name)?.is_takanon),
+          has_pdf: files.some((f) => f.type === "pdf"),
+          has_image: files.some((f) => ["jpg", "jpeg", "png", "tif", "tiff"].includes(f.type)),
+        });
+      }
+
+      // 4. Get permits for this gush/helka
+      const permitRows = await supabaseGet<any>(
+        "permits",
+        `select=*&gush=eq.${gush}&helka=eq.${helka}`
+      );
+      const permits: LocalPermit[] = [];
+      for (const pr of permitRows) {
+        const pdRows = await supabaseGet<any>(
+          "permit_documents",
+          `select=*&permit_id=eq.${pr.id}`
+        );
+        permits.push({
+          permit_id: pr.permit_id,
+          file_count: pdRows.length,
+          files: pdRows.map((d: any) => ({
+            name: d.file_name || "",
+            size: d.file_size || 0,
+            type: d.file_type || "",
+            path: d.file_path || "",
+          })),
+        });
+      }
+
+      // 5. Get TABA outlines (all outlines - same as local backend)
+      const tabaRows = await supabaseGet<any>(
+        "taba_outlines",
+        "select=pl_number,pl_name,entity_subtype,status,area_dunam,land_use,plan_county,pl_url"
+      );
+      const tabaOutlines: TabaOutline[] = tabaRows.map((t: any) => ({
+        pl_number: t.pl_number ?? null,
+        pl_name: t.pl_name ?? null,
+        entity_subtype: t.entity_subtype ?? null,
+        status: t.status ?? null,
+        area_dunam: t.area_dunam ?? null,
+        land_use: t.land_use ?? null,
+        plan_county: t.plan_county ?? null,
+        pl_url: t.pl_url ?? null,
+        main_status: null,
+      }));
+
+      return {
+        gush,
+        helka,
+        plans,
+        permits,
+        taba_outlines: tabaOutlines,
+        parcel_detail: parcelDetail,
+        plan_count: plans.length,
+        permit_count: permits.length,
+        taba_count: tabaOutlines.length,
+      };
+    }
+  );
 }
 
 export function getLocalFileUrl(path: string): string {
