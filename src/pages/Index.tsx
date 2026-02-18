@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { SearchPanel } from "@/components/SearchPanel";
 import { MapView } from "@/components/MapView";
 import { MapLegend } from "@/components/MapLegend";
@@ -11,12 +12,40 @@ import { fetchBoundaries } from "@/lib/boundaries";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [result, setResult] = useState<GeoResult | null>(null);
   const [boundaries, setBoundaries] = useState<BoundaryResult | null>(null);
   const [aerialYear, setAerialYear] = useState<string | null>(null);
   const [planPath, setPlanPath] = useState<string | null>(null);
   const [parcelDialog, setParcelDialog] = useState<ParcelDialogData | null>(null);
+  const [highlightGeometry, setHighlightGeometry] = useState<GeoJSON.Geometry | null>(null);
   const { toast } = useToast();
+
+  // ── URL deep-link: open parcel from ?gush=X&helka=Y ──
+  useEffect(() => {
+    const g = searchParams.get("gush");
+    const h = searchParams.get("helka");
+    if (g && h) {
+      const gush = Number(g);
+      const helka = Number(h);
+      if (gush > 0 && helka > 0) {
+        // Simulate a click on that parcel
+        (async () => {
+          try {
+            const res = await searchByGushHelka(gush, helka);
+            setResult(res);
+            const parcel = await reverseGeocodeParcel(res.lat, res.lng);
+            if (parcel) setParcelDialog(parcel);
+            // Highlight parcel boundary
+            const b = await fetchBoundaries(gush, helka);
+            if (b.parcelGeometry) setHighlightGeometry(b.parcelGeometry);
+          } catch { /* ignore */ }
+        })();
+      }
+    }
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSelectGush = useCallback(async (gush: number) => {
     try {
@@ -46,6 +75,13 @@ const Index = () => {
         return;
       }
       setParcelDialog(parcel);
+      // Update URL for sharing
+      setSearchParams({ gush: String(parcel.gush), helka: String(parcel.helka) }, { replace: true });
+      // Fetch & highlight parcel boundary
+      try {
+        const b = await fetchBoundaries(parcel.gush, parcel.helka);
+        if (b.parcelGeometry) setHighlightGeometry(b.parcelGeometry);
+      } catch { /* ignore */ }
     } catch {
       toast({
         title: "שגיאה",
@@ -53,7 +89,7 @@ const Index = () => {
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [toast, setSearchParams]);
 
   return (
     <div className="flex flex-row h-screen bg-background" dir="rtl">
@@ -80,11 +116,17 @@ const Index = () => {
             planPath={planPath}
             onClearPlan={() => setPlanPath(null)}
             onMapClick={handleMapClick}
+            highlightGeometry={highlightGeometry}
           />
           {boundaries && <MapLegend />}
           <ParcelInfoDialog
             data={parcelDialog}
-            onClose={() => setParcelDialog(null)}
+            onClose={() => {
+              setParcelDialog(null);
+              setHighlightGeometry(null);
+              setSearchParams({}, { replace: true });
+            }}
+            onShowPlan={(path) => setPlanPath(path)}
           />
         </div>
       </div>
