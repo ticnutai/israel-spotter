@@ -12,6 +12,18 @@ dist
 dist-ssr
 *.local
 
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Data folders (local only)
+gis_downloads/
+kfar_chabad_data/
+
+# Frontend nested copy (use root src/ only)
+frontend/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
