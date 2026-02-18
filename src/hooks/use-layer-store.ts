@@ -8,7 +8,7 @@
  *  • Persistence to localStorage
  */
 
-import { useState, useCallback, useRef, useEffect, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

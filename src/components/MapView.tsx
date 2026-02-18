@@ -2,14 +2,13 @@ import { useEffect, useRef, useState, useCallback, Component, type ReactNode } f
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { GeoResult } from "@/lib/geocode";
-import type { BoundaryResult } from "@/lib/boundaries";
+import { fetchBoundaries, type BoundaryResult } from "@/lib/boundaries";
 import { MapLayerSwitcher, MAP_LAYERS, LABELS_LAYER_URL, type MapLayerOption } from "./MapLayerSwitcher";
 import { MapMeasure } from "./MapMeasure";
 import { ScaleBarControl } from "./ScaleBarControl";
 import { AerialOverlay } from "./AerialOverlay";
 import { PlanOverlay } from "./PlanOverlay";
 import { useLayerStore } from "@/hooks/use-layer-store";
-import { fetchBoundaries } from "@/lib/boundaries";
 
 // Fix default marker icons for Leaflet + bundler
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -419,6 +418,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
         }
       } else if (sl.data && sl.kind === "geojson") {
         // Create new GeoJSON layer
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const geojsonLayer = L.geoJSON(sl.data as any, {
           style: {
             color: sl.color,

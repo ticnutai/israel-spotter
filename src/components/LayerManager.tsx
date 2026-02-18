@@ -37,7 +37,6 @@ import {
   Unlock,
   ChevronDown,
   ChevronRight,
-  Palette,
   Pencil,
   Check,
   X,
@@ -45,8 +44,6 @@ import {
   Layers,
   Paintbrush,
   RotateCcw,
-  EyeIcon,
-  Settings2,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
