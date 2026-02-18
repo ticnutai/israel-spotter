@@ -187,3 +187,25 @@ All colors MUST be HSL.
   box-shadow: 0 1px 4px rgba(0,0,0,0.3);
   direction: rtl;
 }
+
+/* ─── Sidebar gold theme ─── */
+.sidebar-gold-content {
+  color: hsl(43 56% 52%);
+  text-align: right;
+}
+.sidebar-gold-content h3,
+.sidebar-gold-content .font-medium,
+.sidebar-gold-content .font-semibold {
+  color: hsl(43 56% 52%);
+}
+.sidebar-gold-content .text-muted-foreground {
+  color: hsl(43 56% 62%);
+}
+.sidebar-gold-content .border,
+.sidebar-gold-content .border-b,
+.sidebar-gold-content .border-t {
+  border-color: hsl(43 56% 52% / 0.3);
+}
+.sidebar-gold-content button:hover {
+  background-color: hsl(43 56% 52% / 0.08);
+}
