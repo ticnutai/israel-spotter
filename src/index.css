@@ -188,24 +188,37 @@ All colors MUST be HSL.
   direction: rtl;
 }
 
-/* ─── Sidebar gold theme ─── */
+/* ─── Sidebar navy + gold theme ─── */
 .sidebar-gold-content {
-  color: hsl(43 56% 52%);
+  color: hsl(222.2 47.4% 11.2%);
   text-align: right;
+  direction: rtl;
 }
 .sidebar-gold-content h3,
 .sidebar-gold-content .font-medium,
 .sidebar-gold-content .font-semibold {
-  color: hsl(43 56% 52%);
+  color: hsl(222.2 47.4% 11.2%);
 }
 .sidebar-gold-content .text-muted-foreground {
-  color: hsl(43 56% 62%);
+  color: hsl(222.2 30% 45%);
 }
 .sidebar-gold-content .border,
 .sidebar-gold-content .border-b,
-.sidebar-gold-content .border-t {
-  border-color: hsl(43 56% 52% / 0.3);
+.sidebar-gold-content .border-t,
+.sidebar-gold-content .divide-y > * + *,
+.sidebar-gold-content .border-dashed {
+  border-color: hsl(222.2 47.4% 11.2% / 0.25);
+}
+.sidebar-gold-content select {
+  border-color: hsl(222.2 47.4% 11.2% / 0.25);
+  text-align: right;
+}
+.sidebar-gold-content input {
+  text-align: right;
 }
 .sidebar-gold-content button:hover {
-  background-color: hsl(43 56% 52% / 0.08);
+  background-color: hsl(222.2 47.4% 11.2% / 0.06);
+}
+.sidebar-gold-content * {
+  text-align: right;
 }
