@@ -77,13 +77,15 @@ interface MapViewProps {
   onClearPlan?: () => void;
   onMapClick?: (lat: number, lng: number) => void;
   highlightGeometry?: GeoJSON.Geometry | null;
+  gisOverlay?: GeoJSON.FeatureCollection | null;
 }
 
-function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, onMapClick, highlightGeometry }: MapViewProps) {
+function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, onMapClick, highlightGeometry, gisOverlay }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const boundaryLayerRef = useRef<L.LayerGroup | null>(null);
   const highlightLayerRef = useRef<L.GeoJSON | null>(null);
+  const gisOverlayRef = useRef<L.GeoJSON | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const labelsLayerRef = useRef<L.TileLayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -308,6 +310,65 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
 
     highlightLayerRef.current = layer;
   }, [highlightGeometry]);
+
+  // ── GIS overlay from uploaded files (DXF, GeoJSON, KML) ──
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove previous overlay
+    if (gisOverlayRef.current) {
+      gisOverlayRef.current.remove();
+      gisOverlayRef.current = null;
+    }
+
+    if (!gisOverlay || !gisOverlay.features?.length) return;
+
+    const colors = ["#e11d48", "#2563eb", "#16a34a", "#9333ea", "#ea580c", "#0891b2"];
+
+    const layer = L.geoJSON(gisOverlay as any, {
+      style: (feature) => {
+        const layerName = feature?.properties?.layer ?? "0";
+        const hash = Array.from(layerName).reduce((s, c) => s + c.charCodeAt(0), 0);
+        const color = colors[hash % colors.length];
+        return {
+          color,
+          weight: 2.5,
+          fillColor: color,
+          fillOpacity: 0.15,
+        };
+      },
+      pointToLayer: (_feature, latlng) => {
+        return L.circleMarker(latlng, {
+          radius: 5,
+          fillColor: "#e11d48",
+          color: "#fff",
+          weight: 1.5,
+          fillOpacity: 0.8,
+        });
+      },
+      onEachFeature: (feature, featureLayer) => {
+        if (feature.properties) {
+          const entries = Object.entries(feature.properties)
+            .filter(([, v]) => v != null && v !== "")
+            .map(([k, v]) => `<b>${k}</b>: ${v}`)
+            .join("<br>");
+          if (entries) {
+            featureLayer.bindPopup(`<div dir="rtl" style="text-align:right;font-size:12px">${entries}</div>`);
+          }
+        }
+      },
+    }).addTo(mapRef.current);
+
+    // Fit map to overlay bounds
+    try {
+      const bounds = layer.getBounds();
+      if (bounds.isValid()) {
+        mapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 });
+      }
+    } catch { /* ignore */ }
+
+    gisOverlayRef.current = layer;
+  }, [gisOverlay]);
 
   return (
     <div className="h-full w-full relative">

@@ -37,6 +37,7 @@ import {
 import { cn } from "@/lib/utils";
 import { KfarChabadPanel } from "./KfarChabadPanel";
 import { UploadPanel } from "./UploadPanel";
+import type { ParsedGisLayer } from "@/lib/gis-parser";
 import { PdfExport } from "./PdfExport";
 import { PlanTimeline } from "./PlanTimeline";
 import { StatsCharts } from "./StatsCharts";
@@ -68,6 +69,7 @@ interface SmartSidebarProps {
   onSelectGush: (gush: number) => void;
   onSelectAerialYear: (year: string) => void;
   onSelectPlanImage: (path: string) => void;
+  onShowGisLayer?: (layer: ParsedGisLayer | null) => void;
   defaultPinned?: boolean;
 }
 
@@ -84,6 +86,7 @@ export function SmartSidebar({
   onSelectGush,
   onSelectAerialYear,
   onSelectPlanImage,
+  onShowGisLayer,
   defaultPinned = true,
 }: SmartSidebarProps) {
   const [pinned, setPinned] = useState(() => {
@@ -258,7 +261,7 @@ export function SmartSidebar({
             {activeTab === "search" && (
               <SearchTab onSelectPlanImage={onSelectPlanImage} />
             )}
-            {activeTab === "upload" && <UploadPanel />}
+            {activeTab === "upload" && <UploadPanel onShowGisLayer={onShowGisLayer} />}
             {activeTab === "timeline" && <PlanTimeline />}
             {activeTab === "stats" && <StatsCharts />}
             {activeTab === "tools" && <ToolsTab />}

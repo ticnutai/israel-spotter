@@ -9,6 +9,7 @@ import type { GeoResult } from "@/lib/geocode";
 import type { BoundaryResult } from "@/lib/boundaries";
 import { searchByGushHelka, reverseGeocodeParcel } from "@/lib/geocode";
 import { fetchBoundaries } from "@/lib/boundaries";
+import type { ParsedGisLayer } from "@/lib/gis-parser";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -19,6 +20,7 @@ const Index = () => {
   const [planPath, setPlanPath] = useState<string | null>(null);
   const [parcelDialog, setParcelDialog] = useState<ParcelDialogData | null>(null);
   const [highlightGeometry, setHighlightGeometry] = useState<GeoJSON.Geometry | null>(null);
+  const [gisOverlay, setGisOverlay] = useState<GeoJSON.FeatureCollection | null>(null);
   const { toast } = useToast();
 
   // ── URL deep-link: open parcel from ?gush=X&helka=Y ──
@@ -98,6 +100,7 @@ const Index = () => {
         onSelectGush={handleSelectGush}
         onSelectAerialYear={setAerialYear}
         onSelectPlanImage={setPlanPath}
+        onShowGisLayer={(layer) => setGisOverlay(layer ? layer.geojson : null)}
       />
 
       {/* Main content */}
@@ -117,6 +120,7 @@ const Index = () => {
             onClearPlan={() => setPlanPath(null)}
             onMapClick={handleMapClick}
             highlightGeometry={highlightGeometry}
+            gisOverlay={gisOverlay}
           />
           {boundaries && <MapLegend />}
           <ParcelInfoDialog
