@@ -1,10 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +18,9 @@ import {
   Shield,
   Calendar,
   Info,
+  X,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { ReverseParcelResult } from "@/lib/geocode";
 import {
   getParcelDocuments,
@@ -44,6 +40,7 @@ export type ParcelDialogData = ReverseParcelResult;
 interface Props {
   data: ParcelDialogData | null;
   onClose: () => void;
+  onShowPlan?: (path: string) => void;
 }
 
 // ── Category helpers ─────────────────────────────────────────────────────────
@@ -84,13 +81,14 @@ function statusColor(status: string | null) {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export function ParcelInfoDialog({ data, onClose }: Props) {
+export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   const [loadingDb, setLoadingDb] = useState(false);
   const [gushInfo, setGushInfo] = useState<GushInfo | null>(null);
   const [parcelInfo, setParcelInfo] = useState<ParcelInfo | null>(null);
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [plans, setPlans] = useState<PlanSummary[]>([]);
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // Fetch supplementary DB data (may return empty – that's OK)
   const fetchDbData = useCallback(async (gush: number, helka: number) => {
@@ -147,57 +145,66 @@ export function ParcelInfoDialog({ data, onClose }: Props) {
   const open = data !== null;
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent
-        side="right"
-        className="w-[420px] sm:w-[460px] p-0 flex flex-col"
-        dir="rtl"
-      >
-        {/* ═══ Header ═══ */}
-        <SheetHeader className="px-5 pt-5 pb-3 border-b bg-gradient-to-l from-blue-50 to-white dark:from-blue-950 dark:to-background">
-          <div className="flex items-start gap-3">
-            <div className="rounded-lg bg-blue-600 text-white p-2.5 mt-0.5 shrink-0">
-              <MapPin className="h-5 w-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <SheetTitle className="text-right text-lg font-bold leading-snug">
-                {data ? `גוש ${data.gush} · חלקה ${data.helka}` : "מידע תכנוני"}
-              </SheetTitle>
-              {data && (
-                <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                  {data.status && (
-                    <Badge className="text-[11px] bg-green-100 text-green-800">{data.status}</Badge>
-                  )}
-                  {data.regionalMunicipality && (
-                    <Badge variant="outline" className="text-[11px]">{data.regionalMunicipality}</Badge>
-                  )}
-                  {data.region && (
-                    <Badge variant="outline" className="text-[11px]">מחוז {data.region}</Badge>
-                  )}
-                </div>
-              )}
-              {data && (
-                <p className="text-xs text-muted-foreground mt-1.5 font-mono">
-                  {data.lat.toFixed(5)}, {data.lng.toFixed(5)}
-                </p>
-              )}
-            </div>
+    <div
+      ref={panelRef}
+      className={cn(
+        "fixed inset-y-0 right-0 z-50 w-[420px] sm:w-[460px] bg-background border-l shadow-2xl flex flex-col transition-transform duration-300 ease-in-out",
+        open ? "translate-x-0" : "translate-x-full pointer-events-none"
+      )}
+      dir="rtl"
+    >
+      {/* ═══ Header ═══ */}
+      <div className="px-5 pt-5 pb-3 border-b bg-gradient-to-l from-blue-50 to-white dark:from-blue-950 dark:to-background flex flex-col relative">
+        <button
+          onClick={onClose}
+          className="absolute left-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          aria-label="סגור"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-blue-600 text-white p-2.5 mt-0.5 shrink-0">
+            <MapPin className="h-5 w-5" />
           </div>
-        </SheetHeader>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-right text-lg font-bold leading-snug">
+              {data ? `גוש ${data.gush} · חלקה ${data.helka}` : "מידע תכנוני"}
+            </h2>
+            {data && (
+              <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                {data.status && (
+                  <Badge className="text-[11px] bg-green-100 text-green-800">{data.status}</Badge>
+                )}
+                {data.regionalMunicipality && (
+                  <Badge variant="outline" className="text-[11px]">{data.regionalMunicipality}</Badge>
+                )}
+                {data.region && (
+                  <Badge variant="outline" className="text-[11px]">מחוז {data.region}</Badge>
+                )}
+              </div>
+            )}
+            {data && (
+              <p className="text-xs text-muted-foreground mt-1.5 font-mono">
+                {data.lat.toFixed(5)}, {data.lng.toFixed(5)}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
 
-        {/* ═══ Body ═══ */}
-        <ScrollArea className="flex-1">
-          <div className="px-5 py-4 space-y-5">
+      {/* ═══ Body ═══ */}
+      <ScrollArea className="flex-1">
+        <div className="px-5 py-4 space-y-5">
 
-            {/* ─── ArcGIS Parcel Details (always available) ─── */}
-            {data && <ParcelDetails data={data} />}
+          {/* ─── ArcGIS Parcel Details (always available) ─── */}
+          {data && <ParcelDetails data={data} />}
 
-            <Separator />
+          <Separator />
 
-            {/* ─── DB Planning Data ─── */}
-            {loadingDb ? (
-              <LoadingSkeleton />
-            ) : (
+          {/* ─── DB Planning Data ─── */}
+          {loadingDb ? (
+            <LoadingSkeleton />
+          ) : (
               <>
                 {/* Quick stats from DB */}
                 {(plans.length > 0 || documents.length > 0) && (
@@ -276,8 +283,7 @@ export function ParcelInfoDialog({ data, onClose }: Props) {
             )}
           </div>
         </ScrollArea>
-      </SheetContent>
-    </Sheet>
+      </div>
   );
 }
 
