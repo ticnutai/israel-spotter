@@ -38,6 +38,8 @@ DATA_DIR = BASE_DIR / "kfar_chabad_data"
 GIS_DIR = BASE_DIR / "gis_downloads"
 AERIAL_DIR = GIS_DIR / "aerial"
 PLANS_DIR = DATA_DIR / "plans"
+PERMITS_DIR = DATA_DIR / "permits"
+PARCEL_DETAILS_DIR = DATA_DIR / "parcel_details"
 UPLOADS_DIR = DATA_DIR / "uploads"
 DB_PATH = BASE_DIR / "kfar_chabad_documents.db"
 
@@ -344,6 +346,164 @@ async def get_plan_detail(plan_number: str):
         raise HTTPException(404, f"Plan '{plan_number}' not found")
     docs = supabase_get("documents", f"plan_number=eq.{encoded}&order=gush.asc,helka.asc,file_name.asc")
     return {"plan": plans[0], "documents": docs, "georef": [], "source": "cloud"}
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  LOCAL PLANS & PERMITS  (from kfar_chabad_data folder on disk)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def _scan_plan_folder(folder: Path) -> list[dict]:
+    """Scan a plans/{gush}_{helka}/ folder and return list of plan info dicts."""
+    results = []
+    if not folder.is_dir():
+        return results
+    for plan_dir in sorted(folder.iterdir()):
+        if not plan_dir.is_dir():
+            continue
+        plan_name = plan_dir.name
+        files = []
+        for f in sorted(plan_dir.iterdir()):
+            if f.is_file():
+                ext = f.suffix.lower()
+                try:
+                    rel = str(f.relative_to(BASE_DIR)).replace("\\", "/")
+                except ValueError:
+                    rel = str(f).replace("\\", "/")
+                files.append({
+                    "name": f.name,
+                    "size": f.stat().st_size,
+                    "type": ext.lstrip("."),
+                    "path": rel,
+                })
+        if files:
+            results.append({
+                "plan_name": plan_name,
+                "file_count": len(files),
+                "files": files,
+                "has_tashrit": any(
+                    "תשריט" in f["name"] for f in files
+                ),
+                "has_takanon": any(
+                    "תקנון" in f["name"] for f in files
+                ),
+                "has_pdf": any(f["type"] == "pdf" for f in files),
+                "has_image": any(f["type"] in ("jpg", "jpeg", "png", "tif", "tiff") for f in files),
+            })
+    return results
+
+
+def _scan_permit_folder(folder: Path) -> list[dict]:
+    """Scan a permits/{gush}_{helka}/ folder and return list of permit info dicts."""
+    results = []
+    if not folder.is_dir():
+        return results
+    for permit_dir in sorted(folder.iterdir()):
+        if not permit_dir.is_dir():
+            continue
+        permit_id = permit_dir.name
+        files = []
+        for f in sorted(permit_dir.iterdir()):
+            if f.is_file():
+                ext = f.suffix.lower()
+                try:
+                    rel = str(f.relative_to(BASE_DIR)).replace("\\", "/")
+                except ValueError:
+                    rel = str(f).replace("\\", "/")
+                files.append({
+                    "name": f.name,
+                    "size": f.stat().st_size,
+                    "type": ext.lstrip("."),
+                    "path": rel,
+                })
+        results.append({
+            "permit_id": permit_id,
+            "file_count": len(files),
+            "files": files,
+        })
+    return results
+
+
+@app.get("/api/local-plans/{gush}/{helka}")
+async def get_local_plans_for_parcel(gush: int, helka: int):
+    """Get plans and permits from local filesystem for a specific parcel."""
+    folder_name = f"{gush}_{helka}"
+
+    plans = _scan_plan_folder(PLANS_DIR / folder_name)
+    permits = _scan_permit_folder(PERMITS_DIR / folder_name)
+
+    # Also load parcel details from JSON if available
+    parcel_detail = None
+    details_file = PARCEL_DETAILS_DIR / f"gush_{gush}_details.json"
+    if details_file.is_file():
+        try:
+            data = json.loads(details_file.read_text(encoding="utf-8"))
+            for p in data.get("parcels", []):
+                if p.get("helka") == helka:
+                    parcel_detail = p
+                    break
+        except Exception:
+            pass
+
+    return {
+        "gush": gush,
+        "helka": helka,
+        "plans": plans,
+        "permits": permits,
+        "parcel_detail": parcel_detail,
+        "plan_count": len(plans),
+        "permit_count": len(permits),
+    }
+
+
+@app.get("/api/local-plans/{gush}")
+async def get_local_plans_for_gush(gush: int):
+    """Get all plans across all helkot for a specific gush."""
+    all_plans: dict[int, list[dict]] = {}
+    all_permits: dict[int, list[dict]] = {}
+
+    if PLANS_DIR.is_dir():
+        for folder in sorted(PLANS_DIR.iterdir()):
+            if folder.is_dir() and folder.name.startswith(f"{gush}_"):
+                try:
+                    h = int(folder.name.split("_", 1)[1])
+                except ValueError:
+                    continue
+                plans = _scan_plan_folder(folder)
+                if plans:
+                    all_plans[h] = plans
+
+    if PERMITS_DIR.is_dir():
+        for folder in sorted(PERMITS_DIR.iterdir()):
+            if folder.is_dir() and folder.name.startswith(f"{gush}_"):
+                try:
+                    h = int(folder.name.split("_", 1)[1])
+                except ValueError:
+                    continue
+                permits = _scan_permit_folder(folder)
+                if permits:
+                    all_permits[h] = permits
+
+    return {
+        "gush": gush,
+        "plans_by_helka": all_plans,
+        "permits_by_helka": all_permits,
+        "total_plans": sum(len(v) for v in all_plans.values()),
+        "total_permits": sum(len(v) for v in all_permits.values()),
+    }
+
+
+@app.get("/api/local-file/{file_path:path}")
+async def serve_local_file(file_path: str):
+    """Serve a file from kfar_chabad_data (plans, permits, etc)."""
+    full = BASE_DIR / file_path
+    # Security: must be under DATA_DIR
+    try:
+        full.resolve().relative_to(DATA_DIR.resolve())
+    except ValueError:
+        raise HTTPException(403, "Access denied")
+    if not full.is_file():
+        raise HTTPException(404, "File not found")
+    return FileResponse(full, filename=full.name)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

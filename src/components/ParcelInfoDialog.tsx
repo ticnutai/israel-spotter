@@ -26,15 +26,18 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReverseParcelResult } from "@/lib/geocode";
-import { queryPlansAtPoint, type GovMapPlan } from "@/lib/geocode";
 import {
   getParcelDocuments,
   getPlans,
   getGush,
+  getLocalPlans,
+  getLocalFileUrl,
   type GushInfo,
   type ParcelInfo,
   type PlanSummary,
   type DocumentRecord,
+  type LocalPlansResponse,
+
 } from "@/lib/kfar-chabad-api";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchParcels } from "@/hooks/use-watch-parcels";
@@ -95,8 +98,8 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [plans, setPlans] = useState<PlanSummary[]>([]);
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
-  const [govmapPlans, setGovmapPlans] = useState<GovMapPlan[]>([]);
-  const [loadingGovmap, setLoadingGovmap] = useState(false);
+  const [localPlansData, setLocalPlansData] = useState<LocalPlansResponse | null>(null);
+  const [loadingLocalPlans, setLoadingLocalPlans] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const { isFavorite, addFavorite, removeFavorite, favorites, isLoggedIn: favLoggedIn } = useFavorites();
   const { isWatching, addWatch, removeWatch, watches, isLoggedIn: watchLoggedIn } = useWatchParcels();
@@ -134,13 +137,13 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   useEffect(() => {
     if (data) {
       fetchDbData(data.gush, data.helka);
-      // Fetch GovMap plans spatially
-      setLoadingGovmap(true);
-      setGovmapPlans([]);
-      queryPlansAtPoint(data.lat, data.lng)
-        .then(setGovmapPlans)
+      // Fetch local plans & permits from disk
+      setLoadingLocalPlans(true);
+      setLocalPlansData(null);
+      getLocalPlans(data.gush, data.helka)
+        .then(setLocalPlansData)
         .catch(() => {})
-        .finally(() => setLoadingGovmap(false));
+        .finally(() => setLoadingLocalPlans(false));
     }
   }, [data, fetchDbData]);
 
@@ -256,23 +259,26 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
 
           <Separator />
 
-          {/* ─── GovMap Plans (live spatial query) ─── */}
-          {loadingGovmap ? (
+          {/* ─── Local Plans & Permits (מקומי) ─── */}
+          {loadingLocalPlans ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-1">
                 <Layers className="h-4 w-4" />
-                <span className="text-sm font-semibold">תוכניות החלות על החלקה</span>
+                <span className="text-sm font-semibold">תוכניות והיתרים</span>
               </div>
               <Skeleton className="h-10 rounded-lg" />
               <Skeleton className="h-10 rounded-lg" />
               <Skeleton className="h-10 rounded-lg" />
             </div>
-          ) : govmapPlans.length > 0 ? (
-            <GovMapPlansSection plans={govmapPlans} />
+          ) : localPlansData && (localPlansData.plan_count > 0 || localPlansData.permit_count > 0) ? (
+            <LocalPlansSection
+              data={localPlansData}
+              onShowPlan={onShowPlan}
+            />
           ) : (
             <div className="rounded-lg border border-dashed p-3 text-center text-muted-foreground">
               <Layers className="h-5 w-5 mx-auto mb-1 opacity-50" />
-              <p className="text-sm">לא נמצאו תוכניות חלות על חלקה זו</p>
+              <p className="text-sm">לא נמצאו תוכניות או היתרים לחלקה זו</p>
             </div>
           )}
 
@@ -640,126 +646,231 @@ function DocRow({ doc }: { doc: DocumentRecord }) {
   );
 }
 
-// ── GovMap Plans Section ─────────────────────────────────────────────────────
+// ── Local Plans & Permits Section ─────────────────────────────────────────────
 
-function govmapStatusColor(statusGroup: string) {
-  if (statusGroup === "מאושרת") return "bg-green-100 text-green-800";
-  if (statusGroup === "פעילה") return "bg-blue-100 text-blue-800";
-  if (statusGroup === "בהפקדה") return "bg-yellow-100 text-yellow-800";
-  return "bg-gray-100 text-gray-700";
+function fileTypeIcon(type: string) {
+  switch (type) {
+    case "pdf": return <FileText className="h-3.5 w-3.5 text-red-500" />;
+    case "jpg": case "jpeg": case "png": case "tif": case "tiff":
+      return <Image className="h-3.5 w-3.5 text-purple-500" />;
+    default: return <FileText className="h-3.5 w-3.5 text-gray-400" />;
+  }
 }
 
-function GovMapPlansSection({ plans }: { plans: GovMapPlan[] }) {
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function LocalPlansSection({
+  data,
+  onShowPlan,
+}: {
+  data: LocalPlansResponse;
+  onShowPlan?: (path: string) => void;
+}) {
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
 
-  // Group by status
-  const grouped = plans.reduce<Record<string, GovMapPlan[]>>((acc, p) => {
-    const g = p.statusGroup;
-    (acc[g] ??= []).push(p);
-    return acc;
-  }, {});
-
-  const groupOrder = ["מאושרת", "פעילה", "בהפקדה"];
-
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-3">
-        <Layers className="h-4 w-4 text-blue-600" />
-        <h3 className="text-sm font-semibold">תוכניות החלות על החלקה</h3>
-        <Badge variant="outline" className="text-xs">{plans.length}</Badge>
-      </div>
+    <div className="space-y-4">
+      {/* Plans */}
+      {data.plans.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Layers className="h-4 w-4 text-blue-600" />
+            <h3 className="text-sm font-semibold">תוכניות החלות על החלקה</h3>
+            <Badge variant="outline" className="text-xs">{data.plans.length}</Badge>
+          </div>
 
-      <div className="space-y-3">
-        {groupOrder.map((group) => {
-          const items = grouped[group];
-          if (!items?.length) return null;
-          return (
-            <div key={group}>
-              <div className="flex items-center gap-2 mb-1.5">
-                <Badge className={`text-[11px] px-2 py-0.5 ${govmapStatusColor(group)}`}>
-                  {group} ({items.length})
-                </Badge>
-              </div>
-              <div className="space-y-1.5">
-                {items.map((plan) => (
-                  <div
-                    key={plan.planNumber}
-                    className="rounded-lg border bg-card overflow-hidden"
+          <div className="space-y-1.5">
+            {data.plans.map((plan) => {
+              const isExpanded = expandedPlan === plan.plan_name;
+              return (
+                <div
+                  key={plan.plan_name}
+                  className="rounded-lg border bg-card overflow-hidden"
+                >
+                  <button
+                    onClick={() =>
+                      setExpandedPlan(isExpanded ? null : plan.plan_name)
+                    }
+                    className="w-full flex items-center gap-2 px-3 py-2 text-right hover:bg-accent/50 transition-colors"
                   >
-                    <button
-                      onClick={() =>
-                        setExpandedPlan(
-                          expandedPlan === plan.planNumber ? null : plan.planNumber
-                        )
-                      }
-                      className="w-full flex items-center gap-2 px-3 py-2 text-right hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{plan.planNumber}</p>
-                        {plan.planName && (
-                          <p className="text-xs text-muted-foreground truncate mt-0.5">
-                            {plan.planName}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {plan.status && (
-                          <Badge className={`text-[10px] px-1.5 py-0 ${statusColor(plan.status)}`}>
-                            {plan.status}
-                          </Badge>
-                        )}
-                        {expandedPlan === plan.planNumber ? (
-                          <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                        )}
-                      </div>
-                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{plan.plan_name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {plan.file_count} קבצים
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {plan.has_tashrit && (
+                        <Badge className="text-[10px] px-1.5 py-0 bg-purple-100 text-purple-700">
+                          תשריט
+                        </Badge>
+                      )}
+                      {plan.has_takanon && (
+                        <Badge className="text-[10px] px-1.5 py-0 bg-green-100 text-green-700">
+                          תקנון
+                        </Badge>
+                      )}
+                      {isExpanded ? (
+                        <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                    </div>
+                  </button>
 
-                    {expandedPlan === plan.planNumber && (
-                      <div className="border-t px-3 py-2 bg-muted/30 space-y-1 text-xs">
-                        {plan.landUse && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">ייעוד קרקע</span>
-                            <span className="font-medium text-left max-w-[60%] truncate">{plan.landUse}</span>
-                          </div>
-                        )}
-                        {plan.areaDunam != null && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">שטח (דונם)</span>
-                            <span className="font-medium">{plan.areaDunam.toLocaleString("he-IL")}</span>
-                          </div>
-                        )}
-                        {plan.authority && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">מוסד תכנון</span>
-                            <span className="font-medium">{plan.authority}</span>
-                          </div>
-                        )}
-                        {plan.date && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">תאריך</span>
-                            <span className="font-medium">{plan.date}</span>
-                          </div>
-                        )}
-                        <a
-                          href={`https://mavat.iplan.gov.il/SV4/1/${plan.planNumber}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-blue-600 hover:underline mt-1"
+                  {isExpanded && (
+                    <div className="border-t px-3 py-2 bg-muted/30 space-y-1">
+                      {plan.files.map((file) => (
+                        <div
+                          key={file.path}
+                          className="flex items-center gap-2 py-0.5"
                         >
-                          <Globe className="h-3 w-3" />
-                          צפייה במאבת
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+                          {fileTypeIcon(file.type)}
+                          <a
+                            href={getLocalFileUrl(file.path)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:underline flex-1 min-w-0 truncate"
+                          >
+                            {file.name}
+                          </a>
+                          <span className="text-[10px] text-muted-foreground shrink-0">
+                            {formatBytes(file.size)}
+                          </span>
+                          {(file.type === "jpg" || file.type === "jpeg" || file.type === "png") && onShowPlan && (
+                            <button
+                              onClick={() => onShowPlan(file.path)}
+                              className="text-[10px] text-teal-600 hover:underline shrink-0"
+                            >
+                              הצג במפה
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Permits */}
+      {data.permits.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Shield className="h-4 w-4 text-amber-600" />
+            <h3 className="text-sm font-semibold">היתרי בנייה</h3>
+            <Badge variant="outline" className="text-xs">{data.permits.length}</Badge>
+          </div>
+
+          <div className="space-y-1.5">
+            {data.permits.map((permit) => {
+              const isExpanded = expandedPlan === `permit-${permit.permit_id}`;
+              return (
+                <div
+                  key={permit.permit_id}
+                  className="rounded-lg border bg-card overflow-hidden"
+                >
+                  <button
+                    onClick={() =>
+                      setExpandedPlan(
+                        isExpanded ? null : `permit-${permit.permit_id}`
+                      )
+                    }
+                    className="w-full flex items-center gap-2 px-3 py-2 text-right hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">היתר {permit.permit_id}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {permit.file_count} קבצים
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {isExpanded ? (
+                        <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                    </div>
+                  </button>
+
+                  {isExpanded && (
+                    <div className="border-t px-3 py-2 bg-muted/30 space-y-1">
+                      {permit.files.map((file) => (
+                        <div
+                          key={file.path}
+                          className="flex items-center gap-2 py-0.5"
+                        >
+                          {fileTypeIcon(file.type)}
+                          <a
+                            href={getLocalFileUrl(file.path)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:underline flex-1 min-w-0 truncate"
+                          >
+                            {file.name}
+                          </a>
+                          <span className="text-[10px] text-muted-foreground shrink-0">
+                            {formatBytes(file.size)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Parcel detail from local data */}
+      {data.parcel_detail && (
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Info className="h-4 w-4 text-gray-500" />
+            <h3 className="text-sm font-semibold">פרטי חלקה (מאגר מקומי)</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs rounded-lg border p-3 bg-card">
+            {data.parcel_detail.legal_area_sqm != null && (
+              <>
+                <span className="text-muted-foreground">שטח רשום</span>
+                <span className="font-medium">{data.parcel_detail.legal_area_sqm.toLocaleString("he-IL")} מ&quot;ר</span>
+              </>
+            )}
+            {data.parcel_detail.status && (
+              <>
+                <span className="text-muted-foreground">סטטוס</span>
+                <span className="font-medium">{data.parcel_detail.status}</span>
+              </>
+            )}
+            {data.parcel_detail.municipality && (
+              <>
+                <span className="text-muted-foreground">מועצה</span>
+                <span className="font-medium">{data.parcel_detail.municipality}</span>
+              </>
+            )}
+            {data.parcel_detail.county && (
+              <>
+                <span className="text-muted-foreground">נפה</span>
+                <span className="font-medium">{data.parcel_detail.county}</span>
+              </>
+            )}
+            {data.parcel_detail.region && (
+              <>
+                <span className="text-muted-foreground">מחוז</span>
+                <span className="font-medium">{data.parcel_detail.region}</span>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

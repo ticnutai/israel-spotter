@@ -545,3 +545,61 @@ function mapGeoref(r: any): GeorefEntry {
     helka: r.helka ?? null,
   };
 }
+
+// ─── Local Plans & Permits (from disk) ───────────────────────────────────────
+
+export interface LocalPlanFile {
+  name: string;
+  size: number;
+  type: string;
+  path: string;
+}
+
+export interface LocalPlan {
+  plan_name: string;
+  file_count: number;
+  files: LocalPlanFile[];
+  has_tashrit: boolean;
+  has_takanon: boolean;
+  has_pdf: boolean;
+  has_image: boolean;
+}
+
+export interface LocalPermit {
+  permit_id: string;
+  file_count: number;
+  files: LocalPlanFile[];
+}
+
+export interface LocalParcelDetail {
+  gush: number;
+  helka: number;
+  gush_helka: string;
+  legal_area_sqm: number | null;
+  status: string;
+  municipality: string;
+  county: string;
+  region: string;
+  centroid_lat: number;
+  centroid_lng: number;
+}
+
+export interface LocalPlansResponse {
+  gush: number;
+  helka: number;
+  plans: LocalPlan[];
+  permits: LocalPermit[];
+  parcel_detail: LocalParcelDetail | null;
+  plan_count: number;
+  permit_count: number;
+}
+
+export async function getLocalPlans(gush: number, helka: number): Promise<LocalPlansResponse> {
+  const res = await fetch(`${API_BASE}/local-plans/${gush}/${helka}`);
+  if (!res.ok) throw new Error(`Failed to fetch local plans: ${res.status}`);
+  return res.json();
+}
+
+export function getLocalFileUrl(path: string): string {
+  return `${API_BASE}/local-file/${path}`;
+}
