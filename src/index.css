@@ -103,6 +103,7 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
     direction: rtl;
     text-align: right;
+    overflow-x: hidden;
   }
 
   /* Ensure all inputs, labels, and form elements respect RTL */
