@@ -8,6 +8,8 @@ import { MapMeasure } from "./MapMeasure";
 import { ScaleBarControl } from "./ScaleBarControl";
 import { AerialOverlay } from "./AerialOverlay";
 import { PlanOverlay } from "./PlanOverlay";
+import { useLayerStore } from "@/hooks/use-layer-store";
+import { fetchBoundaries } from "@/lib/boundaries";
 
 // Fix default marker icons for Leaflet + bundler
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -86,11 +88,16 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
   const boundaryLayerRef = useRef<L.LayerGroup | null>(null);
   const highlightLayerRef = useRef<L.GeoJSON | null>(null);
   const gisOverlayRef = useRef<L.GeoJSON | null>(null);
+  const storeLayersRef = useRef<Map<string, L.Layer>>(new Map());
+  const paintedLayersRef = useRef<L.LayerGroup | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const labelsLayerRef = useRef<L.TileLayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeLayerId, setActiveLayerId] = useState("osm");
   const [mapReady, setMapReady] = useState(false);
+
+  // Layer store
+  const { layers: storeLayers, paintedParcels } = useLayerStore();
 
   // Initialize map – wait until container has non-zero dimensions
   useEffect(() => {
@@ -369,6 +376,135 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
 
     gisOverlayRef.current = layer;
   }, [gisOverlay]);
+
+  // ── Render store-managed layers ──
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current;
+    const currentMap = storeLayersRef.current;
+
+    // Set of current store layer IDs
+    const storeIds = new Set(storeLayers.map((l) => l.id));
+
+    // Remove layers no longer in store
+    for (const [id, leafletLayer] of currentMap.entries()) {
+      if (!storeIds.has(id)) {
+        map.removeLayer(leafletLayer);
+        currentMap.delete(id);
+      }
+    }
+
+    // Add or update layers
+    for (const sl of storeLayers) {
+      const existing = currentMap.get(sl.id);
+
+      if (existing) {
+        // Update visibility
+        if (!sl.visible && map.hasLayer(existing)) {
+          map.removeLayer(existing);
+        } else if (sl.visible && !map.hasLayer(existing)) {
+          map.addLayer(existing);
+        }
+
+        // Update style for GeoJSON layers
+        if (sl.kind === "geojson" && existing instanceof L.GeoJSON) {
+          existing.setStyle({
+            color: sl.color,
+            weight: sl.weight,
+            opacity: sl.opacity,
+            fillColor: sl.fillColor,
+            fillOpacity: sl.fillOpacity,
+            dashArray: sl.dashArray || undefined,
+          });
+        }
+      } else if (sl.data && sl.kind === "geojson") {
+        // Create new GeoJSON layer
+        const geojsonLayer = L.geoJSON(sl.data as any, {
+          style: {
+            color: sl.color,
+            weight: sl.weight,
+            opacity: sl.opacity,
+            fillColor: sl.fillColor,
+            fillOpacity: sl.fillOpacity,
+            dashArray: sl.dashArray || undefined,
+          },
+          pointToLayer: (_feature, latlng) => {
+            return L.circleMarker(latlng, {
+              radius: 5,
+              fillColor: sl.fillColor,
+              color: sl.color,
+              weight: sl.weight,
+              fillOpacity: sl.fillOpacity,
+              opacity: sl.opacity,
+            });
+          },
+          onEachFeature: (feature, featureLayer) => {
+            if (feature.properties) {
+              const entries = Object.entries(feature.properties)
+                .filter(([, v]) => v != null && v !== "")
+                .map(([k, v]) => `<b>${k}</b>: ${v}`)
+                .join("<br>");
+              if (entries) {
+                featureLayer.bindPopup(
+                  `<div dir="rtl" style="text-align:right;font-size:12px">${entries}</div>`
+                );
+              }
+            }
+          },
+        });
+
+        if (sl.visible) geojsonLayer.addTo(map);
+        currentMap.set(sl.id, geojsonLayer);
+      }
+    }
+  }, [storeLayers]);
+
+  // ── Render painted parcels ──
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current;
+
+    // Remove previous painted layer group
+    if (paintedLayersRef.current) {
+      paintedLayersRef.current.clearLayers();
+      paintedLayersRef.current.remove();
+      paintedLayersRef.current = null;
+    }
+
+    if (paintedParcels.length === 0) return;
+
+    const group = L.layerGroup().addTo(map);
+    paintedLayersRef.current = group;
+
+    // Fetch boundaries for each painted parcel and render
+    for (const pp of paintedParcels) {
+      fetchBoundaries(pp.gush, pp.helka)
+        .then((b) => {
+          if (!b.parcelGeometry || !paintedLayersRef.current) return;
+          const fc: GeoJSON.FeatureCollection = {
+            type: "FeatureCollection",
+            features: [{ type: "Feature", properties: { gush: pp.gush, helka: pp.helka }, geometry: b.parcelGeometry }],
+          };
+          const layer = L.geoJSON(fc, {
+            style: {
+              color: pp.color,
+              weight: 3,
+              fillColor: pp.fillColor,
+              fillOpacity: pp.fillOpacity,
+            },
+          });
+          if (pp.label) {
+            layer.bindTooltip(pp.label, {
+              permanent: true,
+              direction: "center",
+              className: "painted-parcel-label",
+            });
+          }
+          layer.addTo(group);
+        })
+        .catch(() => { /* ignore missing parcels */ });
+    }
+  }, [paintedParcels]);
 
   return (
     <div className="h-full w-full relative">

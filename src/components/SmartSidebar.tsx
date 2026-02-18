@@ -42,6 +42,7 @@ import { PdfExport } from "./PdfExport";
 import { PlanTimeline } from "./PlanTimeline";
 import { StatsCharts } from "./StatsCharts";
 import { SettingsDialog } from "./SettingsDialog";
+import { LayerManager } from "./LayerManager";
 
 // ─── Tab definitions ─────────────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@ const SIDEBAR_TABS: SidebarTab[] = [
   { id: "aerial", label: "צילום אוויר", icon: <Plane className="h-5 w-5" /> },
   { id: "search", label: "חיפוש מסמכים", icon: <Search className="h-5 w-5" /> },
   { id: "upload", label: "העלאת קבצים", icon: <Upload className="h-5 w-5" /> },
+  { id: "layers", label: "ניהול שכבות", icon: <Layers className="h-5 w-5" /> },
   { id: "timeline", label: "ציר זמן", icon: <Clock className="h-5 w-5" /> },
   { id: "stats", label: "סטטיסטיקה", icon: <BarChart3 className="h-5 w-5" /> },
   { id: "tools", label: "כלים", icon: <Wrench className="h-5 w-5" /> },
@@ -262,6 +264,7 @@ export function SmartSidebar({
               <SearchTab onSelectPlanImage={onSelectPlanImage} />
             )}
             {activeTab === "upload" && <UploadPanel onShowGisLayer={onShowGisLayer} />}
+            {activeTab === "layers" && <LayerManager />}
             {activeTab === "timeline" && <PlanTimeline />}
             {activeTab === "stats" && <StatsCharts />}
             {activeTab === "tools" && <ToolsTab />}

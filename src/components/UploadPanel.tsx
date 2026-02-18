@@ -44,6 +44,7 @@ import {
   looksLikeItm,
   convertItmToWgs84,
 } from "@/lib/gis-parser";
+import { useLayerStore, LAYER_COLORS } from "@/hooks/use-layer-store";
 
 // ── Accepted file extensions ─────────────────────────────────────────────────
 const ACCEPT_STRING =
@@ -54,6 +55,7 @@ export interface UploadPanelProps {
 }
 
 export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
+  const layerStore = useLayerStore();
   // ── DB upload states ──
   const [gush, setGush] = useState("");
   const [helka, setHelka] = useState("");
@@ -142,6 +144,26 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
       const idx = parsedLayers.length;
       setActiveLayerIdx(idx);
       onShowGisLayer(newLayers[0]);
+    }
+
+    // Register all new layers in the global layer store
+    for (let i = 0; i < newLayers.length; i++) {
+      const nl = newLayers[i];
+      const colorIdx = (parsedLayers.length + i) % LAYER_COLORS.length;
+      layerStore.addLayer({
+        name: nl.name,
+        kind: "geojson",
+        visible: true,
+        opacity: 1,
+        color: LAYER_COLORS[colorIdx],
+        fillColor: LAYER_COLORS[colorIdx],
+        fillOpacity: 0.15,
+        weight: 2.5,
+        locked: false,
+        data: nl.geojson,
+        featureCount: nl.featureCount,
+        geometryTypes: nl.geometryTypes,
+      });
     }
 
     // Remove parsed GIS files from upload queue
