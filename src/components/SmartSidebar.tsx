@@ -25,6 +25,7 @@ import {
   Ruler,
   Clock,
   BarChart3,
+  GripVertical,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -77,8 +78,10 @@ interface SmartSidebarProps {
 
 // ─── Sidebar width constants ─────────────────────────────────────────────────
 
-const RAIL_WIDTH = 48; // px – icon rail when collapsed
-const PANEL_WIDTH = 340; // px – full panel content width
+const RAIL_WIDTH = 48;
+const MIN_PANEL_WIDTH = 240;
+const MAX_PANEL_WIDTH = 520;
+const DEFAULT_PANEL_WIDTH = 340;
 
 // ═════════════════════════════════════════════════════════════════════════════
 //  SmartSidebar Component
@@ -97,8 +100,18 @@ export function SmartSidebar({
   });
   const [hovered, setHovered] = useState(false);
   const [activeTab, setActiveTab] = useState("data");
+  const [panelWidth, setPanelWidth] = useState(() => {
+    const saved = localStorage.getItem("sidebar-panel-width");
+    return saved ? Number(saved) : DEFAULT_PANEL_WIDTH;
+  });
+  const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Persist panel width
+  useEffect(() => {
+    localStorage.setItem("sidebar-panel-width", String(panelWidth));
+  }, [panelWidth]);
 
   // Persist pin state
   useEffect(() => {
@@ -136,9 +149,29 @@ export function SmartSidebar({
     return () => window.removeEventListener("mousemove", handleEdgeMove);
   }, [pinned, hovered]);
 
-  // Gold color constants
+  // Color constants
   const goldColor = "hsl(43 56% 52%)";
-  const goldBorder = `1px solid ${goldColor}`;
+  const navyColor = "hsl(222.2 47.4% 11.2%)";
+  const navyBorder = `1.5px solid ${navyColor}`;
+
+  // ── Resize handler ──
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    const startX = e.clientX;
+    const startWidth = panelWidth;
+    const onMouseMove = (ev: MouseEvent) => {
+      const delta = startX - ev.clientX;
+      setPanelWidth(Math.min(MAX_PANEL_WIDTH, Math.max(MIN_PANEL_WIDTH, startWidth + delta)));
+    };
+    const onMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }, [panelWidth]);
 
   // ── Render ──
   return (
@@ -147,19 +180,33 @@ export function SmartSidebar({
         ref={sidebarRef}
         className={cn(
           "h-full flex flex-row shrink-0 z-40",
-          "transition-all duration-300 ease-in-out",
+          "transition-all ease-in-out",
+          !isResizing && "duration-300",
         )}
         style={{
-          width: isOpen ? RAIL_WIDTH + PANEL_WIDTH : 0,
+          width: isOpen ? RAIL_WIDTH + panelWidth + 12 : 0,
         }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         dir="rtl"
       >
+        {/* ── Resize Handle ── */}
+        {isOpen && (
+          <div
+            className="w-3 h-full flex items-center justify-center cursor-col-resize shrink-0 z-20 group"
+            onMouseDown={handleResizeStart}
+          >
+            <div
+              className="w-1 h-10 rounded-full opacity-30 group-hover:opacity-80 transition-opacity"
+              style={{ backgroundColor: navyColor }}
+            />
+          </div>
+        )}
+
         {/* ── Icon Rail ── */}
         <div
           className={cn(
-            "flex flex-col items-center py-2 shrink-0 z-10",
+            "flex flex-col items-center py-2 shrink-0 z-10 rounded-l-2xl",
             "transition-all duration-300 ease-in-out",
           )}
           style={{
@@ -167,7 +214,9 @@ export function SmartSidebar({
             opacity: isOpen ? 1 : 0,
             overflow: "hidden",
             backgroundColor: "hsl(0 0% 100%)",
-            borderLeft: goldBorder,
+            borderLeft: navyBorder,
+            borderTop: navyBorder,
+            borderBottom: navyBorder,
           }}
         >
           {/* Tab icons */}
@@ -181,7 +230,7 @@ export function SmartSidebar({
                       if (!pinned) setHovered(true);
                     }}
                     className={cn(
-                      "w-10 h-10 rounded-lg flex items-center justify-center",
+                      "w-10 h-10 rounded-xl flex items-center justify-center",
                       "transition-colors relative",
                     )}
                     style={{
@@ -213,7 +262,7 @@ export function SmartSidebar({
                     setPinned(!pinned);
                     if (!pinned) setHovered(false);
                   }}
-                  className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
                   style={{ color: goldColor }}
                 >
                   {pinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
@@ -229,21 +278,23 @@ export function SmartSidebar({
         {/* ── Panel Content (slides in/out) ── */}
         <div
           className={cn(
-            "h-full overflow-hidden flex flex-col",
-            "transition-all duration-300 ease-in-out",
+            "h-full overflow-hidden flex flex-col rounded-r-2xl",
+            "transition-all ease-in-out",
+            !isResizing && "duration-300",
           )}
           style={{
-            width: isOpen ? PANEL_WIDTH : 0,
+            width: isOpen ? panelWidth : 0,
             opacity: isOpen ? 1 : 0,
             backgroundColor: "hsl(0 0% 100%)",
-            borderLeft: goldBorder,
+            border: navyBorder,
+            borderRight: "none",
           }}
         >
           {/* Panel header */}
           <div
-            className="shrink-0 px-3 py-2 flex items-center justify-between"
+            className="shrink-0 px-3 py-2 flex items-center justify-between rounded-tr-2xl"
             style={{
-              borderBottom: goldBorder,
+              borderBottom: navyBorder,
               color: goldColor,
             }}
           >
