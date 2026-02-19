@@ -11,6 +11,8 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { fetchTabaOutlinesGeoJSON } from "@/lib/taba-outlines";
+import { getLandUseByName } from "@/lib/land-use-colors";
 import {
   DndContext,
   closestCenter,
@@ -45,6 +47,8 @@ import {
   Paintbrush,
   RotateCcw,
   Type,
+  Map,
+  Loader2,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -569,6 +573,56 @@ export function LayerManager() {
   const [paintGush, setPaintGush] = useState("");
   const [paintHelka, setPaintHelka] = useState("");
   const [paintColor, setPaintColor] = useState(PARCEL_PAINT_COLORS[0]);
+  const [loadingTaba, setLoadingTaba] = useState(false);
+
+  // Check if TABA layer already exists
+  const tabaLayerExists = store.layers.some((l) => l.id.startsWith("taba-outlines"));
+
+  const handleLoadTaba = useCallback(async () => {
+    if (tabaLayerExists || loadingTaba) return;
+    setLoadingTaba(true);
+    try {
+      const geojson = await fetchTabaOutlinesGeoJSON();
+      if (!geojson.features.length) {
+        setLoadingTaba(false);
+        return;
+      }
+
+      // Group features by land_use and create a layer per category
+      const groups: Record<string, GeoJSON.Feature[]> = {};
+      for (const f of geojson.features) {
+        const lu = (f.properties as any)?.land_use || "לא מוגדר";
+        if (!groups[lu]) groups[lu] = [];
+        groups[lu].push(f);
+      }
+
+      // Add each land use category as a separate layer
+      for (const [landUse, features] of Object.entries(groups)) {
+        const luDesignation = getLandUseByName(landUse);
+        const color = luDesignation?.border ?? "#9ca3af";
+        const fillColor = luDesignation?.fill ?? "#d1d5db";
+
+        store.addLayer({
+          name: `תב"ע - ${landUse}`,
+          kind: "geojson",
+          visible: true,
+          opacity: 1,
+          color,
+          fillColor,
+          fillOpacity: 0.35,
+          weight: 2,
+          locked: false,
+          data: { type: "FeatureCollection", features },
+          featureCount: features.length,
+          geometryTypes: [...new Set(features.map((f) => f.geometry.type))] as string[],
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to load TABA outlines:", err);
+    } finally {
+      setLoadingTaba(false);
+    }
+  }, [tabaLayerExists, loadingTaba, store]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -653,7 +707,18 @@ export function LayerManager() {
       {activeSection === "layers" && (
         <div className="flex-1 flex flex-col min-h-0">
           {/* Batch actions */}
-          <div className="flex items-center gap-1 px-2.5 py-1.5 border-b bg-muted/30 shrink-0">
+          <div className="flex items-center gap-1 px-2.5 py-1.5 border-b bg-muted/30 shrink-0 flex-wrap">
+            {!tabaLayerExists && (
+              <button
+                onClick={handleLoadTaba}
+                disabled={loadingTaba}
+                className="text-[10px] text-primary hover:text-primary/80 flex items-center gap-0.5 px-1.5 py-0.5 rounded hover:bg-primary/10 font-medium"
+                title="טען שכבות תב״ע"
+              >
+                {loadingTaba ? <Loader2 className="h-3 w-3 animate-spin" /> : <Map className="h-3 w-3" />}
+                {loadingTaba ? "טוען..." : "טען תב״ע"}
+              </button>
+            )}
             <button
               onClick={() => store.layers.forEach((l) => { if (!l.visible) store.toggleVisibility(l.id); })}
               className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 px-1.5 py-0.5 rounded hover:bg-muted"
@@ -688,9 +753,19 @@ export function LayerManager() {
                 <div className="text-center py-8 text-muted-foreground">
                   <Layers className="h-8 w-8 mx-auto mb-2 opacity-30" />
                   <p className="text-xs">אין שכבות פעילות</p>
-                  <p className="text-[10px] mt-1">
+                  <p className="text-[10px] mt-1 mb-3">
                     העלה קבצי GIS בלשונית "העלאת קבצים"
                   </p>
+                  {!tabaLayerExists && (
+                    <button
+                      onClick={handleLoadTaba}
+                      disabled={loadingTaba}
+                      className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 mx-auto px-3 py-1.5 rounded-md border border-primary/30 hover:bg-primary/5"
+                    >
+                      {loadingTaba ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Map className="h-3.5 w-3.5" />}
+                      {loadingTaba ? "טוען שכבות תב״ע..." : "טען שכבות תב״ע מהדאטאבייס"}
+                    </button>
+                  )}
                 </div>
               ) : (
                 <DndContext
