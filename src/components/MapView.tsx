@@ -173,7 +173,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
       try {
       const map = L.map(el, {
           zoomControl: false,
-          zoomSnap: 0.25,
+          zoomSnap: 0,
           zoomDelta: 0.25,
           wheelPxPerZoomLevel: 120,
         });
