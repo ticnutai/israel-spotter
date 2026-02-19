@@ -517,6 +517,9 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
   // No separate rendering needed here
 
   // ── Render store-managed layers ──
+  // We need to serialize key style properties to detect changes reliably
+  const storeLayersStyleKey = storeLayers.map(l => `${l.id}:${l.visible}:${l.color}:${l.fillColor}:${l.opacity}:${l.fillOpacity}:${l.weight}:${l.dashArray ?? ""}`).join("|");
+
   useEffect(() => {
     if (!mapRef.current) return;
     const map = mapRef.current;
@@ -558,7 +561,6 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
         }
       } else if (sl.data && sl.kind === "geojson") {
         // Create new GeoJSON layer
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const geojsonLayer = L.geoJSON(sl.data as any, {
           style: {
             color: sl.color,
@@ -597,7 +599,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
         currentMap.set(sl.id, geojsonLayer);
       }
     }
-  }, [storeLayers]);
+  }, [storeLayers, storeLayersStyleKey]);
 
   // ── Render painted parcels ──
   useEffect(() => {
