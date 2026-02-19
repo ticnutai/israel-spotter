@@ -43,6 +43,12 @@ export interface ParcelLabelSettings {
   borderColor: string;    // border color
 }
 
+export interface ParcelBorderSettings {
+  color: string;          // border line color
+  weight: number;         // border line width
+  fillOpacity: number;    // fill opacity
+}
+
 export const DEFAULT_LABEL_SETTINGS: ParcelLabelSettings = {
   visible: true,
   fontSize: 11,
@@ -51,6 +57,12 @@ export const DEFAULT_LABEL_SETTINGS: ParcelLabelSettings = {
   textColor: "#991b1b",
   opacity: 1,
   borderColor: "#dc2626",
+};
+
+export const DEFAULT_BORDER_SETTINGS: ParcelBorderSettings = {
+  color: "#dc2626",
+  weight: 1.5,
+  fillOpacity: 0.06,
 };
 
 export interface PaintedParcel {
@@ -66,6 +78,7 @@ export interface LayerStoreState {
   layers: MapLayer[];
   paintedParcels: PaintedParcel[];
   labelSettings: ParcelLabelSettings;
+  borderSettings: ParcelBorderSettings;
 }
 
 // ─── Default colors palette ─────────────────────────────────────────────────
@@ -88,12 +101,13 @@ export const PARCEL_PAINT_COLORS = [
 const STORAGE_KEY = "layer-store-v1";
 const PAINTED_KEY = "painted-parcels-v1";
 const LABELS_KEY = "parcel-labels-v1";
+const BORDER_KEY = "parcel-border-v1";
 
 // ─── External store for cross-component reactivity ───────────────────────────
 
 type Listener = () => void;
 
-let _state: LayerStoreState = { layers: [], paintedParcels: [], labelSettings: { ...DEFAULT_LABEL_SETTINGS } };
+let _state: LayerStoreState = { layers: [], paintedParcels: [], labelSettings: { ...DEFAULT_LABEL_SETTINGS }, borderSettings: { ...DEFAULT_BORDER_SETTINGS } };
 const _listeners = new Set<Listener>();
 
 function getSnapshot(): LayerStoreState {
@@ -126,6 +140,7 @@ function scheduleSave() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stripped));
       localStorage.setItem(PAINTED_KEY, JSON.stringify(_state.paintedParcels));
       localStorage.setItem(LABELS_KEY, JSON.stringify(_state.labelSettings));
+      localStorage.setItem(BORDER_KEY, JSON.stringify(_state.borderSettings));
     } catch { /* storage full – ignore */ }
   }, 500);
 }
@@ -152,6 +167,13 @@ function hydrate() {
     if (raw) {
       const labelSettings = JSON.parse(raw) as ParcelLabelSettings;
       _state = { ..._state, labelSettings: { ...DEFAULT_LABEL_SETTINGS, ...labelSettings } };
+    }
+  } catch { /* ignore */ }
+  try {
+    const raw = localStorage.getItem(BORDER_KEY);
+    if (raw) {
+      const borderSettings = JSON.parse(raw) as ParcelBorderSettings;
+      _state = { ..._state, borderSettings: { ...DEFAULT_BORDER_SETTINGS, ...borderSettings } };
     }
   } catch { /* ignore */ }
 }
@@ -355,10 +377,21 @@ export function useLayerStore() {
     []
   );
 
+  const updateBorderSettings = useCallback(
+    (updates: Partial<ParcelBorderSettings>) => {
+      setState((prev) => ({
+        ...prev,
+        borderSettings: { ...prev.borderSettings, ...updates },
+      }));
+    },
+    []
+  );
+
   return {
     layers: state.layers,
     paintedParcels: state.paintedParcels,
     labelSettings: state.labelSettings,
+    borderSettings: state.borderSettings,
     addLayer,
     removeLayer,
     updateLayer,
@@ -377,5 +410,6 @@ export function useLayerStore() {
     clearPaintedParcels,
     updatePaintedParcel,
     updateLabelSettings,
+    updateBorderSettings,
   };
 }
