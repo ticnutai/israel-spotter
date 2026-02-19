@@ -70,6 +70,8 @@ function isValidLatLng(lat: number, lng: number): boolean {
   );
 }
 
+export type ParcelColorMode = "default" | "status" | "area";
+
 interface MapViewProps {
   result: GeoResult | null;
   boundaries: BoundaryResult | null;
@@ -79,9 +81,40 @@ interface MapViewProps {
   onMapClick?: (lat: number, lng: number) => void;
   highlightGeometry?: GeoJSON.Geometry | null;
   gisOverlay?: GeoJSON.FeatureCollection | null;
+  parcelColorMode?: ParcelColorMode;
 }
 
-function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, onMapClick, highlightGeometry, gisOverlay }: MapViewProps) {
+// ── Parcel color helpers ──
+const STATUS_COLORS: Record<string, { border: string; fill: string }> = {
+  "מוסדר": { border: "#16a34a", fill: "#22c55e" },
+  "הסדר ראשוני": { border: "#2563eb", fill: "#3b82f6" },
+  "בהסדר": { border: "#f59e0b", fill: "#fbbf24" },
+  "לא מוסדר": { border: "#dc2626", fill: "#ef4444" },
+};
+const DEFAULT_STATUS_COLOR = { border: "#8b5cf6", fill: "#a78bfa" };
+
+function getAreaColor(area?: number): { border: string; fill: string } {
+  if (!area || area <= 0) return { border: "#9ca3af", fill: "#d1d5db" };
+  if (area < 100) return { border: "#06b6d4", fill: "#22d3ee" };
+  if (area < 500) return { border: "#16a34a", fill: "#4ade80" };
+  if (area < 1000) return { border: "#f59e0b", fill: "#fbbf24" };
+  if (area < 5000) return { border: "#f97316", fill: "#fb923c" };
+  return { border: "#dc2626", fill: "#ef4444" };
+}
+
+function getParcelStyle(parcel: import("@/lib/boundaries").ParcelFeature, mode: ParcelColorMode) {
+  if (mode === "status") {
+    const c = STATUS_COLORS[parcel.status || ""] || DEFAULT_STATUS_COLOR;
+    return { color: c.border, weight: 2, fillColor: c.fill, fillOpacity: 0.25 };
+  }
+  if (mode === "area") {
+    const c = getAreaColor(parcel.legalArea);
+    return { color: c.border, weight: 2, fillColor: c.fill, fillOpacity: 0.25 };
+  }
+  return { color: "#dc2626", weight: 1.5, fillColor: "#ef4444", fillOpacity: 0.06 };
+}
+
+function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, onMapClick, highlightGeometry, gisOverlay, parcelColorMode = "default" }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const boundaryLayerRef = useRef<L.LayerGroup | null>(null);
@@ -255,17 +288,11 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
       }).addTo(layerGroup);
     }
 
-    // Show all parcels within the gush (red outlines for subdivision)
+    // Show all parcels within the gush
     if (boundaries.allParcels && boundaries.allParcels.length > 0) {
       for (const parcel of boundaries.allParcels) {
-        const pLayer = L.geoJSON(parcel.geometry as any, {
-          style: {
-            color: "#dc2626",
-            weight: 1.5,
-            fillColor: "#ef4444",
-            fillOpacity: 0.06,
-          },
-        }).addTo(layerGroup);
+        const style = getParcelStyle(parcel, parcelColorMode);
+        const pLayer = L.geoJSON(parcel.geometry as any, { style }).addTo(layerGroup);
 
         // Add tooltip with helka number
         if (parcel.helka > 0) {
@@ -317,7 +344,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
     }
 
     boundaryLayerRef.current = layerGroup;
-  }, [boundaries]);
+  }, [boundaries, parcelColorMode]);
 
   // ── Highlight parcel polygon (from map click or URL deep-link) ──
   useEffect(() => {

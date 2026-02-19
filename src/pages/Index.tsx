@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SearchPanel } from "@/components/SearchPanel";
-import { MapView } from "@/components/MapView";
+import { MapView, type ParcelColorMode } from "@/components/MapView";
 import { MapLegend } from "@/components/MapLegend";
 import { SmartSidebar } from "@/components/SmartSidebar";
 import { ParcelInfoDialog, type ParcelDialogData } from "@/components/ParcelInfoDialog";
@@ -25,6 +25,7 @@ const Index = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [showSidebar, setShowSidebar] = useState(false);
+  const [parcelColorMode, setParcelColorMode] = useState<ParcelColorMode>("default");
 
   // ── URL deep-link: open parcel from ?gush=X&helka=Y ──
   useEffect(() => {
@@ -153,8 +154,9 @@ const Index = () => {
             onMapClick={handleMapClick}
             highlightGeometry={highlightGeometry}
             gisOverlay={gisOverlay}
+            parcelColorMode={parcelColorMode}
           />
-          {boundaries && <MapLegend />}
+          {boundaries && <MapLegend colorMode={parcelColorMode} onColorModeChange={setParcelColorMode} />}
           <ParcelInfoDialog
             data={parcelDialog}
             onClose={() => {
@@ -197,8 +199,9 @@ const Index = () => {
             onMapClick={handleMapClick}
             highlightGeometry={highlightGeometry}
             gisOverlay={gisOverlay}
+            parcelColorMode={parcelColorMode}
           />
-          {boundaries && <MapLegend />}
+          {boundaries && <MapLegend colorMode={parcelColorMode} onColorModeChange={setParcelColorMode} />}
           <ParcelInfoDialog
             data={parcelDialog}
             onClose={() => {
