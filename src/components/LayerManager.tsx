@@ -138,6 +138,7 @@ function SortableLayerItem({
     <div
       ref={setNodeRef}
       style={style}
+      dir="rtl"
       className={cn(
         "border rounded-lg mb-1.5 bg-card transition-shadow",
         isDragging && "shadow-lg ring-2 ring-primary/30",
