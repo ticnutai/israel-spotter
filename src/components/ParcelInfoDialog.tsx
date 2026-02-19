@@ -39,6 +39,8 @@ import {
   type LocalPlansResponse,
   type TabaOutline,
 } from "@/lib/kfar-chabad-api";
+import { documentFileUrl } from "@/lib/kfar-chabad-api";
+import { DocumentViewer } from "./DocumentViewer";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchParcels } from "@/hooks/use-watch-parcels";
 
@@ -114,6 +116,7 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   const [isResizing, setIsResizing] = useState(false);
   const { isFavorite, addFavorite, removeFavorite, favorites, isLoggedIn: favLoggedIn } = useFavorites();
   const { isWatching, addWatch, removeWatch, watches, isLoggedIn: watchLoggedIn } = useWatchParcels();
+  const [viewingDoc, setViewingDoc] = useState<DocumentRecord | null>(null);
 
   // Track mobile breakpoint
   useEffect(() => {
@@ -208,6 +211,7 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   const open = data !== null;
 
   return (
+    <>
     <div
       ref={panelRef}
       className={cn(
@@ -379,6 +383,7 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
                         documents={documents.filter(
                           (d) => d.plan_number === plan.plan_number
                         )}
+                        onViewDoc={setViewingDoc}
                       />
                     ))}
                   </div>
@@ -406,7 +411,7 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
                           </div>
                           <div className="space-y-1 mr-6">
                             {docs.map((doc) => (
-                              <DocRow key={doc.id} doc={doc} />
+                              <DocRow key={doc.id} doc={doc} onViewDoc={setViewingDoc} />
                             ))}
                           </div>
                         </div>
@@ -432,6 +437,16 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
         </ScrollArea>
       </div>
       </div>
+
+      {viewingDoc && (
+        <DocumentViewer
+          url={documentFileUrl(viewingDoc.id)}
+          title={viewingDoc.title}
+          fileType={viewingDoc.file_type as "pdf" | "image" | "other"}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
+    </>
   );
 }
 
@@ -634,11 +649,13 @@ function PlanCard({
   expanded,
   onToggle,
   documents,
+  onViewDoc,
 }: {
   plan: PlanSummary;
   expanded: boolean;
   onToggle: () => void;
   documents: DocumentRecord[];
+  onViewDoc: (doc: DocumentRecord) => void;
 }) {
   return (
     <div className="rounded-2xl overflow-hidden" style={{ border: '1.5px solid hsl(222.2 47.4% 11.2%)' }}>
@@ -677,7 +694,7 @@ function PlanCard({
           {documents.length > 0 ? (
             <div className="space-y-1 mt-1">
               {documents.map((doc) => (
-                <DocRow key={doc.id} doc={doc} />
+                <DocRow key={doc.id} doc={doc} onViewDoc={onViewDoc} />
               ))}
             </div>
           ) : (
@@ -689,10 +706,13 @@ function PlanCard({
   );
 }
 
-function DocRow({ doc }: { doc: DocumentRecord }) {
+function DocRow({ doc, onViewDoc }: { doc: DocumentRecord; onViewDoc?: (doc: DocumentRecord) => void }) {
   const meta = categoryMeta(doc.category);
   return (
-    <div className="flex items-center gap-2 py-1 px-2 rounded hover:bg-accent/40 transition-colors">
+    <div
+      className="flex items-center gap-2 py-1 px-2 rounded hover:bg-accent/40 transition-colors cursor-pointer"
+      onClick={() => onViewDoc?.(doc)}
+    >
       <span className="shrink-0">{meta.icon}</span>
       <span className="flex-1 text-xs truncate">{doc.title || doc.file_name}</span>
       <span className="text-[10px] text-muted-foreground shrink-0">

@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { UploadPanel } from "./UploadPanel";
+import { DocumentViewer } from "./DocumentViewer";
 import type { ParsedGisLayer } from "@/lib/gis-parser";
 import { PdfExport } from "./PdfExport";
 import { PlanTimeline } from "./PlanTimeline";
@@ -385,10 +386,14 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function DocRow({ doc, onShowImage }: { doc: DocumentRecord; onShowImage: (p: string) => void }) {
+function DocRow({ doc, onShowImage, onViewDoc }: { doc: DocumentRecord; onShowImage: (p: string) => void; onViewDoc: (doc: DocumentRecord) => void }) {
   const isImage = doc.file_type === "image";
   return (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs hover:bg-accent group text-right" dir="rtl">
+    <div
+      className="flex items-center gap-1.5 px-3 py-1.5 text-xs hover:bg-accent group text-right cursor-pointer"
+      dir="rtl"
+      onClick={() => onViewDoc(doc)}
+    >
       {fileIcon(doc.file_type)}
       <span className="flex-1 truncate">{doc.title}</span>
       {doc.is_tashrit === 1 && (
@@ -401,14 +406,15 @@ function DocRow({ doc, onShowImage }: { doc: DocumentRecord; onShowImage: (p: st
       <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         {isImage && doc.is_tashrit === 1 && (
           <Button variant="ghost" size="sm" className="h-5 w-5 p-0" title="הצג על המפה"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               const rel = doc.file_path.replace(/^\.\/kfar_chabad_data[\\/]plans[\\/]/, "");
               onShowImage(rel);
             }}>
             <MapPin className="h-3 w-3" />
           </Button>
         )}
-        <a href={documentFileUrl(doc.id)} target="_blank" rel="noopener noreferrer">
+        <a href={documentFileUrl(doc.id)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
           <Button variant="ghost" size="sm" className="h-5 w-5 p-0" title="הורד">
             <Download className="h-3 w-3" />
           </Button>
@@ -432,6 +438,7 @@ function DataTab({
   const [stats, setStats] = useState<DocumentStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [viewingDoc, setViewingDoc] = useState<DocumentRecord | null>(null);
 
   const [expandedGush, setExpandedGush] = useState<number | null>(null);
   const [parcels, setParcels] = useState<ParcelInfo[]>([]);
@@ -521,6 +528,7 @@ function DataTab({
   const emptyGushim = gushim.filter((g) => g.plan_count === 0 && g.permit_count === 0);
 
   return (
+    <>
     <ScrollArea className="h-full" dir="rtl">
       <div className="px-2 py-2 space-y-2 text-right" dir="rtl">
         {/* Stats bar */}
@@ -611,6 +619,7 @@ function DataTab({
                                       key={doc.id}
                                       doc={doc}
                                       onShowImage={onSelectPlanImage}
+                                      onViewDoc={setViewingDoc}
                                     />
                                   ))}
                                 </div>
@@ -695,6 +704,16 @@ function DataTab({
         )}
       </div>
     </ScrollArea>
+
+    {viewingDoc && (
+      <DocumentViewer
+        url={documentFileUrl(viewingDoc.id)}
+        title={viewingDoc.title}
+        fileType={viewingDoc.file_type as "pdf" | "image" | "other"}
+        onClose={() => setViewingDoc(null)}
+      />
+    )}
+    </>
   );
 }
 
@@ -796,6 +815,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
   const [results, setResults] = useState<DocumentRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [searching, setSearching] = useState(false);
+  const [viewingDoc, setViewingDoc] = useState<DocumentRecord | null>(null);
 
   const doSearch = useCallback(async () => {
     if (!searchText.trim() && !category && !fileType) return;
@@ -868,7 +888,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
                 גוש {doc.gush} · חלקה {doc.helka}
                 {doc.plan_number && ` · ${doc.plan_number}`}
               </div>
-              <DocRow doc={doc} onShowImage={onSelectPlanImage} />
+              <DocRow doc={doc} onShowImage={onSelectPlanImage} onViewDoc={setViewingDoc} />
             </div>
           ))}
         </div>
@@ -885,6 +905,15 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
           </div>
         )}
       </ScrollArea>
+
+      {viewingDoc && (
+        <DocumentViewer
+          url={documentFileUrl(viewingDoc.id)}
+          title={viewingDoc.title}
+          fileType={viewingDoc.file_type as "pdf" | "image" | "other"}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </div>
   );
 }
