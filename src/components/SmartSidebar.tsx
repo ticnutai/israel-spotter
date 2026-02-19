@@ -201,96 +201,95 @@ export function SmartSidebar({
           </div>
         )}
 
-        {/* ── Icon Rail ── */}
+        {/* ── Unified sidebar container (rail + panel) ── */}
         <div
           className={cn(
-            "flex flex-col items-center py-2 shrink-0 z-10 rounded-l-2xl",
-            "transition-all duration-300 ease-in-out",
-          )}
-          style={{
-            width: isOpen ? RAIL_WIDTH : 0,
-            opacity: isOpen ? 1 : 0,
-            overflow: "hidden",
-            backgroundColor: "hsl(0 0% 100%)",
-            borderLeft: navyBorder,
-            borderTop: navyBorder,
-            borderBottom: navyBorder,
-          }}
-        >
-          {/* Tab icons */}
-          <div className="flex-1 flex flex-col items-center gap-1 mt-1">
-            {SIDEBAR_TABS.map((tab) => (
-              <Tooltip key={tab.id}>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => {
-                      setActiveTab(tab.id);
-                      if (!pinned) setHovered(true);
-                    }}
-                    className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center",
-                      "transition-colors relative",
-                    )}
-                    style={{
-                      color: activeTab === tab.id ? "hsl(0 0% 100%)" : goldColor,
-                      backgroundColor: activeTab === tab.id ? goldColor : "transparent",
-                    }}
-                  >
-                    {tab.icon}
-                    {tab.badge && tab.badge > 0 && (
-                      <span className="absolute -top-0.5 -left-0.5 bg-destructive text-destructive-foreground text-[9px] rounded-full w-4 h-4 flex items-center justify-center">
-                        {tab.badge}
-                      </span>
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="left" className="text-xs">
-                  {tab.label}
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </div>
-
-          {/* Pin / Unpin button at bottom */}
-          <div className="flex flex-col items-center gap-1 mb-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => {
-                    setPinned(!pinned);
-                    if (!pinned) setHovered(false);
-                  }}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-                  style={{ color: goldColor }}
-                >
-                  {pinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="text-xs">
-                {pinned ? "בטל נעיצה (אוטו-הסתר)" : "נעץ סיידבר"}
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-
-        {/* ── Panel Content (slides in/out) ── */}
-        <div
-          className={cn(
-            "h-full overflow-hidden flex flex-col rounded-r-2xl",
+            "h-full flex flex-row overflow-hidden rounded-2xl",
             "transition-all ease-in-out",
             !isResizing && "duration-300",
           )}
           style={{
-            width: isOpen ? panelWidth : 0,
-            opacity: isOpen ? 1 : 0,
-            backgroundColor: "hsl(0 0% 100%)",
             border: navyBorder,
-            borderRight: "none",
+            backgroundColor: "hsl(0 0% 100%)",
+            opacity: isOpen ? 1 : 0,
           }}
         >
+          {/* ── Icon Rail ── */}
+          <div
+            className="flex flex-col items-center py-2 shrink-0"
+            style={{ width: RAIL_WIDTH }}
+          >
+            {/* Tab icons */}
+            <div className="flex-1 flex flex-col items-center gap-1 mt-1">
+              {SIDEBAR_TABS.map((tab) => (
+                <Tooltip key={tab.id}>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => {
+                        setActiveTab(tab.id);
+                        if (!pinned) setHovered(true);
+                      }}
+                      className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center",
+                        "transition-colors relative",
+                      )}
+                      style={{
+                        color: activeTab === tab.id ? "hsl(0 0% 100%)" : goldColor,
+                        backgroundColor: activeTab === tab.id ? goldColor : "transparent",
+                      }}
+                    >
+                      {tab.icon}
+                      {tab.badge && tab.badge > 0 && (
+                        <span className="absolute -top-0.5 -left-0.5 bg-destructive text-destructive-foreground text-[9px] rounded-full w-4 h-4 flex items-center justify-center">
+                          {tab.badge}
+                        </span>
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="text-xs">
+                    {tab.label}
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+
+            {/* Pin / Unpin button at bottom */}
+            <div className="flex flex-col items-center gap-1 mb-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => {
+                      setPinned(!pinned);
+                      if (!pinned) setHovered(false);
+                    }}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+                    style={{ color: goldColor }}
+                  >
+                    {pinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="text-xs">
+                  {pinned ? "בטל נעיצה (אוטו-הסתר)" : "נעץ סיידבר"}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
+
+          {/* ── Panel Content ── */}
+          <div
+            className={cn(
+              "h-full overflow-hidden flex flex-col",
+              "transition-all ease-in-out",
+              !isResizing && "duration-300",
+            )}
+            style={{
+              width: panelWidth,
+              borderRight: `1px solid hsl(222.2 47.4% 11.2% / 0.15)`,
+            }}
+          >
           {/* Panel header */}
           <div
-            className="shrink-0 px-3 py-2 flex items-center justify-between rounded-tr-2xl"
+            className="shrink-0 px-3 py-2 flex items-center justify-between"
             style={{
               borderBottom: navyBorder,
               color: goldColor,
@@ -335,6 +334,7 @@ export function SmartSidebar({
             {activeTab === "tools" && <ToolsTab />}
             {activeTab === "settings" && <SettingsTab />}
           </div>
+        </div>
         </div>
       </div>
     </TooltipProvider>
@@ -595,25 +595,29 @@ function DataTab({
                       </button>
                       {isExpanded && parcelDocs && (
                         <div className="bg-muted/20">
-                          {parcelDocs.by_plan.map((bp, idx) => (
-                            <div key={idx} className="border-b last:border-b-0">
-                              {bp.plan_number && (
-                                <div className="px-5 py-1 text-[11px] font-medium bg-muted/40 flex items-center gap-1">
-                                  <FileText className="h-3 w-3 text-primary" />
-                                  תוכנית: {bp.plan_number}
+                          {parcelDocs.by_plan.length > 0 ? (
+                            parcelDocs.by_plan.map((bp, idx) => (
+                              <div key={idx} className="border-b last:border-b-0">
+                                {bp.plan_number && (
+                                  <div className="px-5 py-1 text-[11px] font-medium bg-muted/40 flex items-center gap-1">
+                                    <FileText className="h-3 w-3 text-primary" />
+                                    תוכנית: {bp.plan_number}
+                                  </div>
+                                )}
+                                <div className="divide-y">
+                                  {bp.documents.map((doc) => (
+                                    <DocRow
+                                      key={doc.id}
+                                      doc={doc}
+                                      onShowImage={onSelectPlanImage}
+                                    />
+                                  ))}
                                 </div>
-                              )}
-                              <div className="divide-y">
-                                {bp.documents.map((doc) => (
-                                  <DocRow
-                                    key={doc.id}
-                                    doc={doc}
-                                    onShowImage={onSelectPlanImage}
-                                  />
-                                ))}
                               </div>
-                            </div>
-                          ))}
+                            ))
+                          ) : (
+                            <p className="text-xs text-muted-foreground p-3">אין מסמכים זמינים לחלקה זו</p>
+                          )}
                         </div>
                       )}
                     </div>
