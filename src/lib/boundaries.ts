@@ -1,5 +1,7 @@
 // Fetch parcel and block boundary geometries from Survey of Israel ArcGIS REST services
 
+import { supabase } from "@/integrations/supabase/client";
+
 const PARCEL_SERVICE_URL =
   "https://services8.arcgis.com/JcXY3lLZni6BK4El/arcgis/rest/services/%D7%97%D7%9C%D7%A7%D7%95%D7%AA/FeatureServer/0/query";
 const BLOCK_SERVICE_URL =
@@ -11,6 +13,8 @@ export interface ParcelFeature {
   geometry: GeoJSON.Geometry;
   legalArea?: number;
   status?: string;
+  landUse?: string;
+  lotNumber?: number;
 }
 
 export interface BoundaryResult {
@@ -65,6 +69,65 @@ async function queryAllParcelsInGush(gush: number): Promise<ParcelFeature[]> {
   } catch {
     return [];
   }
+}
+
+/**
+ * Fetch land use data for all parcels in a gush from plan_blocks + taba_outlines.
+ * Returns a map of helka → { landUse, lotNumber }.
+ */
+export async function fetchParcelLandUse(gush: number): Promise<Map<number, { landUse: string; lotNumber?: number }>> {
+  const result = new Map<number, { landUse: string; lotNumber?: number }>();
+
+  try {
+    // Get plan_blocks for this gush
+    const { data: planBlocks } = await supabase
+      .from("plan_blocks")
+      .select("helka, plan_number")
+      .eq("gush", gush);
+
+    if (!planBlocks || planBlocks.length === 0) return result;
+
+    // Get unique plan numbers
+    const planNumbers = [...new Set(planBlocks.map((pb) => pb.plan_number))];
+
+    // Fetch taba_outlines for these plans
+    const { data: tabaData } = await supabase
+      .from("taba_outlines")
+      .select("pl_number, land_use, pl_name")
+      .in("pl_number", planNumbers);
+
+    if (!tabaData) return result;
+
+    // Build plan_number → { land_use, pl_name } map
+    const planLandUse = new Map<string, { landUse: string; plName: string }>();
+    for (const t of tabaData) {
+      if (t.land_use) {
+        planLandUse.set(t.pl_number!, { landUse: t.land_use, plName: t.pl_name || "" });
+      }
+    }
+
+    // Map helka → land use (use first matching plan)
+    for (const pb of planBlocks) {
+      if (pb.helka == null || pb.helka <= 0) continue;
+      const info = planLandUse.get(pb.plan_number);
+      if (!info) continue;
+
+      // Try to extract lot number from plan name (e.g., "מגרש 124")
+      const lotMatch = info.plName.match(/מגרש\s*(\d+)/);
+      const lotNumber = lotMatch ? parseInt(lotMatch[1], 10) : undefined;
+
+      // Take the first (primary) land use if comma-separated
+      const primaryLandUse = info.landUse.split(",")[0].trim();
+
+      if (!result.has(pb.helka)) {
+        result.set(pb.helka, { landUse: primaryLandUse, lotNumber });
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to fetch parcel land use:", err);
+  }
+
+  return result;
 }
 
 /**
