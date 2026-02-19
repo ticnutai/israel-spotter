@@ -10,6 +10,7 @@ import { AerialOverlay } from "./AerialOverlay";
 import { PlanOverlay } from "./PlanOverlay";
 import { useLayerStore } from "@/hooks/use-layer-store";
 import { getLandUseByName } from "@/lib/land-use-colors";
+import { fetchTabaOutlinesGeoJSON } from "@/lib/taba-outlines";
 
 // Fix default marker icons for Leaflet + bundler
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -146,10 +147,12 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
   const paintedLayersRef = useRef<L.LayerGroup | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const labelsLayerRef = useRef<L.TileLayer | null>(null);
+  const tabaLayerRef = useRef<L.GeoJSON | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeLayerId, setActiveLayerId] = useState("osm");
   const [mapReady, setMapReady] = useState(false);
   const [landUseMap, setLandUseMap] = useState<Map<number, { landUse: string; lotNumber?: number }>>(new Map());
+  const [tabaGeoJSON, setTabaGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
 
   // Layer store
   const { layers: storeLayers, paintedParcels, labelSettings, borderSettings } = useLayerStore();
@@ -507,6 +510,57 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
 
     gisOverlayRef.current = layer;
   }, [gisOverlay]);
+
+  // ── TABA outlines layer (land use coloring) ──
+  useEffect(() => {
+    if (parcelColorMode === "landuse" && !tabaGeoJSON) {
+      fetchTabaOutlinesGeoJSON().then(setTabaGeoJSON).catch(() => {});
+    }
+  }, [parcelColorMode, tabaGeoJSON]);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    if (tabaLayerRef.current) {
+      tabaLayerRef.current.remove();
+      tabaLayerRef.current = null;
+    }
+
+    if (parcelColorMode !== "landuse" || !tabaGeoJSON || !tabaGeoJSON.features.length) return;
+
+    const layer = L.geoJSON(tabaGeoJSON as any, {
+      style: (feature) => {
+        const landUse = feature?.properties?.land_use || "";
+        const lu = getLandUseByName(landUse);
+        return {
+          color: lu?.border ?? "#9ca3af",
+          weight: 2,
+          fillColor: lu?.fill ?? "#d1d5db",
+          fillOpacity: 0.35,
+          dashArray: lu ? undefined : "4 4",
+        };
+      },
+      onEachFeature: (feature, featureLayer) => {
+        const p = feature.properties;
+        if (!p) return;
+        const lu = getLandUseByName(p.land_use || "");
+        const popupHtml =
+          `<div dir="rtl" style="text-align:right;font-size:13px;">` +
+          `<b>${p.pl_name || p.pl_number || "תב״ע"}</b><br/>` +
+          (p.land_use ? `<span style="display:inline-block;width:12px;height:12px;background:${lu?.fill ?? '#ccc'};border:1px solid ${lu?.border ?? '#999'};margin-left:4px;vertical-align:middle;border-radius:2px;"></span> יעוד: ${p.land_use}<br/>` : "") +
+          (p.status ? `סטטוס: ${p.status}<br/>` : "") +
+          (p.area_dunam ? `שטח: ${p.area_dunam} דונם<br/>` : "") +
+          (p.pl_number ? `מספר תוכנית: ${p.pl_number}` : "") +
+          `</div>`;
+        featureLayer.bindPopup(popupHtml);
+      },
+    }).addTo(mapRef.current);
+
+    // Add below parcels (z-index management)
+    layer.bringToBack();
+
+    tabaLayerRef.current = layer;
+  }, [parcelColorMode, tabaGeoJSON]);
 
   // ── Render store-managed layers ──
   useEffect(() => {
