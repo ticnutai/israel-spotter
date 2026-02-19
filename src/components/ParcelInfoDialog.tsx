@@ -426,17 +426,17 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
           </div>
         </ScrollArea>
       </div>
-      </div>
 
       {/* ═══ Resize Handle (desktop only) ═══ */}
       {!isMobile && (
         <div
-          className="w-3 h-full flex items-center justify-center cursor-col-resize shrink-0 group hover:bg-accent/50 transition-colors"
+          className="w-4 h-full flex items-center justify-center cursor-col-resize shrink-0 group hover:bg-accent/40 transition-colors border-l"
           onMouseDown={handleResizeStart}
         >
-          <div className="w-1 h-10 rounded-full bg-muted-foreground/30 group-hover:bg-primary/60 transition-colors" />
+          <div className="w-1.5 h-12 rounded-full bg-muted-foreground/25 group-hover:bg-primary/50 transition-colors" />
         </div>
       )}
+      </div>
 
       {viewingDoc && (
         <DocumentViewer
