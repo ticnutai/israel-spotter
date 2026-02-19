@@ -120,27 +120,71 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
     setWarning("");
     setPlanResults([]);
     try {
-      let query = supabase
-        .from("taba_outlines")
-        .select("pl_number, pl_name, land_use");
+      // Normalize: remove extra spaces around slashes and collapse whitespace
+      const normalizedPlan = planQuery.trim().replace(/\s*\/\s*/g, "/ ").replace(/\s+/g, " ");
+      // Also create a compact version without spaces for broader matching
+      const compactPlan = planQuery.trim().replace(/\s+/g, "").replace(/\//g, "/");
 
-      if (planQuery.trim()) {
-        query = query.ilike("pl_number", `%${planQuery.trim()}%`);
-      }
-      if (lotQuery.trim()) {
-        query = query.ilike("pl_name", `%מגרש ${lotQuery.trim()}%`);
-      }
-
-      const { data, error: err } = await query.limit(20);
-      if (err) throw err;
-
-      if (!data || data.length === 0) {
-        setWarning("לא נמצאו תוכניות תואמות");
-      } else {
-        setPlanResults(data.map(d => ({
+      // Search taba_outlines
+      let tabaResults: { pl_number: string; pl_name: string; land_use: string; source: string }[] = [];
+      if (planQuery.trim() || lotQuery.trim()) {
+        let q = supabase.from("taba_outlines").select("pl_number, pl_name, land_use");
+        if (planQuery.trim()) {
+          q = q.ilike("pl_number", `%${planQuery.trim()}%`);
+        }
+        if (lotQuery.trim()) {
+          q = q.ilike("pl_name", `%מגרש ${lotQuery.trim()}%`);
+        }
+        const { data } = await q.limit(20);
+        tabaResults = (data || []).map(d => ({
           pl_number: d.pl_number || "",
           pl_name: d.pl_name || "",
           land_use: d.land_use || "",
+          source: "taba",
+        }));
+      }
+
+      // Search plans table too
+      let plansResults: { pl_number: string; pl_name: string; land_use: string; source: string }[] = [];
+      {
+        let q = supabase.from("plans").select("plan_number, plan_name, main_status, city_county");
+        if (planQuery.trim()) {
+          // Search with multiple patterns to handle spacing variations
+          q = q.or(`plan_number.ilike.%${planQuery.trim()}%,plan_number.ilike.%${normalizedPlan}%,plan_number.ilike.%${compactPlan}%`);
+        }
+        if (lotQuery.trim()) {
+          q = q.or(`plan_name.ilike.%מגרש ${lotQuery.trim()}%,plan_name.ilike.%${lotQuery.trim()}%`);
+        }
+        if (!planQuery.trim() && !lotQuery.trim()) {
+          // skip
+        } else {
+          const { data } = await q.limit(20);
+          plansResults = (data || []).map(d => ({
+            pl_number: d.plan_number || "",
+            pl_name: d.plan_name || "",
+            land_use: d.main_status || d.city_county || "",
+            source: "plans",
+          }));
+        }
+      }
+
+      // Merge results, deduplicate by pl_number
+      const seen = new Set<string>();
+      const merged: typeof tabaResults = [];
+      for (const r of [...plansResults, ...tabaResults]) {
+        if (!seen.has(r.pl_number)) {
+          seen.add(r.pl_number);
+          merged.push(r);
+        }
+      }
+
+      if (merged.length === 0) {
+        setWarning("לא נמצאו תוכניות תואמות");
+      } else {
+        setPlanResults(merged.map(d => ({
+          pl_number: d.pl_number,
+          pl_name: d.pl_name,
+          land_use: d.land_use,
         })));
       }
     } catch (e) {
@@ -156,19 +200,41 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
     setError("");
     setWarning("");
     try {
+      // Try plan_blocks first
+      let g: number | null = null;
+      let h: number | null = null;
+
       const { data: blocks } = await supabase
         .from("plan_blocks")
         .select("gush, helka")
         .eq("plan_number", plNumber)
         .limit(1);
 
-      if (!blocks || blocks.length === 0) {
+      if (blocks && blocks.length > 0) {
+        g = blocks[0].gush;
+        h = blocks[0].helka;
+      }
+
+      // Fallback: check plans table gush_list
+      if (!g) {
+        const { data: plans } = await supabase
+          .from("plans")
+          .select("gush_list")
+          .eq("plan_number", plNumber)
+          .limit(1);
+
+        if (plans && plans.length > 0 && plans[0].gush_list) {
+          const firstGush = plans[0].gush_list.split(",")[0].trim();
+          g = Number(firstGush) || null;
+        }
+      }
+
+      if (!g) {
         setWarning("לא נמצאו חלקות עבור תוכנית זו");
         setLoading(false);
         return;
       }
 
-      const { gush: g, helka: h } = blocks[0];
       const result = await searchByGushHelka(g, h ?? undefined);
       onResult(result);
 
