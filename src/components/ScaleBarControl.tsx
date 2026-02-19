@@ -166,9 +166,9 @@ export function ScaleBarControl({ map }: ScaleBarControlProps) {
   useEffect(() => {
     if (!map) return;
     updateScale();
-    map.on("zoomend moveend resize", updateScale);
+    map.on("zoom zoomend moveend resize", updateScale);
     return () => {
-      map.off("zoomend moveend resize", updateScale);
+      map.off("zoom zoomend moveend resize", updateScale);
     };
   }, [map, updateScale]);
 
