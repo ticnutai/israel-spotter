@@ -9,6 +9,7 @@ import { ScaleBarControl } from "./ScaleBarControl";
 import { AerialOverlay } from "./AerialOverlay";
 import { PlanOverlay } from "./PlanOverlay";
 import { useLayerStore } from "@/hooks/use-layer-store";
+import { getLandUseByName } from "@/lib/land-use-colors";
 
 // Fix default marker icons for Leaflet + bundler
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -70,7 +71,7 @@ function isValidLatLng(lat: number, lng: number): boolean {
   );
 }
 
-export type ParcelColorMode = "default" | "status" | "area";
+export type ParcelColorMode = "default" | "status" | "area" | "landuse";
 
 interface MapViewProps {
   result: GeoResult | null;
@@ -102,16 +103,36 @@ function getAreaColor(area?: number): { border: string; fill: string } {
   return { border: "#dc2626", fill: "#ef4444" };
 }
 
-function getParcelStyle(parcel: import("@/lib/boundaries").ParcelFeature, mode: ParcelColorMode) {
+function getParcelStyle(
+  parcel: import("@/lib/boundaries").ParcelFeature,
+  mode: ParcelColorMode,
+  borderColor?: string,
+  borderWeight?: number,
+  borderFillOpacity?: number
+) {
+  if (mode === "landuse") {
+    // Try to match land use from status text or other available data
+    const lu = getLandUseByName(parcel.status || "");
+    if (lu) {
+      return { color: lu.border, weight: borderWeight ?? 2, fillColor: lu.fill, fillOpacity: 0.3 };
+    }
+    // Fallback for unknown land use
+    return { color: borderColor ?? "#9ca3af", weight: borderWeight ?? 1.5, fillColor: "#d1d5db", fillOpacity: 0.1 };
+  }
   if (mode === "status") {
     const c = STATUS_COLORS[parcel.status || ""] || DEFAULT_STATUS_COLOR;
-    return { color: c.border, weight: 2, fillColor: c.fill, fillOpacity: 0.25 };
+    return { color: c.border, weight: borderWeight ?? 2, fillColor: c.fill, fillOpacity: 0.25 };
   }
   if (mode === "area") {
     const c = getAreaColor(parcel.legalArea);
-    return { color: c.border, weight: 2, fillColor: c.fill, fillOpacity: 0.25 };
+    return { color: c.border, weight: borderWeight ?? 2, fillColor: c.fill, fillOpacity: 0.25 };
   }
-  return { color: "#dc2626", weight: 1.5, fillColor: "#ef4444", fillOpacity: 0.06 };
+  return {
+    color: borderColor ?? "#dc2626",
+    weight: borderWeight ?? 1.5,
+    fillColor: borderColor ?? "#ef4444",
+    fillOpacity: borderFillOpacity ?? 0.06,
+  };
 }
 
 function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, onMapClick, highlightGeometry, gisOverlay, parcelColorMode = "default" }: MapViewProps) {
@@ -129,7 +150,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
   const [mapReady, setMapReady] = useState(false);
 
   // Layer store
-  const { layers: storeLayers, paintedParcels, labelSettings } = useLayerStore();
+  const { layers: storeLayers, paintedParcels, labelSettings, borderSettings } = useLayerStore();
 
   // Initialize map – wait until container has non-zero dimensions
   useEffect(() => {
@@ -291,7 +312,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
     // Show all parcels within the gush
     if (boundaries.allParcels && boundaries.allParcels.length > 0) {
       for (const parcel of boundaries.allParcels) {
-        const style = getParcelStyle(parcel, parcelColorMode);
+        const style = getParcelStyle(parcel, parcelColorMode, borderSettings.color, borderSettings.weight, borderSettings.fillOpacity);
         const pLayer = L.geoJSON(parcel.geometry as any, { style }).addTo(layerGroup);
 
         // Add tooltip with helka number (respects label settings)
@@ -344,7 +365,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
     }
 
     boundaryLayerRef.current = layerGroup;
-  }, [boundaries, parcelColorMode, labelSettings.visible]);
+  }, [boundaries, parcelColorMode, labelSettings.visible, borderSettings]);
 
   // ── Dynamic CSS for parcel label styling ──
   useEffect(() => {
