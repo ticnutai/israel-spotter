@@ -120,20 +120,24 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
     setWarning("");
     setPlanResults([]);
     try {
-      // Normalize: remove extra spaces around slashes and collapse whitespace
-      const normalizedPlan = planQuery.trim().replace(/\s*\/\s*/g, "/ ").replace(/\s+/g, " ");
-      // Also create a compact version without spaces for broader matching
-      const compactPlan = planQuery.trim().replace(/\s+/g, "").replace(/\//g, "/");
+      // Normalize spacing variations for plan numbers like גז/12/525 vs גז/ 525/ 12
+      const raw = planQuery.trim();
+      const normalizedPlan = raw.replace(/\s*\/\s*/g, "/ ").replace(/\s+/g, " ");
+      const compactPlan = raw.replace(/\s+/g, "").replace(/\//g, "/");
+      // Reverse order: "גז/12/525" → also try "525/ 12" pattern
+      const parts = compactPlan.split("/");
+      const reversedParts = parts.length >= 2 ? [parts[0], ...parts.slice(1).reverse()].join("/ ") : "";
 
-      // Search taba_outlines
+      // Search taba_outlines (uses 425-XXXXXXX format plan numbers)
       let tabaResults: { pl_number: string; pl_name: string; land_use: string; source: string }[] = [];
-      if (planQuery.trim() || lotQuery.trim()) {
+      if (raw || lotQuery.trim()) {
         let q = supabase.from("taba_outlines").select("pl_number, pl_name, land_use");
-        if (planQuery.trim()) {
-          q = q.ilike("pl_number", `%${planQuery.trim()}%`);
+        if (raw) {
+          q = q.ilike("pl_number", `%${raw}%`);
         }
+        // Search lot in pl_name with flexible matching
         if (lotQuery.trim()) {
-          q = q.ilike("pl_name", `%מגרש ${lotQuery.trim()}%`);
+          q = q.or(`pl_name.ilike.%מגרש ${lotQuery.trim()}%,pl_name.ilike.%מגרש${lotQuery.trim()}%`);
         }
         const { data } = await q.limit(20);
         tabaResults = (data || []).map(d => ({
@@ -144,21 +148,49 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
         }));
       }
 
-      // Search plans table too
+      // Also search taba_outlines by pl_name if lot query provided (separate query without plan filter)
+      if (lotQuery.trim() && !raw) {
+        const { data } = await supabase
+          .from("taba_outlines")
+          .select("pl_number, pl_name, land_use")
+          .or(`pl_name.ilike.%מגרש ${lotQuery.trim()}%,pl_name.ilike.%מגרש${lotQuery.trim()}%`)
+          .limit(20);
+        for (const d of data || []) {
+          tabaResults.push({
+            pl_number: d.pl_number || "",
+            pl_name: d.pl_name || "",
+            land_use: d.land_use || "",
+            source: "taba",
+          });
+        }
+      }
+
+      // Search plans table with spacing variations
       let plansResults: { pl_number: string; pl_name: string; land_use: string; source: string }[] = [];
-      {
+      if (raw || lotQuery.trim()) {
         let q = supabase.from("plans").select("plan_number, plan_name, main_status, city_county");
-        if (planQuery.trim()) {
-          // Search with multiple patterns to handle spacing variations
-          q = q.or(`plan_number.ilike.%${planQuery.trim()}%,plan_number.ilike.%${normalizedPlan}%,plan_number.ilike.%${compactPlan}%`);
+        const orFilters: string[] = [];
+        if (raw) {
+          orFilters.push(
+            `plan_number.ilike.%${raw}%`,
+            `plan_number.ilike.%${normalizedPlan}%`,
+            `plan_number.ilike.%${compactPlan}%`
+          );
+          if (reversedParts) {
+            orFilters.push(`plan_number.ilike.%${reversedParts}%`);
+          }
+          // Also search plan_name for the plan number
+          orFilters.push(`plan_name.ilike.%${raw}%`);
         }
         if (lotQuery.trim()) {
-          q = q.or(`plan_name.ilike.%מגרש ${lotQuery.trim()}%,plan_name.ilike.%${lotQuery.trim()}%`);
+          orFilters.push(
+            `plan_name.ilike.%מגרש ${lotQuery.trim()}%`,
+            `plan_name.ilike.%${lotQuery.trim()}%`
+          );
         }
-        if (!planQuery.trim() && !lotQuery.trim()) {
-          // skip
-        } else {
-          const { data } = await q.limit(20);
+        if (orFilters.length > 0) {
+          q = q.or(orFilters.join(","));
+          const { data } = await q.limit(30);
           plansResults = (data || []).map(d => ({
             pl_number: d.plan_number || "",
             pl_name: d.plan_name || "",
@@ -179,7 +211,10 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
       }
 
       if (merged.length === 0) {
-        setWarning("לא נמצאו תוכניות תואמות");
+        setWarning(lotQuery.trim()
+          ? `לא נמצא מגרש ${lotQuery.trim()} ${raw ? `בתוכנית ${raw}` : ""} – ייתכן שהנתון לא קיים בבסיס הנתונים`
+          : "לא נמצאו תוכניות תואמות"
+        );
       } else {
         setPlanResults(merged.map(d => ({
           pl_number: d.pl_number,
