@@ -1,24 +1,47 @@
 /**
  * Convert Israeli Transverse Mercator (ITM / EPSG:2039) coordinates to WGS84 (EPSG:4326).
- * Uses a simplified Transverse Mercator inverse projection with GRS80 ellipsoid.
+ * 
+ * Uses the official ITM parameters from the Survey of Israel:
+ *   • Ellipsoid: GRS80 (a=6378137, 1/f=298.257222101)
+ *   • Central meridian: 35°12'16.261" E
+ *   • Latitude of origin: 31°44'03.817" N
+ *   • Scale factor: 1.0000067
+ *   • False Easting: 219529.584 m
+ *   • False Northing: 626907.390 m
+ *
+ * Includes Molodensky datum transformation from Israel 1993 (GRS80) to WGS84:
+ *   dX = -24.0024, dY = -17.1032, dZ = -17.8444
  */
 
-const a = 6378137.0; // GRS80 semi-major axis
-const f = 1 / 298.257222101;
-const b = a * (1 - f);
-const e2 = (a * a - b * b) / (a * a);
-const e_prime2 = (a * a - b * b) / (b * b);
+// ── GRS80 Ellipsoid (Israel 1993 datum) ──
+const a_grs80 = 6378137.0;
+const f_grs80 = 1 / 298.257222101;
+const b_grs80 = a_grs80 * (1 - f_grs80);
+const e2_grs80 = (a_grs80 * a_grs80 - b_grs80 * b_grs80) / (a_grs80 * a_grs80);
+const e_prime2_grs80 = (a_grs80 * a_grs80 - b_grs80 * b_grs80) / (b_grs80 * b_grs80);
 
-// ITM projection parameters
-const k0 = 1.0000067;
-const lon0 = (31 + 44 / 60 + 3.8171 / 3600) * (Math.PI / 180); // 31°44'03.8171" E → radians
-const lat0 = (31 + 44 / 60 + 3.8171 / 3600) * (Math.PI / 180);
-const FE = 219529.584; // false easting
-const FN = 626907.39; // false northing
+// ── ITM Projection Parameters ──
+const k0 = 1.0000067; // scale factor at central meridian
+const centralMeridianDeg = 35 + 12 / 60 + 16.261 / 3600; // 35°12'16.261" E
+const latOriginDeg = 31 + 44 / 60 + 3.817 / 3600;        // 31°44'03.817" N
+const centralMeridianRad = centralMeridianDeg * (Math.PI / 180);
+const latOriginRad = latOriginDeg * (Math.PI / 180);
+const FE = 219529.584;  // false easting (meters)
+const FN = 626907.390;  // false northing (meters)
 
-// Meridional arc distance
-function M(lat: number): number {
-  return a * (
+// ── Datum shift parameters (Israel 1993 → WGS84, Molodensky) ──
+const dX = -24.0024;
+const dY = -17.1032;
+const dZ = -17.8444;
+
+// WGS84 ellipsoid
+const a_wgs84 = 6378137.0;
+const f_wgs84 = 1 / 298.257223563;
+
+// ── Meridional arc distance ──
+function meridionalArc(lat: number): number {
+  const e2 = e2_grs80;
+  return a_grs80 * (
     (1 - e2 / 4 - 3 * e2 * e2 / 64 - 5 * e2 * e2 * e2 / 256) * lat -
     (3 * e2 / 8 + 3 * e2 * e2 / 32 + 45 * e2 * e2 * e2 / 1024) * Math.sin(2 * lat) +
     (15 * e2 * e2 / 256 + 45 * e2 * e2 * e2 / 1024) * Math.sin(4 * lat) -
@@ -26,20 +49,59 @@ function M(lat: number): number {
   );
 }
 
-const M0 = M(lat0);
+const M0 = meridionalArc(latOriginRad);
 
-// Central meridian for ITM is 35°12'16.261" E
-const centralMeridianRad = (35 + 12 / 60 + 16.261 / 3600) * (Math.PI / 180);
+/**
+ * Molodensky datum transformation: geodetic coords on GRS80 → WGS84
+ */
+function molodenskyToWgs84(
+  latRad: number, lonRad: number,
+): { lat: number; lon: number } {
+  const sinLat = Math.sin(latRad);
+  const cosLat = Math.cos(latRad);
+  const sinLon = Math.sin(lonRad);
+  const cosLon = Math.cos(lonRad);
 
+  const da = a_wgs84 - a_grs80;             // ~0 (both are 6378137)
+  const df = f_wgs84 - f_grs80;             // very small difference
+
+  const e2 = e2_grs80;
+  const Rn = a_grs80 / Math.sqrt(1 - e2 * sinLat * sinLat);
+  const Rm = a_grs80 * (1 - e2) / Math.pow(1 - e2 * sinLat * sinLat, 1.5);
+
+  const dLat = (
+    -dX * sinLat * cosLon
+    - dY * sinLat * sinLon
+    + dZ * cosLat
+    + da * (Rn * e2 * sinLat * cosLat) / a_grs80
+    + df * (Rm / (1 - f_grs80) + Rn * (1 - f_grs80)) * sinLat * cosLat
+  ) / (Rm + 0); // h=0 approximation
+
+  const dLon = (
+    -dX * sinLon + dY * cosLon
+  ) / ((Rn + 0) * cosLat);
+
+  return {
+    lat: latRad + dLat,
+    lon: lonRad + dLon,
+  };
+}
+
+/**
+ * Convert ITM (EPSG:2039) easting/northing to WGS84 lat/lon.
+ * Returns [latitude, longitude] in degrees.
+ */
 export function itmToWgs84(easting: number, northing: number): [number, number] {
+  const e2 = e2_grs80;
+
   // Remove false easting/northing
   const x = easting - FE;
   const y = northing - FN;
 
   const M1 = M0 + y / k0;
 
-  // Iterative footpoint latitude
-  const mu = M1 / (a * (1 - e2 / 4 - 3 * e2 * e2 / 64 - 5 * e2 * e2 * e2 / 256));
+  // Footpoint latitude (iterative via series expansion)
+  const mu = M1 / (a_grs80 * (1 - e2 / 4 - 3 * e2 * e2 / 64 - 5 * e2 * e2 * e2 / 256));
   const e1 = (1 - Math.sqrt(1 - e2)) / (1 + Math.sqrt(1 - e2));
 
   const phi1 = mu +
@@ -51,27 +113,32 @@ export function itmToWgs84(easting: number, northing: number): [number, number] 
   const sinPhi1 = Math.sin(phi1);
   const cosPhi1 = Math.cos(phi1);
   const tanPhi1 = Math.tan(phi1);
-  const N1 = a / Math.sqrt(1 - e2 * sinPhi1 * sinPhi1);
+  const N1 = a_grs80 / Math.sqrt(1 - e2 * sinPhi1 * sinPhi1);
   const T1 = tanPhi1 * tanPhi1;
-  const C1 = e_prime2 * cosPhi1 * cosPhi1;
-  const R1 = a * (1 - e2) / Math.pow(1 - e2 * sinPhi1 * sinPhi1, 1.5);
+  const C1 = e_prime2_grs80 * cosPhi1 * cosPhi1;
+  const R1 = a_grs80 * (1 - e2) / Math.pow(1 - e2 * sinPhi1 * sinPhi1, 1.5);
   const D = x / (N1 * k0);
 
-  const lat = phi1 -
+  // Latitude on GRS80
+  const latGrs80 = phi1 -
     (N1 * tanPhi1 / R1) * (
       D * D / 2 -
-      (5 + 3 * T1 + 10 * C1 - 4 * C1 * C1 - 9 * e_prime2) * D * D * D * D / 24 +
-      (61 + 90 * T1 + 298 * C1 + 45 * T1 * T1 - 252 * e_prime2 - 3 * C1 * C1) * D * D * D * D * D * D / 720
+      (5 + 3 * T1 + 10 * C1 - 4 * C1 * C1 - 9 * e_prime2_grs80) * D * D * D * D / 24 +
+      (61 + 90 * T1 + 298 * C1 + 45 * T1 * T1 - 252 * e_prime2_grs80 - 3 * C1 * C1) * D * D * D * D * D * D / 720
     );
 
-  const lon = centralMeridianRad +
+  // Longitude on GRS80
+  const lonGrs80 = centralMeridianRad +
     (1 / cosPhi1) * (
       D -
       (1 + 2 * T1 + C1) * D * D * D / 6 +
-      (5 - 2 * C1 + 28 * T1 - 3 * C1 * C1 + 8 * e_prime2 + 24 * T1 * T1) * D * D * D * D * D / 120
+      (5 - 2 * C1 + 28 * T1 - 3 * C1 * C1 + 8 * e_prime2_grs80 + 24 * T1 * T1) * D * D * D * D * D / 120
     );
 
-  return [lat * (180 / Math.PI), lon * (180 / Math.PI)];
+  // Apply Molodensky datum shift to WGS84
+  const wgs84 = molodenskyToWgs84(latGrs80, lonGrs80);
+
+  return [wgs84.lat * (180 / Math.PI), wgs84.lon * (180 / Math.PI)];
 }
 
 /**
