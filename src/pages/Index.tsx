@@ -82,9 +82,10 @@ const Index = () => {
       setParcelDialog(parcel);
       // Update URL for sharing
       setSearchParams({ gush: String(parcel.gush), helka: String(parcel.helka) }, { replace: true });
-      // Fetch & highlight parcel boundary
+      // Fetch & highlight parcel boundary + show all parcels in gush
       try {
         const b = await fetchBoundaries(parcel.gush, parcel.helka);
+        setBoundaries(b);
         if (b.parcelGeometry) setHighlightGeometry(b.parcelGeometry);
       } catch { /* ignore */ }
     } catch {

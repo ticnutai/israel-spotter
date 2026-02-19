@@ -14,16 +14,20 @@ export function MapLegend() {
       </div>
       <div className="flex flex-col gap-1 text-xs">
         <div className="flex items-center gap-2">
-          <span className="inline-block w-4 h-3 rounded-sm border-2" style={{ borderColor: "#dc2626", backgroundColor: "rgba(239,68,68,0.2)" }} />
-          חלקה
+          <span className="inline-block w-4 h-3 rounded-sm border-2" style={{ borderColor: "#2563eb", backgroundColor: "rgba(59,130,246,0.04)" }} />
+          גוש (גבול בלוק)
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block w-4 h-3 rounded-sm border-2" style={{ borderColor: "#2563eb", backgroundColor: "rgba(59,130,246,0.1)" }} />
-          גוש
+          <span className="inline-block w-4 h-3 rounded-sm border-[1.5px]" style={{ borderColor: "#dc2626", backgroundColor: "rgba(239,68,68,0.06)" }} />
+          חלקות (חלוקה למגרשים)
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-block w-4 h-3 rounded-sm border-2" style={{ borderColor: "#f59e0b", backgroundColor: "rgba(245,158,11,0.2)" }} />
-          מתאר חלקה (highlight)
+          חלקה נבחרת
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-block px-1 text-[9px] font-bold rounded border" style={{ borderColor: "#dc2626", color: "#991b1b", backgroundColor: "rgba(255,255,255,0.85)" }}>47</span>
+          מספר חלקה
         </div>
       </div>
     </div>

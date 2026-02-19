@@ -229,7 +229,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
     }
   }, [result]);
 
-  // Update boundary layers
+  // Update boundary layers – show block outline + all parcel subdivisions
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -243,35 +243,70 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
 
     const layerGroup = L.layerGroup().addTo(mapRef.current);
 
-    if (boundaries.blockGeometry && !boundaries.parcelGeometry) {
+    // Always show block outline (blue)
+    if (boundaries.blockGeometry) {
       L.geoJSON(boundaries.blockGeometry as any, {
         style: {
           color: "#2563eb",
-          weight: 2,
+          weight: 2.5,
           fillColor: "#3b82f6",
-          fillOpacity: 0.1,
+          fillOpacity: 0.04,
         },
       }).addTo(layerGroup);
     }
 
+    // Show all parcels within the gush (red outlines for subdivision)
+    if (boundaries.allParcels && boundaries.allParcels.length > 0) {
+      for (const parcel of boundaries.allParcels) {
+        const pLayer = L.geoJSON(parcel.geometry as any, {
+          style: {
+            color: "#dc2626",
+            weight: 1.5,
+            fillColor: "#ef4444",
+            fillOpacity: 0.06,
+          },
+        }).addTo(layerGroup);
+
+        // Add tooltip with helka number
+        if (parcel.helka > 0) {
+          pLayer.bindTooltip(String(parcel.helka), {
+            permanent: true,
+            direction: "center",
+            className: "parcel-number-label",
+          });
+        }
+
+        // Add popup with parcel info
+        pLayer.bindPopup(
+          `<div dir="rtl" style="text-align:right;font-size:13px;">` +
+          `<b>חלקה ${parcel.helka}</b><br/>` +
+          `גוש ${parcel.gush}<br/>` +
+          (parcel.legalArea ? `שטח רשום: ${parcel.legalArea.toLocaleString()} מ"ר<br/>` : "") +
+          (parcel.status ? `סטטוס: ${parcel.status}` : "") +
+          `</div>`
+        );
+      }
+    }
+
+    // Highlighted specific parcel (thicker) if searching for specific helka
     if (boundaries.parcelGeometry) {
-      const parcelLayer = L.geoJSON(boundaries.parcelGeometry as any, {
+      L.geoJSON(boundaries.parcelGeometry as any, {
         style: {
           color: "#dc2626",
-          weight: 3,
+          weight: 4,
           fillColor: "#ef4444",
           fillOpacity: 0.2,
         },
       }).addTo(layerGroup);
 
       try {
-        const bounds = parcelLayer.getBounds();
+        const pl = L.geoJSON(boundaries.parcelGeometry as any);
+        const bounds = pl.getBounds();
         if (bounds.isValid()) {
           mapRef.current.fitBounds(bounds, { padding: [50, 50] });
         }
-      } catch { /* ignore invalid bounds */ }
+      } catch { /* ignore */ }
     } else if (boundaries.blockGeometry) {
-      // If only block geometry, fit to that
       try {
         const blockLayer = L.geoJSON(boundaries.blockGeometry as any);
         const bounds = blockLayer.getBounds();
