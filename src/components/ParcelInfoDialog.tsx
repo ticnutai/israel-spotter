@@ -111,7 +111,9 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [dialogWidth, setDialogWidth] = useState(() => {
     const saved = localStorage.getItem("parcel-dialog-width");
-    return saved ? Number(saved) : DEFAULT_DIALOG_WIDTH;
+    const val = saved ? Number(saved) : DEFAULT_DIALOG_WIDTH;
+    // Ensure saved value is within valid range
+    return Math.min(MAX_DIALOG_WIDTH, Math.max(MIN_DIALOG_WIDTH, isNaN(val) ? DEFAULT_DIALOG_WIDTH : val));
   });
   const [isResizing, setIsResizing] = useState(false);
   const { isFavorite, addFavorite, removeFavorite, favorites, isLoggedIn: favLoggedIn } = useFavorites();
@@ -429,11 +431,11 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
       {/* ═══ Resize Handle (desktop only) ═══ */}
       {!isMobile && (
         <div
-          className="w-3 h-full flex items-center justify-center cursor-col-resize shrink-0 group bg-muted/30 hover:bg-primary/10 active:bg-primary/20 transition-colors border-l-2 border-border"
+          className="w-5 h-full flex items-center justify-center cursor-col-resize shrink-0 group bg-muted/20 hover:bg-primary/10 active:bg-primary/20 transition-colors border-l border-border select-none"
           onMouseDown={handleResizeStart}
           title="גרור לשינוי רוחב"
         >
-          <div className="w-[3px] h-16 rounded-full bg-muted-foreground/40 group-hover:bg-primary group-active:bg-primary transition-colors" />
+          <div className="w-1 h-20 rounded-full bg-muted-foreground/30 group-hover:bg-primary group-active:bg-primary transition-colors" />
         </div>
       )}
       </div>
