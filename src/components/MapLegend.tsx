@@ -58,6 +58,8 @@ export function MapLegend({ colorMode, onColorModeChange }: MapLegendProps) {
 
       {showBorderSettings && (
         <div className="mb-2 p-1.5 bg-muted/30 rounded border border-border space-y-1.5">
+          {/* Parcel borders */}
+          <p className="text-[9px] font-semibold text-muted-foreground">קווי חלקות</p>
           <div className="flex items-center gap-1.5">
             <label className="text-[9px] text-muted-foreground w-12">צבע קו</label>
             <input
@@ -94,9 +96,66 @@ export function MapLegend({ colorMode, onColorModeChange }: MapLegendProps) {
             />
             <span className="text-[8px] text-muted-foreground w-6 text-center">{Math.round(borderSettings.fillOpacity * 100)}%</span>
           </div>
+
+          {/* Highlight (selected parcel) */}
+          <div className="border-t border-border/50 pt-1.5 mt-1.5">
+            <div className="flex items-center gap-1.5 mb-1">
+              <p className="text-[9px] font-semibold text-muted-foreground">חלקה נבחרת</p>
+              <label className="mr-auto flex items-center gap-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={borderSettings.highlightVisible}
+                  onChange={(e) => updateBorderSettings({ highlightVisible: e.target.checked })}
+                  className="w-3 h-3 accent-primary"
+                />
+                <span className="text-[8px] text-muted-foreground">הצג</span>
+              </label>
+            </div>
+            {borderSettings.highlightVisible && (
+              <>
+                <div className="flex items-center gap-1.5">
+                  <label className="text-[9px] text-muted-foreground w-12">צבע</label>
+                  <input
+                    type="color"
+                    value={borderSettings.highlightColor}
+                    onChange={(e) => updateBorderSettings({ highlightColor: e.target.value })}
+                    className="w-5 h-5 border border-border rounded cursor-pointer p-0"
+                  />
+                  <span className="text-[8px] text-muted-foreground font-mono">{borderSettings.highlightColor}</span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <label className="text-[9px] text-muted-foreground w-12">עובי</label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="8"
+                    step="0.5"
+                    value={borderSettings.highlightWeight}
+                    onChange={(e) => updateBorderSettings({ highlightWeight: Number(e.target.value) })}
+                    className="flex-1 h-3"
+                  />
+                  <span className="text-[8px] text-muted-foreground w-4 text-center">{borderSettings.highlightWeight}</span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <label className="text-[9px] text-muted-foreground w-12">מילוי</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="0.6"
+                    step="0.02"
+                    value={borderSettings.highlightFillOpacity}
+                    onChange={(e) => updateBorderSettings({ highlightFillOpacity: Number(e.target.value) })}
+                    className="flex-1 h-3"
+                  />
+                  <span className="text-[8px] text-muted-foreground w-6 text-center">{Math.round(borderSettings.highlightFillOpacity * 100)}%</span>
+                </div>
+              </>
+            )}
+          </div>
+
           <button
             onClick={() => updateBorderSettings({ ...DEFAULT_BORDER_SETTINGS })}
-            className="text-[9px] text-primary hover:underline"
+            className="text-[9px] text-primary hover:underline mt-1"
           >
             איפוס ברירת מחדל
           </button>
@@ -186,10 +245,12 @@ export function MapLegend({ colorMode, onColorModeChange }: MapLegendProps) {
         )}
 
         {/* Highlight & number labels */}
-        <div className="flex items-center gap-2">
-          <span className="inline-block w-4 h-3 rounded-sm border-2" style={{ borderColor: "#f59e0b", backgroundColor: "rgba(245,158,11,0.2)" }} />
-          חלקה נבחרת
-        </div>
+        {borderSettings.highlightVisible && (
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-4 h-3 rounded-sm border-2" style={{ borderColor: borderSettings.highlightColor, backgroundColor: `${borderSettings.highlightColor}33` }} />
+            חלקה נבחרת
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <span className="inline-block px-1 text-[9px] font-bold rounded border" style={{ borderColor: "#dc2626", color: "#991b1b", backgroundColor: "rgba(255,255,255,0.85)" }}>47</span>
           מספר חלקה

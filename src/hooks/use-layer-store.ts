@@ -47,6 +47,10 @@ export interface ParcelBorderSettings {
   color: string;          // border line color
   weight: number;         // border line width
   fillOpacity: number;    // fill opacity
+  highlightColor: string; // selected parcel border color
+  highlightWeight: number; // selected parcel border width
+  highlightFillOpacity: number; // selected parcel fill opacity
+  highlightVisible: boolean; // show/hide selected parcel highlight
 }
 
 export const DEFAULT_LABEL_SETTINGS: ParcelLabelSettings = {
@@ -63,6 +67,10 @@ export const DEFAULT_BORDER_SETTINGS: ParcelBorderSettings = {
   color: "#dc2626",
   weight: 1.5,
   fillOpacity: 0.06,
+  highlightColor: "#dc2626",
+  highlightWeight: 4,
+  highlightFillOpacity: 0.2,
+  highlightVisible: true,
 };
 
 export interface PaintedParcel {
