@@ -129,7 +129,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
   const [mapReady, setMapReady] = useState(false);
 
   // Layer store
-  const { layers: storeLayers, paintedParcels } = useLayerStore();
+  const { layers: storeLayers, paintedParcels, labelSettings } = useLayerStore();
 
   // Initialize map – wait until container has non-zero dimensions
   useEffect(() => {
@@ -294,8 +294,8 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
         const style = getParcelStyle(parcel, parcelColorMode);
         const pLayer = L.geoJSON(parcel.geometry as any, { style }).addTo(layerGroup);
 
-        // Add tooltip with helka number
-        if (parcel.helka > 0) {
+        // Add tooltip with helka number (respects label settings)
+        if (parcel.helka > 0 && labelSettings.visible) {
           pLayer.bindTooltip(String(parcel.helka), {
             permanent: true,
             direction: "center",
@@ -344,7 +344,30 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
     }
 
     boundaryLayerRef.current = layerGroup;
-  }, [boundaries, parcelColorMode]);
+  }, [boundaries, parcelColorMode, labelSettings.visible]);
+
+  // ── Dynamic CSS for parcel label styling ──
+  useEffect(() => {
+    const styleId = "parcel-label-dynamic-style";
+    let el = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (!el) {
+      el = document.createElement("style");
+      el.id = styleId;
+      document.head.appendChild(el);
+    }
+    el.textContent = `
+      .parcel-number-label {
+        font-size: ${labelSettings.fontSize}px !important;
+        color: ${labelSettings.textColor} !important;
+        background: ${labelSettings.bgEnabled ? labelSettings.bgColor : "transparent"} !important;
+        border: ${labelSettings.bgEnabled ? `1px solid ${labelSettings.borderColor}` : "none"} !important;
+        opacity: ${labelSettings.opacity} !important;
+        box-shadow: ${labelSettings.bgEnabled ? "0 1px 3px rgba(0,0,0,0.15)" : "none"} !important;
+        padding: ${labelSettings.bgEnabled ? "1px 4px" : "0"} !important;
+      }
+    `;
+    return () => { /* keep style element for reuse */ };
+  }, [labelSettings]);
 
   // ── Highlight parcel polygon (from map click or URL deep-link) ──
   useEffect(() => {

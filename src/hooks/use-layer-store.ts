@@ -12,7 +12,7 @@ import { useCallback, useSyncExternalStore } from "react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type LayerKind = "geojson" | "tile" | "wms" | "boundary" | "highlight" | "painted";
+export type LayerKind = "geojson" | "tile" | "wms" | "boundary" | "highlight" | "painted" | "labels";
 
 export interface MapLayer {
   id: string;
@@ -33,6 +33,26 @@ export interface MapLayer {
   geometryTypes?: string[];
 }
 
+export interface ParcelLabelSettings {
+  visible: boolean;
+  fontSize: number;       // px
+  bgEnabled: boolean;     // show background
+  bgColor: string;        // background color
+  textColor: string;      // text color
+  opacity: number;        // 0–1
+  borderColor: string;    // border color
+}
+
+export const DEFAULT_LABEL_SETTINGS: ParcelLabelSettings = {
+  visible: true,
+  fontSize: 11,
+  bgEnabled: true,
+  bgColor: "rgba(255,255,255,0.85)",
+  textColor: "#991b1b",
+  opacity: 1,
+  borderColor: "#dc2626",
+};
+
 export interface PaintedParcel {
   gush: number;
   helka: number;
@@ -45,6 +65,7 @@ export interface PaintedParcel {
 export interface LayerStoreState {
   layers: MapLayer[];
   paintedParcels: PaintedParcel[];
+  labelSettings: ParcelLabelSettings;
 }
 
 // ─── Default colors palette ─────────────────────────────────────────────────
@@ -66,12 +87,13 @@ export const PARCEL_PAINT_COLORS = [
 
 const STORAGE_KEY = "layer-store-v1";
 const PAINTED_KEY = "painted-parcels-v1";
+const LABELS_KEY = "parcel-labels-v1";
 
 // ─── External store for cross-component reactivity ───────────────────────────
 
 type Listener = () => void;
 
-let _state: LayerStoreState = { layers: [], paintedParcels: [] };
+let _state: LayerStoreState = { layers: [], paintedParcels: [], labelSettings: { ...DEFAULT_LABEL_SETTINGS } };
 const _listeners = new Set<Listener>();
 
 function getSnapshot(): LayerStoreState {
@@ -103,6 +125,7 @@ function scheduleSave() {
       const stripped = _state.layers.map(({ data, ...rest }) => rest);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stripped));
       localStorage.setItem(PAINTED_KEY, JSON.stringify(_state.paintedParcels));
+      localStorage.setItem(LABELS_KEY, JSON.stringify(_state.labelSettings));
     } catch { /* storage full – ignore */ }
   }, 500);
 }
@@ -122,6 +145,13 @@ function hydrate() {
     if (raw) {
       const painted = JSON.parse(raw) as PaintedParcel[];
       _state = { ..._state, paintedParcels: painted };
+    }
+  } catch { /* ignore */ }
+  try {
+    const raw = localStorage.getItem(LABELS_KEY);
+    if (raw) {
+      const labelSettings = JSON.parse(raw) as ParcelLabelSettings;
+      _state = { ..._state, labelSettings: { ...DEFAULT_LABEL_SETTINGS, ...labelSettings } };
     }
   } catch { /* ignore */ }
 }
@@ -315,9 +345,20 @@ export function useLayerStore() {
     []
   );
 
+  const updateLabelSettings = useCallback(
+    (updates: Partial<ParcelLabelSettings>) => {
+      setState((prev) => ({
+        ...prev,
+        labelSettings: { ...prev.labelSettings, ...updates },
+      }));
+    },
+    []
+  );
+
   return {
     layers: state.layers,
     paintedParcels: state.paintedParcels,
+    labelSettings: state.labelSettings,
     addLayer,
     removeLayer,
     updateLayer,
@@ -335,5 +376,6 @@ export function useLayerStore() {
     unpaintParcel,
     clearPaintedParcels,
     updatePaintedParcel,
+    updateLabelSettings,
   };
 }

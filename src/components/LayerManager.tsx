@@ -44,6 +44,7 @@ import {
   Layers,
   Paintbrush,
   RotateCcw,
+  Type,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ import {
   useLayerStore,
   LAYER_COLORS,
   PARCEL_PAINT_COLORS,
+  DEFAULT_LABEL_SETTINGS,
   type MapLayer,
   type PaintedParcel,
 } from "@/hooks/use-layer-store";
@@ -561,7 +563,7 @@ function PaintedParcelItem({ parcel, onUpdateColor, onUpdateFillOpacity, onUpdat
 export function LayerManager() {
   const store = useLayerStore();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [activeSection, setActiveSection] = useState<"layers" | "paint">("layers");
+  const [activeSection, setActiveSection] = useState<"layers" | "paint" | "labels">("layers");
 
   // Paint parcel form
   const [paintGush, setPaintGush] = useState("");
@@ -632,6 +634,18 @@ export function LayerManager() {
         >
           <Paintbrush className="h-3.5 w-3.5" />
           צביעת מגרשים ({store.paintedParcels.length})
+        </button>
+        <button
+          onClick={() => setActiveSection("labels")}
+          className={cn(
+            "flex-1 text-xs py-2 flex items-center justify-center gap-1 transition-colors",
+            activeSection === "labels"
+              ? "text-primary border-b-2 border-primary font-semibold"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Type className="h-3.5 w-3.5" />
+          תוויות
         </button>
       </div>
 
@@ -819,6 +833,194 @@ export function LayerManager() {
                   ))}
                 </>
               )}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
+
+      {/* ═══ Labels Section ═══ */}
+      {activeSection === "labels" && (
+        <div className="flex-1 flex flex-col min-h-0">
+          <ScrollArea className="flex-1">
+            <div className="px-3 py-3 space-y-4" dir="rtl">
+              <p className="text-[11px] text-muted-foreground">
+                הגדרות תוויות מספרי חלקות על המפה
+              </p>
+
+              {/* Visibility toggle */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium">הצג מספרי חלקות</span>
+                <button
+                  onClick={() => store.updateLabelSettings({ visible: !store.labelSettings.visible })}
+                  className={cn(
+                    "w-10 h-5 rounded-full transition-colors relative",
+                    store.labelSettings.visible ? "bg-primary" : "bg-muted",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "w-4 h-4 rounded-full bg-white shadow-sm absolute top-0.5 transition-all",
+                      store.labelSettings.visible ? "right-0.5" : "right-[22px]",
+                    )}
+                  />
+                </button>
+              </div>
+
+              {/* Font size */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] text-muted-foreground">גודל טקסט</span>
+                  <span className="text-[11px] font-mono text-muted-foreground">{store.labelSettings.fontSize}px</span>
+                </div>
+                <input
+                  type="range"
+                  min="8"
+                  max="24"
+                  value={store.labelSettings.fontSize}
+                  onChange={(e) => store.updateLabelSettings({ fontSize: Number(e.target.value) })}
+                  className="w-full h-1.5 accent-primary cursor-pointer"
+                />
+                <div className="flex justify-between text-[9px] text-muted-foreground mt-0.5">
+                  <span>8px</span>
+                  <span>24px</span>
+                </div>
+              </div>
+
+              {/* Opacity */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] text-muted-foreground">שקיפות</span>
+                  <span className="text-[11px] font-mono text-muted-foreground">{Math.round(store.labelSettings.opacity * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={Math.round(store.labelSettings.opacity * 100)}
+                  onChange={(e) => store.updateLabelSettings({ opacity: Number(e.target.value) / 100 })}
+                  className="w-full h-1.5 accent-primary cursor-pointer"
+                />
+              </div>
+
+              {/* Background toggle */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium">רקע לתוויות</span>
+                <button
+                  onClick={() => store.updateLabelSettings({ bgEnabled: !store.labelSettings.bgEnabled })}
+                  className={cn(
+                    "w-10 h-5 rounded-full transition-colors relative",
+                    store.labelSettings.bgEnabled ? "bg-primary" : "bg-muted",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "w-4 h-4 rounded-full bg-white shadow-sm absolute top-0.5 transition-all",
+                      store.labelSettings.bgEnabled ? "right-0.5" : "right-[22px]",
+                    )}
+                  />
+                </button>
+              </div>
+
+              {/* Background color */}
+              {store.labelSettings.bgEnabled && (
+                <div>
+                  <span className="text-[11px] text-muted-foreground mb-1 block">צבע רקע</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { label: "לבן", value: "rgba(255,255,255,0.85)" },
+                      { label: "שחור", value: "rgba(0,0,0,0.7)" },
+                      { label: "צהוב", value: "rgba(254,249,195,0.9)" },
+                      { label: "כחול", value: "rgba(219,234,254,0.9)" },
+                      { label: "ירוק", value: "rgba(220,252,231,0.9)" },
+                    ].map((c) => (
+                      <button
+                        key={c.value}
+                        onClick={() => store.updateLabelSettings({
+                          bgColor: c.value,
+                          textColor: c.value.includes("0,0,0") ? "#ffffff" : "#991b1b",
+                        })}
+                        className={cn(
+                          "text-[10px] px-2 py-1 rounded border transition-colors",
+                          store.labelSettings.bgColor === c.value
+                            ? "border-primary bg-primary/10 font-semibold"
+                            : "border-border hover:border-primary/50",
+                        )}
+                      >
+                        {c.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Text color */}
+              <div>
+                <span className="text-[11px] text-muted-foreground mb-1 block">צבע טקסט</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { label: "אדום כהה", value: "#991b1b" },
+                    { label: "שחור", value: "#000000" },
+                    { label: "כחול", value: "#1e40af" },
+                    { label: "לבן", value: "#ffffff" },
+                    { label: "ירוק", value: "#166534" },
+                  ].map((c) => (
+                    <button
+                      key={c.value}
+                      onClick={() => store.updateLabelSettings({ textColor: c.value })}
+                      className={cn(
+                        "text-[10px] px-2 py-1 rounded border transition-colors",
+                        store.labelSettings.textColor === c.value
+                          ? "border-primary bg-primary/10 font-semibold"
+                          : "border-border hover:border-primary/50",
+                      )}
+                      style={{ color: c.value === "#ffffff" ? "#000" : c.value }}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Border color */}
+              <div>
+                <span className="text-[11px] text-muted-foreground mb-1 block">צבע מסגרת</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={store.labelSettings.borderColor}
+                    onChange={(e) => store.updateLabelSettings({ borderColor: e.target.value })}
+                    className="w-8 h-6 rounded border border-border cursor-pointer"
+                  />
+                  <span className="text-[10px] font-mono text-muted-foreground">{store.labelSettings.borderColor}</span>
+                </div>
+              </div>
+
+              {/* Preview */}
+              <div className="border rounded-lg p-3 bg-muted/30">
+                <span className="text-[10px] text-muted-foreground block mb-2">תצוגה מקדימה:</span>
+                <div className="flex justify-center">
+                  <span
+                    className="rounded px-2 py-0.5 font-bold"
+                    style={{
+                      fontSize: store.labelSettings.fontSize,
+                      color: store.labelSettings.textColor,
+                      backgroundColor: store.labelSettings.bgEnabled ? store.labelSettings.bgColor : "transparent",
+                      border: store.labelSettings.bgEnabled ? `1px solid ${store.labelSettings.borderColor}` : "none",
+                      opacity: store.labelSettings.opacity,
+                    }}
+                  >
+                    47
+                  </span>
+                </div>
+              </div>
+
+              {/* Reset */}
+              <button
+                onClick={() => store.updateLabelSettings({ ...DEFAULT_LABEL_SETTINGS })}
+                className="text-[10px] flex items-center gap-1 text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-muted w-full justify-center"
+              >
+                <RotateCcw className="h-3 w-3" /> איפוס לברירת מחדל
+              </button>
             </div>
           </ScrollArea>
         </div>
