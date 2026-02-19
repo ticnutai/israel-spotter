@@ -6,6 +6,7 @@ import { fetchBoundaries, fetchParcelLandUse, type BoundaryResult } from "@/lib/
 import { MapLayerSwitcher, MAP_LAYERS, LABELS_LAYER_URL, type MapLayerOption } from "./MapLayerSwitcher";
 import { MapMeasure } from "./MapMeasure";
 import { ScaleBarControl } from "./ScaleBarControl";
+import { CoordinateDisplay } from "./CoordinateDisplay";
 import { AerialOverlay } from "./AerialOverlay";
 import { PlanOverlay } from "./PlanOverlay";
 import { useLayerStore } from "@/hooks/use-layer-store";
@@ -651,6 +652,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
       <MapLayerSwitcher activeLayerId={activeLayerId} onLayerChange={handleLayerChange} />
       {mapReady && <MapMeasure map={mapRef.current} />}
       {mapReady && <ScaleBarControl map={mapRef.current} />}
+      {mapReady && <CoordinateDisplay map={mapRef.current} />}
       {mapReady && <AerialOverlay map={mapRef.current} year={aerialYear ?? null} />}
       {mapReady && (
         <PlanOverlay
