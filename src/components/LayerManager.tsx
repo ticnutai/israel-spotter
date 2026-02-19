@@ -286,11 +286,12 @@ function SortableLayerItem({
 
       {/* ── Expanded details panel ── */}
       {expanded && (
-        <div className="px-3 pb-2.5 space-y-2.5 border-t border-border/50 pt-2">
+        <div className="px-3 pb-2.5 space-y-2 border-t border-border/50 pt-2" dir="rtl">
           {/* Fill color */}
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-muted-foreground">צבע מילוי</span>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap">צבע מילוי</span>
+              <div className="flex-1" />
               <button
                 onClick={() => { setShowFillColors(!showFillColors); setShowStrokeColors(false); }}
                 className="w-4 h-4 rounded-sm border border-border/60"
@@ -325,67 +326,65 @@ function SortableLayerItem({
 
           {/* Opacity slider */}
           <div>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-muted-foreground">שקיפות קו</span>
-              <span className="text-[10px] font-mono text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap">שקיפות קו</span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={Math.round(layer.opacity * 100)}
+                onChange={(e) => onSetOpacity(Number(e.target.value) / 100)}
+                className="flex-1 h-1 accent-primary cursor-pointer"
+                disabled={layer.locked}
+              />
+              <span className="text-[10px] font-mono text-muted-foreground w-8 text-left">
                 {Math.round(layer.opacity * 100)}%
               </span>
             </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={Math.round(layer.opacity * 100)}
-              onChange={(e) => onSetOpacity(Number(e.target.value) / 100)}
-              className="w-full h-1.5 accent-primary cursor-pointer"
-              disabled={layer.locked}
-            />
           </div>
 
           {/* Fill opacity slider */}
           <div>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-muted-foreground">שקיפות מילוי</span>
-              <span className="text-[10px] font-mono text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap">שקיפות מילוי</span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={Math.round(layer.fillOpacity * 100)}
+                onChange={(e) => onSetFillOpacity(Number(e.target.value) / 100)}
+                className="flex-1 h-1 accent-primary cursor-pointer"
+                disabled={layer.locked}
+              />
+              <span className="text-[10px] font-mono text-muted-foreground w-8 text-left">
                 {Math.round(layer.fillOpacity * 100)}%
               </span>
             </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={Math.round(layer.fillOpacity * 100)}
-              onChange={(e) => onSetFillOpacity(Number(e.target.value) / 100)}
-              className="w-full h-1.5 accent-primary cursor-pointer"
-              disabled={layer.locked}
-            />
           </div>
 
           {/* Stroke weight */}
           <div>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-muted-foreground">עובי קו</span>
-              <span className="text-[10px] font-mono text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap">עובי קו</span>
+              <input
+                type="range"
+                min="5"
+                max="100"
+                value={Math.round(layer.weight * 10)}
+                onChange={(e) => onSetWeight(Number(e.target.value) / 10)}
+                className="flex-1 h-1 accent-primary cursor-pointer"
+                disabled={layer.locked}
+              />
+              <span className="text-[10px] font-mono text-muted-foreground w-10 text-left">
                 {layer.weight.toFixed(1)}px
               </span>
             </div>
-            <input
-              type="range"
-              min="5"
-              max="100"
-              value={Math.round(layer.weight * 10)}
-              onChange={(e) => onSetWeight(Number(e.target.value) / 10)}
-              className="w-full h-1.5 accent-primary cursor-pointer"
-              disabled={layer.locked}
-            />
           </div>
 
           {/* Dash pattern */}
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-muted-foreground">דפוס קו</span>
-            </div>
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap">דפוס קו</span>
               {[
                 { label: "רציף", value: "" },
                 { label: "מקווקו", value: "8 4" },
