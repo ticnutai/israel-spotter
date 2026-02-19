@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Search, MapPin, Loader2, AlertCircle, History, Trash2, Bookmark, BookmarkPlus, X } from "lucide-react";
+import { Search, MapPin, Loader2, AlertCircle, History, Trash2, Bookmark, BookmarkPlus, X, FileText } from "lucide-react";
 import { searchByGushHelka, searchByAddress, type GeoResult } from "@/lib/geocode";
 import { fetchBoundaries, type BoundaryResult } from "@/lib/boundaries";
 import { useSearchHistory, type SearchHistoryItem } from "@/hooks/use-search-history";
@@ -27,6 +27,12 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
   const [showSaved, setShowSaved] = useState(false);
   const { history, addEntry, clearHistory } = useSearchHistory();
   const { saved, addSaved, removeSaved, clearSaved } = useSavedSearches();
+
+  // Plan/lot search
+  const [planQuery, setPlanQuery] = useState("");
+  const [lotQuery, setLotQuery] = useState("");
+  const [planResults, setPlanResults] = useState<{ pl_number: string; pl_name: string; land_use: string }[]>([]);
+  const [planLoading, setPlanLoading] = useState(false);
 
   // Autocomplete for gush
   const [gushSuggestions, setGushSuggestions] = useState<{ gush: number; name: string | null }[]>([]);
@@ -103,6 +109,80 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
     }
   };
 
+  // Search by plan number or lot number
+  const handlePlanSearch = async () => {
+    if (!planQuery.trim() && !lotQuery.trim()) {
+      setError("יש להזין מספר תב״ע או מספר מגרש");
+      return;
+    }
+    setPlanLoading(true);
+    setError("");
+    setWarning("");
+    setPlanResults([]);
+    try {
+      let query = supabase
+        .from("taba_outlines")
+        .select("pl_number, pl_name, land_use");
+
+      if (planQuery.trim()) {
+        query = query.ilike("pl_number", `%${planQuery.trim()}%`);
+      }
+      if (lotQuery.trim()) {
+        query = query.ilike("pl_name", `%מגרש ${lotQuery.trim()}%`);
+      }
+
+      const { data, error: err } = await query.limit(20);
+      if (err) throw err;
+
+      if (!data || data.length === 0) {
+        setWarning("לא נמצאו תוכניות תואמות");
+      } else {
+        setPlanResults(data.map(d => ({
+          pl_number: d.pl_number || "",
+          pl_name: d.pl_name || "",
+          land_use: d.land_use || "",
+        })));
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "שגיאה בחיפוש");
+    } finally {
+      setPlanLoading(false);
+    }
+  };
+
+  // When clicking a plan result, find the gush/helka and navigate
+  const handlePlanResultClick = async (plNumber: string) => {
+    setLoading(true);
+    setError("");
+    setWarning("");
+    try {
+      const { data: blocks } = await supabase
+        .from("plan_blocks")
+        .select("gush, helka")
+        .eq("plan_number", plNumber)
+        .limit(1);
+
+      if (!blocks || blocks.length === 0) {
+        setWarning("לא נמצאו חלקות עבור תוכנית זו");
+        setLoading(false);
+        return;
+      }
+
+      const { gush: g, helka: h } = blocks[0];
+      const result = await searchByGushHelka(g, h ?? undefined);
+      onResult(result);
+
+      const boundaries = await fetchBoundaries(g, h ?? undefined);
+      onBoundaries(boundaries);
+
+      addEntry({ type: "gush", label: `תב"ע ${plNumber} (גוש ${g})`, gush: g, helka: h ?? undefined });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "שגיאה בחיפוש");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleHistoryClick = (item: SearchHistoryItem) => {
     setShowHistory(false);
     setShowSaved(false);
@@ -135,10 +215,14 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
   return (
     <div className="w-full bg-card border-b p-4" dir="rtl">
       <Tabs defaultValue="gush" className="w-full max-w-2xl mx-auto">
-        <TabsList className="w-full grid grid-cols-2">
+        <TabsList className="w-full grid grid-cols-3">
           <TabsTrigger value="gush" className="gap-2">
             <MapPin className="h-4 w-4" />
             גוש / חלקה
+          </TabsTrigger>
+          <TabsTrigger value="plan" className="gap-2">
+            <FileText className="h-4 w-4" />
+            תב״ע / מגרש
           </TabsTrigger>
           <TabsTrigger value="address" className="gap-2">
             <Search className="h-4 w-4" />
@@ -214,6 +298,70 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
           <p className="text-xs text-muted-foreground mt-2">
             גבולות הגוש/חלקה יוצגו אוטומטית על המפה
           </p>
+        </TabsContent>
+
+        {/* Plan / Lot search tab */}
+        <TabsContent value="plan">
+          <div className="flex flex-col sm:flex-row gap-3 items-end mt-3">
+            <div className="flex-1 w-full">
+              <Label htmlFor="plan-input">מספר תב״ע</Label>
+              <Input
+                id="plan-input"
+                placeholder="לדוגמה: 425-0486316"
+                value={planQuery}
+                onChange={(e) => setPlanQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handlePlanSearch()}
+                dir="ltr"
+              />
+            </div>
+            <div className="flex-1 w-full">
+              <Label htmlFor="lot-input">מספר מגרש (אופציונלי)</Label>
+              <Input
+                id="lot-input"
+                type="number"
+                placeholder="לדוגמה: 124"
+                value={lotQuery}
+                onChange={(e) => setLotQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handlePlanSearch()}
+                dir="ltr"
+              />
+            </div>
+            <Button onClick={handlePlanSearch} disabled={planLoading} className="w-full sm:w-auto">
+              {planLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              חיפוש
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            חפש לפי מספר תוכנית או מספר מגרש – לחץ על תוצאה לניווט למפה
+          </p>
+
+          {/* Plan search results */}
+          {planResults.length > 0 && (
+            <div className="mt-3 border rounded-lg bg-card overflow-hidden max-h-60 overflow-y-auto">
+              <div className="px-3 py-1.5 border-b bg-muted/50 text-xs font-medium text-muted-foreground">
+                {planResults.length} תוצאות
+              </div>
+              {planResults.map((p) => (
+                <button
+                  key={p.pl_number}
+                  onClick={() => handlePlanResultClick(p.pl_number)}
+                  disabled={loading}
+                  className="w-full text-right px-3 py-2 text-sm hover:bg-accent transition-colors border-b last:border-b-0 flex flex-col gap-0.5"
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span className="font-medium text-xs">{p.pl_number}</span>
+                    {p.land_use && (
+                      <span className="text-[10px] bg-muted text-muted-foreground rounded px-1.5 py-0.5">
+                        {p.land_use}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground truncate pr-5">{p.pl_name}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="address">
