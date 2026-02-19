@@ -17,6 +17,7 @@ export type Database = {
       documents: {
         Row: {
           category: string
+          doc_date: string | null
           downloaded_at: string | null
           file_name: string | null
           file_path: string
@@ -26,12 +27,15 @@ export type Database = {
           helka: number
           id: number
           is_georef: number | null
+          is_takanon: number | null
           is_tashrit: number | null
           plan_number: string | null
+          subcategory: string | null
           title: string
         }
         Insert: {
           category: string
+          doc_date?: string | null
           downloaded_at?: string | null
           file_name?: string | null
           file_path: string
@@ -41,12 +45,15 @@ export type Database = {
           helka: number
           id?: number
           is_georef?: number | null
+          is_takanon?: number | null
           is_tashrit?: number | null
           plan_number?: string | null
+          subcategory?: string | null
           title: string
         }
         Update: {
           category?: string
+          doc_date?: string | null
           downloaded_at?: string | null
           file_name?: string | null
           file_path?: string
@@ -56,8 +63,10 @@ export type Database = {
           helka?: number
           id?: number
           is_georef?: number | null
+          is_takanon?: number | null
           is_tashrit?: number | null
           plan_number?: string | null
+          subcategory?: string | null
           title?: string
         }
         Relationships: [
@@ -156,34 +165,79 @@ export type Database = {
       }
       parcels: {
         Row: {
+          centroid_lat: number | null
+          centroid_lng: number | null
+          county: string | null
+          county_code: number | null
           doc_count: number | null
           gush: number
+          gush_suffix: string | null
           has_tashrit: number | null
           helka: number
           id: number
+          legal_area_sqm: number | null
+          locality_code: number | null
+          municipality: string | null
+          municipality_code: number | null
           notes: string | null
           permit_count: number | null
           plan_count: number | null
+          region: string | null
+          region_code: number | null
+          shape_area_sqm: number | null
+          status_code: number | null
+          status_text: string | null
+          update_date: string | null
         }
         Insert: {
+          centroid_lat?: number | null
+          centroid_lng?: number | null
+          county?: string | null
+          county_code?: number | null
           doc_count?: number | null
           gush: number
+          gush_suffix?: string | null
           has_tashrit?: number | null
           helka: number
           id?: number
+          legal_area_sqm?: number | null
+          locality_code?: number | null
+          municipality?: string | null
+          municipality_code?: number | null
           notes?: string | null
           permit_count?: number | null
           plan_count?: number | null
+          region?: string | null
+          region_code?: number | null
+          shape_area_sqm?: number | null
+          status_code?: number | null
+          status_text?: string | null
+          update_date?: string | null
         }
         Update: {
+          centroid_lat?: number | null
+          centroid_lng?: number | null
+          county?: string | null
+          county_code?: number | null
           doc_count?: number | null
           gush?: number
+          gush_suffix?: string | null
           has_tashrit?: number | null
           helka?: number
           id?: number
+          legal_area_sqm?: number | null
+          locality_code?: number | null
+          municipality?: string | null
+          municipality_code?: number | null
           notes?: string | null
           permit_count?: number | null
           plan_count?: number | null
+          region?: string | null
+          region_code?: number | null
+          shape_area_sqm?: number | null
+          status_code?: number | null
+          status_text?: string | null
+          update_date?: string | null
         }
         Relationships: [
           {
@@ -342,34 +396,91 @@ export type Database = {
       }
       plans: {
         Row: {
+          area_dunam: number | null
+          authority: string | null
+          city_county: string | null
+          data_json_path: string | null
+          district: string | null
           doc_count: number | null
+          entity_subtype: string | null
+          entity_type: string | null
+          goals: string | null
           gush_list: string | null
+          has_plan_data: number | null
+          house_number: string | null
           id: number
+          jurisdiction: string | null
+          location_desc: string | null
+          main_status: string | null
+          mp_id: number | null
           notes: string | null
+          phase: string | null
+          plan_area: string | null
+          plan_id: number | null
           plan_name: string | null
           plan_number: string
           plan_type: string | null
           status: string | null
+          status_date: string | null
+          street: string | null
         }
         Insert: {
+          area_dunam?: number | null
+          authority?: string | null
+          city_county?: string | null
+          data_json_path?: string | null
+          district?: string | null
           doc_count?: number | null
+          entity_subtype?: string | null
+          entity_type?: string | null
+          goals?: string | null
           gush_list?: string | null
+          has_plan_data?: number | null
+          house_number?: string | null
           id?: number
+          jurisdiction?: string | null
+          location_desc?: string | null
+          main_status?: string | null
+          mp_id?: number | null
           notes?: string | null
+          phase?: string | null
+          plan_area?: string | null
+          plan_id?: number | null
           plan_name?: string | null
           plan_number: string
           plan_type?: string | null
           status?: string | null
+          status_date?: string | null
+          street?: string | null
         }
         Update: {
+          area_dunam?: number | null
+          authority?: string | null
+          city_county?: string | null
+          data_json_path?: string | null
+          district?: string | null
           doc_count?: number | null
+          entity_subtype?: string | null
+          entity_type?: string | null
+          goals?: string | null
           gush_list?: string | null
+          has_plan_data?: number | null
+          house_number?: string | null
           id?: number
+          jurisdiction?: string | null
+          location_desc?: string | null
+          main_status?: string | null
+          mp_id?: number | null
           notes?: string | null
+          phase?: string | null
+          plan_area?: string | null
+          plan_id?: number | null
           plan_name?: string | null
           plan_number?: string
           plan_type?: string | null
           status?: string | null
+          status_date?: string | null
+          street?: string | null
         }
         Relationships: []
       }
