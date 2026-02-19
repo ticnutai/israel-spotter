@@ -268,7 +268,18 @@ export async function getParcelDocuments(gush: number, helka: number): Promise<{
     () => fetchJSON(`${API_BASE}/gushim/${gush}/${helka}/documents`),
     () => withCache(`docs:${gush}:${helka}`, async () => {
       const docs = await supabaseGet<DocumentRecord>("documents", `select=*&gush=eq.${gush}&helka=eq.${helka}`);
-      return { gush, helka, total: docs.length, by_plan: [], documents: docs };
+      // Group documents by plan_number
+      const planMap = new Map<string | null, DocumentRecord[]>();
+      docs.forEach(d => {
+        const key = d.plan_number || null;
+        if (!planMap.has(key)) planMap.set(key, []);
+        planMap.get(key)!.push(d);
+      });
+      const by_plan = Array.from(planMap.entries()).map(([plan_number, documents]) => ({
+        plan_number,
+        documents,
+      }));
+      return { gush, helka, total: docs.length, by_plan, documents: docs };
     })
   );
 }
