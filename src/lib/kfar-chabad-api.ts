@@ -1,9 +1,15 @@
 /**
  * kfar-chabad-api.ts – Client for the local FastAPI backend v2
  * Falls back to Supabase REST API when backend is unavailable (e.g. on Lovable)
+ * Uses IndexedDB cache for instant data on repeat visits
  */
 
+import { withCache, clearCache as clearLocalCache } from "./local-cache";
+
 const API_BASE = "/api";
+
+// Re-export cache utilities
+export { clearLocalCache };
 
 // Supabase fallback config
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://txltujmbkhsszpvsgujs.supabase.co";
@@ -178,7 +184,7 @@ async function withFallback<T>(localFn: () => Promise<T>, cloudFn: () => Promise
 export async function getConfig(): Promise<KfarChabadConfig> {
   return withFallback(
     () => fetchJSON(`${API_BASE}/config`),
-    async () => {
+    () => withCache("config", async () => {
       // Build config from Supabase data
       const gushim = await supabaseGet<{ gush: number }>("gushim", "select=gush");
       const gushIds = gushim.map(g => g.gush);
@@ -204,7 +210,7 @@ export async function getConfig(): Promise<KfarChabadConfig> {
           plan_georef: georefCount,
         },
       };
-    }
+    })
   );
 }
 
@@ -216,17 +222,17 @@ export async function getGushim(): Promise<GushInfo[]> {
       const data = await fetchJSON<{ gushim: GushInfo[] }>(`${API_BASE}/gushim`);
       return data.gushim;
     },
-    async () => {
+    () => withCache("gushim", async () => {
       const rows = await supabaseGet<GushInfo>("gushim", "select=*&order=gush");
       return rows;
-    }
+    })
   );
 }
 
 export async function getGush(gush: number): Promise<{ gush: GushInfo; parcels: ParcelInfo[] }> {
   return withFallback(
     () => fetchJSON(`${API_BASE}/gushim/${gush}`),
-    async () => {
+    () => withCache(`gush:${gush}`, async () => {
       const gushRows = await supabaseGet<GushInfo>("gushim", `select=*&gush=eq.${gush}`);
       const parcelRows = await supabaseGet<ParcelInfo>("parcels", `select=*&gush=eq.${gush}&order=helka`);
       const g = gushRows[0] || { gush, name: "", area_type: "", plan_count: 0, permit_count: 0, parcel_count: 0, notes: null };
@@ -234,7 +240,7 @@ export async function getGush(gush: number): Promise<{ gush: GushInfo; parcels: 
         gush: g,
         parcels: parcelRows,
       };
-    }
+    })
   );
 }
 
@@ -244,10 +250,10 @@ export async function getGushParcels(gush: number): Promise<ParcelInfo[]> {
       const data = await fetchJSON<{ parcels: ParcelInfo[] }>(`${API_BASE}/gushim/${gush}/parcels`);
       return data.parcels;
     },
-    async () => {
+    () => withCache(`parcels:${gush}`, async () => {
       const rows = await supabaseGet<ParcelInfo>("parcels", `select=*&gush=eq.${gush}&order=helka`);
       return rows;
-    }
+    })
   );
 }
 
@@ -260,10 +266,10 @@ export async function getParcelDocuments(gush: number, helka: number): Promise<{
 }> {
   return withFallback(
     () => fetchJSON(`${API_BASE}/gushim/${gush}/${helka}/documents`),
-    async () => {
+    () => withCache(`docs:${gush}:${helka}`, async () => {
       const docs = await supabaseGet<DocumentRecord>("documents", `select=*&gush=eq.${gush}&helka=eq.${helka}`);
       return { gush, helka, total: docs.length, by_plan: [], documents: docs };
-    }
+    })
   );
 }
 
@@ -276,11 +282,11 @@ export async function getPlans(gush?: number): Promise<PlanSummary[]> {
       const data = await fetchJSON<{ plans: PlanSummary[] }>(`${API_BASE}/plans${sp}`);
       return data.plans;
     },
-    async () => {
+    () => withCache(`plans:${gush || 'all'}`, async () => {
       const filter = gush ? `&gush_list=ilike.*${gush}*` : "";
       const rows = await supabaseGet<PlanSummary>("plans", `select=*${filter}&order=plan_number`);
       return rows;
-    }
+    })
   );
 }
 
@@ -291,13 +297,12 @@ export async function getPlanDetail(planNumber: string): Promise<{
 }> {
   return withFallback(
     () => fetchJSON(`${API_BASE}/plans/${encodeURIComponent(planNumber)}`),
-    async () => {
+    () => withCache(`plan:${planNumber}`, async () => {
       const [plans, docs] = await Promise.all([
         supabaseGet<PlanSummary>("plans", `select=*&plan_number=eq.${encodeURIComponent(planNumber)}`),
         supabaseGet<DocumentRecord>("documents", `select=*&plan_number=eq.${encodeURIComponent(planNumber)}`),
       ]);
       const plan = plans[0] || { id: 0, plan_number: planNumber, plan_name: null, status: null, plan_type: null, doc_count: docs.length, gush_list: null, notes: null };
-      // Get georef entries for documents of this plan
       const docIds = docs.map(d => d.id);
       let georefs: GeorefEntry[] = [];
       if (docIds.length > 0) {
@@ -305,7 +310,7 @@ export async function getPlanDetail(planNumber: string): Promise<{
         georefs = georefRows.map(mapGeoref);
       }
       return { plan, documents: docs, georef: georefs };
-    }
+    })
   );
 }
 
@@ -355,7 +360,7 @@ export async function getDocuments(params?: {
 export async function getDocumentStats(): Promise<DocumentStats> {
   return withFallback(
     () => fetchJSON(`${API_BASE}/documents/stats`),
-    async () => {
+    () => withCache("doc-stats", async () => {
       const total = await supabaseCount("documents");
       const [docs, gushim] = await Promise.all([
         supabaseGet<any>("documents", "select=category,file_size,file_type,is_tashrit,is_georef"),
@@ -381,7 +386,7 @@ export async function getDocumentStats(): Promise<DocumentStats> {
         tashrit_count,
         georef_count,
       };
-    }
+    })
   );
 }
 
@@ -405,10 +410,10 @@ export async function getGeorefEntries(): Promise<GeorefEntry[]> {
       const data = await fetchJSON<{ georef: GeorefEntry[] }>(`${API_BASE}/georef`);
       return data.georef;
     },
-    async () => {
+    () => withCache("georef", async () => {
       const rows = await supabaseGet<any>("plan_georef", "select=*");
       return rows.map(mapGeoref);
-    }
+    })
   );
 }
 
@@ -634,7 +639,7 @@ export async function getLocalPlans(gush: number, helka: number): Promise<LocalP
       _backendAvailable = true;
       return res.json();
     },
-    async () => {
+    () => withCache(`local-plans:${gush}:${helka}`, async () => {
       // Supabase cloud fallback – reconstruct LocalPlansResponse from cloud tables
       // 1. Get parcel detail
       const parcelRows = await supabaseGet<any>(
@@ -754,7 +759,7 @@ export async function getLocalPlans(gush: number, helka: number): Promise<LocalP
         permit_count: permits.length,
         taba_count: tabaOutlines.length,
       };
-    }
+    })
   );
 }
 
