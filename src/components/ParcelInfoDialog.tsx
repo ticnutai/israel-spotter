@@ -429,10 +429,11 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
       {/* ═══ Resize Handle (desktop only) ═══ */}
       {!isMobile && (
         <div
-          className="w-4 h-full flex items-center justify-center cursor-col-resize shrink-0 group hover:bg-accent/40 transition-colors border-l"
+          className="w-3 h-full flex items-center justify-center cursor-col-resize shrink-0 group bg-muted/30 hover:bg-primary/10 active:bg-primary/20 transition-colors border-l-2 border-border"
           onMouseDown={handleResizeStart}
+          title="גרור לשינוי רוחב"
         >
-          <div className="w-1.5 h-12 rounded-full bg-muted-foreground/25 group-hover:bg-primary/50 transition-colors" />
+          <div className="w-[3px] h-16 rounded-full bg-muted-foreground/40 group-hover:bg-primary group-active:bg-primary transition-colors" />
         </div>
       )}
       </div>
