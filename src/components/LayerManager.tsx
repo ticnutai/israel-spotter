@@ -178,7 +178,7 @@ function SortableLayerItem({
         />
 
         {/* Kind icon + Name */}
-        <div className="flex-1 min-w-0 flex items-center gap-1 mr-0.5">
+        <div className="flex-1 min-w-0 flex items-center gap-1 overflow-hidden">
           <span className="text-xs shrink-0">{kindIcon}</span>
           {editing ? (
             <div className="flex items-center gap-0.5 flex-1">
@@ -212,7 +212,9 @@ function SortableLayerItem({
             </div>
           ) : (
             <span
-              className="text-xs font-medium truncate cursor-pointer hover:underline"
+              className="text-xs font-medium truncate cursor-pointer hover:underline block"
+              dir="rtl"
+              title={layer.name}
               onDoubleClick={() => {
                 if (!layer.locked) {
                   setEditName(layer.name);
@@ -286,7 +288,7 @@ function SortableLayerItem({
 
       {/* ── Expanded details panel ── */}
       {expanded && (
-        <div className="px-3 pb-2.5 space-y-2 border-t border-border/50 pt-2" dir="rtl">
+        <div className="px-3 pb-2.5 space-y-2 border-t border-border/50 pt-2 overflow-hidden" dir="rtl">
           {/* Fill color */}
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -326,7 +328,7 @@ function SortableLayerItem({
 
           {/* Opacity slider */}
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <span className="text-[10px] text-muted-foreground whitespace-nowrap">שקיפות קו</span>
               <input
                 type="range"
@@ -334,7 +336,7 @@ function SortableLayerItem({
                 max="100"
                 value={Math.round(layer.opacity * 100)}
                 onChange={(e) => onSetOpacity(Number(e.target.value) / 100)}
-                className="flex-1 h-1 accent-primary cursor-pointer"
+                className="flex-1 min-w-0 h-1 accent-primary cursor-pointer"
                 disabled={layer.locked}
               />
               <span className="text-[10px] font-mono text-muted-foreground w-8 text-left">
@@ -345,7 +347,7 @@ function SortableLayerItem({
 
           {/* Fill opacity slider */}
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <span className="text-[10px] text-muted-foreground whitespace-nowrap">שקיפות מילוי</span>
               <input
                 type="range"
@@ -353,7 +355,7 @@ function SortableLayerItem({
                 max="100"
                 value={Math.round(layer.fillOpacity * 100)}
                 onChange={(e) => onSetFillOpacity(Number(e.target.value) / 100)}
-                className="flex-1 h-1 accent-primary cursor-pointer"
+                className="flex-1 min-w-0 h-1 accent-primary cursor-pointer"
                 disabled={layer.locked}
               />
               <span className="text-[10px] font-mono text-muted-foreground w-8 text-left">
@@ -364,7 +366,7 @@ function SortableLayerItem({
 
           {/* Stroke weight */}
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <span className="text-[10px] text-muted-foreground whitespace-nowrap">עובי קו</span>
               <input
                 type="range"
@@ -372,7 +374,7 @@ function SortableLayerItem({
                 max="100"
                 value={Math.round(layer.weight * 10)}
                 onChange={(e) => onSetWeight(Number(e.target.value) / 10)}
-                className="flex-1 h-1 accent-primary cursor-pointer"
+                className="flex-1 min-w-0 h-1 accent-primary cursor-pointer"
                 disabled={layer.locked}
               />
               <span className="text-[10px] font-mono text-muted-foreground w-10 text-left">
