@@ -106,6 +106,7 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   const [localPlansData, setLocalPlansData] = useState<LocalPlansResponse | null>(null);
   const [loadingLocalPlans, setLoadingLocalPlans] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [dialogWidth, setDialogWidth] = useState(() => {
     const saved = localStorage.getItem("parcel-dialog-width");
     return saved ? Number(saved) : DEFAULT_DIALOG_WIDTH;
@@ -114,6 +115,13 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   const { isFavorite, addFavorite, removeFavorite, favorites, isLoggedIn: favLoggedIn } = useFavorites();
   const { isWatching, addWatch, removeWatch, watches, isLoggedIn: watchLoggedIn } = useWatchParcels();
 
+  // Track mobile breakpoint
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 767px)");
+    const onChange = () => setIsMobile(mql.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
   // Persist dialog width
   useEffect(() => {
     localStorage.setItem("parcel-dialog-width", String(dialogWidth));
@@ -203,38 +211,66 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
     <div
       ref={panelRef}
       className={cn(
-        "fixed inset-y-0 right-0 z-50 bg-background border-l shadow-2xl flex flex-row",
+        "fixed z-50 bg-background shadow-2xl flex",
+        // Mobile: full-screen bottom sheet
+        isMobile
+          ? "inset-x-0 bottom-0 top-0 flex-col rounded-t-2xl"
+          : "inset-y-0 right-0 flex-row border-l",
         !isResizing && "transition-transform duration-300 ease-in-out",
-        open ? "translate-x-0" : "translate-x-full pointer-events-none"
+        open
+          ? "translate-x-0 translate-y-0"
+          : isMobile
+            ? "translate-y-full pointer-events-none"
+            : "translate-x-full pointer-events-none"
       )}
-      style={{ width: dialogWidth }}
+      style={isMobile ? undefined : { width: dialogWidth }}
       dir="rtl"
     >
-      {/* ═══ Resize Handle ═══ */}
-      <div
-        className="w-3 h-full flex items-center justify-center cursor-col-resize shrink-0 group hover:bg-blue-50/50 transition-colors"
-        onMouseDown={handleResizeStart}
-      >
-        <div className="w-1 h-10 rounded-full bg-muted-foreground/30 group-hover:bg-blue-500/60 transition-colors" />
-      </div>
+      {/* ═══ Resize Handle (desktop only) ═══ */}
+      {!isMobile && (
+        <div
+          className="w-3 h-full flex items-center justify-center cursor-col-resize shrink-0 group hover:bg-blue-50/50 transition-colors"
+          onMouseDown={handleResizeStart}
+        >
+          <div className="w-1 h-10 rounded-full bg-muted-foreground/30 group-hover:bg-blue-500/60 transition-colors" />
+        </div>
+      )}
 
       {/* ═══ Panel Content ═══ */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
       {/* ═══ Header ═══ */}
-      <div className="px-5 pt-5 pb-3 border-b bg-gradient-to-l from-blue-50 to-white dark:from-blue-950 dark:to-background flex flex-col relative">
+      <div className={cn(
+        "border-b bg-gradient-to-l from-blue-50 to-white dark:from-blue-950 dark:to-background flex flex-col relative shrink-0",
+        isMobile ? "px-4 pt-3 pb-2" : "px-5 pt-5 pb-3"
+      )}>
+        {/* Mobile drag indicator */}
+        {isMobile && (
+          <div className="flex justify-center mb-2">
+            <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+          </div>
+        )}
         <button
           onClick={onClose}
-          className="absolute left-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          className={cn(
+            "absolute rounded-full opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+            isMobile ? "left-3 top-3 p-1.5 bg-muted/50" : "left-4 top-4"
+          )}
           aria-label="סגור"
         >
-          <X className="h-4 w-4" />
+          <X className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
         </button>
         <div className="flex items-start gap-3">
-          <div className="rounded-lg bg-blue-600 text-white p-2.5 mt-0.5 shrink-0">
-            <MapPin className="h-5 w-5" />
+          <div className={cn(
+            "rounded-lg bg-blue-600 text-white shrink-0",
+            isMobile ? "p-2 mt-0.5" : "p-2.5 mt-0.5"
+          )}>
+            <MapPin className={isMobile ? "h-4 w-4" : "h-5 w-5"} />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-right text-lg font-bold leading-snug">
+            <h2 className={cn(
+              "text-right font-bold leading-snug",
+              isMobile ? "text-base" : "text-lg"
+            )}>
               {data ? `גוש ${data.gush} · חלקה ${data.helka}` : "מידע תכנוני"}
             </h2>
             {data && (
@@ -251,7 +287,7 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
               </div>
             )}
             {data && (
-              <p className="text-xs text-muted-foreground mt-1.5 font-mono">
+              <p className="text-xs text-muted-foreground mt-1 font-mono">
                 {data.lat.toFixed(5)}, {data.lng.toFixed(5)}
               </p>
             )}
@@ -263,7 +299,7 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
             <Button
               variant={isFavorite(data.gush, data.helka) ? "default" : "outline"}
               size="sm"
-              className="h-7 text-xs gap-1"
+              className={cn("text-xs gap-1", isMobile ? "h-8 flex-1" : "h-7")}
               onClick={() => {
                 if (isFavorite(data.gush, data.helka)) {
                   const fav = favorites.find(f => f.gush === data.gush && f.helka === data.helka);
@@ -279,7 +315,7 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
             <Button
               variant={isWatching(data.gush, data.helka) ? "default" : "outline"}
               size="sm"
-              className="h-7 text-xs gap-1"
+              className={cn("text-xs gap-1", isMobile ? "h-8 flex-1" : "h-7")}
               onClick={() => {
                 if (isWatching(data.gush, data.helka)) {
                   const w = watches.find(w => w.gush === data.gush && w.helka === data.helka);
@@ -297,8 +333,8 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
       </div>
 
       {/* ═══ Body ═══ */}
-      <ScrollArea className="flex-1">
-        <div className="px-5 py-4 space-y-5">
+      <ScrollArea className="flex-1 overflow-y-auto">
+        <div className={cn("py-4 space-y-5", isMobile ? "px-4 pb-8" : "px-5")}>
 
           {/* ─── ArcGIS Parcel Details (always available) ─── */}
           {data && <ParcelDetails data={data} />}
