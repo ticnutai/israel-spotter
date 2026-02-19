@@ -37,6 +37,8 @@ const dZ = -17.8444;
 // WGS84 ellipsoid
 const a_wgs84 = 6378137.0;
 const f_wgs84 = 1 / 298.257223563;
+const b_wgs84 = a_wgs84 * (1 - f_wgs84);
+const e2_wgs84 = (a_wgs84 * a_wgs84 - b_wgs84 * b_wgs84) / (a_wgs84 * a_wgs84);
 
 // ── Meridional arc distance ──
 function meridionalArc(lat: number): number {
@@ -139,6 +141,83 @@ export function itmToWgs84(easting: number, northing: number): [number, number] 
   const wgs84 = molodenskyToWgs84(latGrs80, lonGrs80);
 
   return [wgs84.lat * (180 / Math.PI), wgs84.lon * (180 / Math.PI)];
+}
+
+/**
+ * Molodensky datum transformation: WGS84 → GRS80 (Israel 1993)
+ */
+function molodenskyFromWgs84(
+  latRad: number, lonRad: number,
+): { lat: number; lon: number } {
+  const sinLat = Math.sin(latRad);
+  const cosLat = Math.cos(latRad);
+  const sinLon = Math.sin(lonRad);
+  const cosLon = Math.cos(lonRad);
+
+  const da = a_grs80 - a_wgs84;
+  const dfVal = f_grs80 - f_wgs84;
+
+  const e2 = e2_wgs84;
+  const Rn = a_wgs84 / Math.sqrt(1 - e2 * sinLat * sinLat);
+  const Rm = a_wgs84 * (1 - e2) / Math.pow(1 - e2 * sinLat * sinLat, 1.5);
+
+  const dLat = (
+    dX * sinLat * cosLon
+    + dY * sinLat * sinLon
+    - dZ * cosLat
+    + da * (Rn * e2 * sinLat * cosLat) / a_wgs84
+    + dfVal * (Rm / (1 - f_wgs84) + Rn * (1 - f_wgs84)) * sinLat * cosLat
+  ) / Rm;
+
+  const dLon = (
+    dX * sinLon - dY * cosLon
+  ) / (Rn * cosLat);
+
+  return {
+    lat: latRad + dLat,
+    lon: lonRad + dLon,
+  };
+}
+
+/**
+ * Convert WGS84 lat/lon (degrees) to ITM (EPSG:2039) easting/northing.
+ * Returns [easting, northing].
+ */
+export function wgs84ToItm(lat: number, lon: number): [number, number] {
+  const latRad_wgs = lat * (Math.PI / 180);
+  const lonRad_wgs = lon * (Math.PI / 180);
+
+  // Shift from WGS84 to GRS80/Israel1993
+  const grs = molodenskyFromWgs84(latRad_wgs, lonRad_wgs);
+  const phi = grs.lat;
+  const lambda = grs.lon;
+
+  const e2 = e2_grs80;
+  const sinPhi = Math.sin(phi);
+  const cosPhi = Math.cos(phi);
+  const tanPhi = Math.tan(phi);
+  const N = a_grs80 / Math.sqrt(1 - e2 * sinPhi * sinPhi);
+  const T = tanPhi * tanPhi;
+  const C = e_prime2_grs80 * cosPhi * cosPhi;
+  const A = cosPhi * (lambda - centralMeridianRad);
+  const M = meridionalArc(phi);
+
+  const easting = FE + k0 * N * (
+    A +
+    (1 - T + C) * A * A * A / 6 +
+    (5 - 18 * T + T * T + 72 * C - 58 * e_prime2_grs80) * A * A * A * A * A / 120
+  );
+
+  const northing = FN + k0 * (
+    M - M0 +
+    N * tanPhi * (
+      A * A / 2 +
+      (5 - T + 9 * C + 4 * C * C) * A * A * A * A / 24 +
+      (61 - 58 * T + T * T + 600 * C - 330 * e_prime2_grs80) * A * A * A * A * A * A / 720
+    )
+  );
+
+  return [Math.round(easting * 100) / 100, Math.round(northing * 100) / 100];
 }
 
 /**
