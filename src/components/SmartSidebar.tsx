@@ -284,7 +284,6 @@ export function SmartSidebar({
             )}
             style={{
               width: panelWidth,
-              borderRight: `1px solid hsl(222.2 47.4% 11.2% / 0.15)`,
             }}
           >
           {/* Panel header */}
@@ -526,7 +525,7 @@ function DataTab({
       <div className="px-2 py-2 space-y-2">
         {/* Stats bar */}
         {stats && (
-          <div className="flex gap-2 flex-wrap text-[11px] text-muted-foreground px-1">
+          <div className="flex gap-2 flex-wrap text-[11px] text-muted-foreground px-1 justify-end" dir="rtl">
             <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
               {stats.total} מסמכים
             </span>
@@ -544,9 +543,10 @@ function DataTab({
           <div key={g.gush} className="border rounded-lg overflow-hidden">
             <button
               onClick={() => toggleGush(g.gush)}
-              className="w-full flex items-center justify-between px-3 py-2 hover:bg-accent text-sm"
+              className="w-full flex items-center px-3 py-2 hover:bg-accent text-sm text-right"
+              dir="rtl"
             >
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2 shrink-0">
                 {expandedGush === g.gush ? (
                   <ChevronDown className="h-3.5 w-3.5" />
                 ) : (
@@ -554,7 +554,7 @@ function DataTab({
                 )}
                 <span className="font-medium">גוש {g.gush}</span>
               </span>
-              <span className="flex gap-2 text-[11px] text-muted-foreground">
+              <span className="flex gap-2 text-[11px] text-muted-foreground mr-auto">
                 <span>{g.plan_count} תוכניות</span>
                 <span>{g.permit_count} היתרים</span>
                 <span>{g.parcel_count} חלקות</span>
