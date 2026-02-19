@@ -368,13 +368,13 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
     }
 
     // Highlighted specific parcel (thicker) if searching for specific helka
-    if (boundaries.parcelGeometry) {
+    if (boundaries.parcelGeometry && borderSettings.highlightVisible) {
       L.geoJSON(boundaries.parcelGeometry as any, {
         style: {
-          color: "#dc2626",
-          weight: 4,
-          fillColor: "#ef4444",
-          fillOpacity: 0.2,
+          color: borderSettings.highlightColor,
+          weight: borderSettings.highlightWeight,
+          fillColor: borderSettings.highlightColor,
+          fillOpacity: borderSettings.highlightFillOpacity,
         },
       }).addTo(layerGroup);
 
