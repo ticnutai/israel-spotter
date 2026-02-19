@@ -228,10 +228,9 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
             : "-translate-x-full pointer-events-none"
       )}
       style={isMobile ? undefined : { width: dialogWidth }}
-      dir="rtl"
     >
       {/* ═══ Panel Content ═══ */}
-      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden" dir="rtl">
       {/* ═══ Header ═══ */}
       <div className={cn(
         "border-b bg-gradient-to-l from-blue-50 to-white dark:from-blue-950 dark:to-background flex flex-col relative shrink-0",
