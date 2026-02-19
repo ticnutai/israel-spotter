@@ -124,44 +124,65 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
       const raw = planQuery.trim();
       const normalizedPlan = raw.replace(/\s*\/\s*/g, "/ ").replace(/\s+/g, " ");
       const compactPlan = raw.replace(/\s+/g, "").replace(/\//g, "/");
-      // Reverse order: "גז/12/525" → also try "525/ 12" pattern
+      // Generate ALL permutations of numeric parts: "גז/525/12" → also "גז/12/525", "גז/ 12/ 525" etc.
       const parts = compactPlan.split("/");
+      const prefix = parts.length >= 2 ? parts[0] : "";
+      const numParts = parts.slice(1);
+      const permutations: string[] = [];
+      if (numParts.length === 2) {
+        // Try both orderings: prefix/a/b and prefix/b/a, compact and spaced
+        permutations.push(
+          `${prefix}/${numParts[0]}/${numParts[1]}`,
+          `${prefix}/${numParts[1]}/${numParts[0]}`,
+          `${prefix}/ ${numParts[0]}/ ${numParts[1]}`,
+          `${prefix}/ ${numParts[1]}/ ${numParts[0]}`,
+        );
+      } else if (numParts.length === 3) {
+        // Try all orderings for 3 parts (e.g. גז/מק/39/525)
+        const [a, b, c] = numParts;
+        permutations.push(
+          `${prefix}/${a}/${b}/${c}`, `${prefix}/${a}/${c}/${b}`,
+          `${prefix}/${b}/${a}/${c}`, `${prefix}/${b}/${c}/${a}`,
+          `${prefix}/${c}/${a}/${b}`, `${prefix}/${c}/${b}/${a}`,
+          `${prefix}/ ${a}/ ${b}/ ${c}`, `${prefix}/ ${c}/ ${b}/ ${a}`,
+        );
+      }
+      // Also extract just the numeric parts for a fallback broad search
+      const numericOnly = numParts.filter(p => /^\d+$/.test(p));
       const reversedParts = parts.length >= 2 ? [parts[0], ...parts.slice(1).reverse()].join("/ ") : "";
 
       // Search taba_outlines (uses 425-XXXXXXX format plan numbers)
       let tabaResults: { pl_number: string; pl_name: string; land_use: string; source: string }[] = [];
       if (raw || lotQuery.trim()) {
-        let q = supabase.from("taba_outlines").select("pl_number, pl_name, land_use");
+        const tabaOrFilters: string[] = [];
         if (raw) {
-          q = q.ilike("pl_number", `%${raw}%`);
+          tabaOrFilters.push(`pl_number.ilike.%${raw}%`);
+          // Add all permutations
+          for (const perm of permutations) {
+            tabaOrFilters.push(`pl_number.ilike.%${perm}%`);
+          }
+          // Also search plan name
+          tabaOrFilters.push(`pl_name.ilike.%${raw}%`);
         }
-        // Search lot in pl_name with flexible matching
         if (lotQuery.trim()) {
-          q = q.or(`pl_name.ilike.%מגרש ${lotQuery.trim()}%,pl_name.ilike.%מגרש${lotQuery.trim()}%`);
+          tabaOrFilters.push(
+            `pl_name.ilike.%מגרש ${lotQuery.trim()}%`,
+            `pl_name.ilike.%מגרש${lotQuery.trim()}%`,
+            `pl_name.ilike.%${lotQuery.trim()}%`
+          );
         }
-        const { data } = await q.limit(20);
-        tabaResults = (data || []).map(d => ({
-          pl_number: d.pl_number || "",
-          pl_name: d.pl_name || "",
-          land_use: d.land_use || "",
-          source: "taba",
-        }));
-      }
-
-      // Also search taba_outlines by pl_name if lot query provided (separate query without plan filter)
-      if (lotQuery.trim() && !raw) {
-        const { data } = await supabase
-          .from("taba_outlines")
-          .select("pl_number, pl_name, land_use")
-          .or(`pl_name.ilike.%מגרש ${lotQuery.trim()}%,pl_name.ilike.%מגרש${lotQuery.trim()}%`)
-          .limit(20);
-        for (const d of data || []) {
-          tabaResults.push({
+        if (tabaOrFilters.length > 0) {
+          const { data } = await supabase
+            .from("taba_outlines")
+            .select("pl_number, pl_name, land_use")
+            .or(tabaOrFilters.join(","))
+            .limit(30);
+          tabaResults = (data || []).map(d => ({
             pl_number: d.pl_number || "",
             pl_name: d.pl_name || "",
             land_use: d.land_use || "",
             source: "taba",
-          });
+          }));
         }
       }
 
@@ -176,6 +197,10 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
             `plan_number.ilike.%${normalizedPlan}%`,
             `plan_number.ilike.%${compactPlan}%`
           );
+          // Add all permutations (different orderings of number parts)
+          for (const perm of permutations) {
+            orFilters.push(`plan_number.ilike.%${perm}%`);
+          }
           if (reversedParts) {
             orFilters.push(`plan_number.ilike.%${reversedParts}%`);
           }
@@ -185,6 +210,7 @@ export function SearchPanel({ onResult, onBoundaries }: SearchPanelProps) {
         if (lotQuery.trim()) {
           orFilters.push(
             `plan_name.ilike.%מגרש ${lotQuery.trim()}%`,
+            `plan_name.ilike.%מגרש${lotQuery.trim()}%`,
             `plan_name.ilike.%${lotQuery.trim()}%`
           );
         }

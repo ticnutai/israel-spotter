@@ -178,7 +178,7 @@ function SortableLayerItem({
         />
 
         {/* Kind icon + Name */}
-        <div className="flex-1 min-w-0 flex items-center gap-1 overflow-hidden">
+        <div className="flex-1 min-w-0 flex items-start gap-1">
           <span className="text-xs shrink-0">{kindIcon}</span>
           {editing ? (
             <div className="flex items-center gap-0.5 flex-1">
@@ -212,7 +212,7 @@ function SortableLayerItem({
             </div>
           ) : (
             <span
-              className="text-xs font-medium truncate cursor-pointer hover:underline block"
+              className="text-xs font-medium cursor-pointer hover:underline block break-words leading-snug"
               dir="rtl"
               title={layer.name}
               onDoubleClick={() => {
