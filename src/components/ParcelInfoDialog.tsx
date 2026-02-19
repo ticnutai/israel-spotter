@@ -137,7 +137,7 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
     const startX = e.clientX;
     const startWidth = dialogWidth;
     const onMouseMove = (ev: MouseEvent) => {
-      const delta = startX - ev.clientX;
+      const delta = ev.clientX - startX;
       setDialogWidth(Math.min(MAX_DIALOG_WIDTH, Math.max(MIN_DIALOG_WIDTH, startWidth + delta)));
     };
     const onMouseUp = () => {
@@ -215,31 +215,21 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
     <div
       ref={panelRef}
       className={cn(
-        "fixed z-50 bg-background shadow-2xl flex",
+        "fixed z-[45] bg-background shadow-2xl flex",
         // Mobile: full-screen bottom sheet
         isMobile
-          ? "inset-x-0 bottom-0 top-0 flex-col rounded-t-2xl"
-          : "inset-y-0 right-0 flex-row border-l",
+          ? "inset-x-0 bottom-0 top-0 flex-col rounded-t-2xl z-50"
+          : "top-[49px] bottom-0 left-0 flex-row border-r",
         !isResizing && "transition-transform duration-300 ease-in-out",
         open
           ? "translate-x-0 translate-y-0"
           : isMobile
             ? "translate-y-full pointer-events-none"
-            : "translate-x-full pointer-events-none"
+            : "-translate-x-full pointer-events-none"
       )}
       style={isMobile ? undefined : { width: dialogWidth }}
       dir="rtl"
     >
-      {/* ═══ Resize Handle (desktop only) ═══ */}
-      {!isMobile && (
-        <div
-          className="w-3 h-full flex items-center justify-center cursor-col-resize shrink-0 group hover:bg-blue-50/50 transition-colors"
-          onMouseDown={handleResizeStart}
-        >
-          <div className="w-1 h-10 rounded-full bg-muted-foreground/30 group-hover:bg-blue-500/60 transition-colors" />
-        </div>
-      )}
-
       {/* ═══ Panel Content ═══ */}
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
       {/* ═══ Header ═══ */}
@@ -437,6 +427,16 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
         </ScrollArea>
       </div>
       </div>
+
+      {/* ═══ Resize Handle (desktop only) ═══ */}
+      {!isMobile && (
+        <div
+          className="w-3 h-full flex items-center justify-center cursor-col-resize shrink-0 group hover:bg-accent/50 transition-colors"
+          onMouseDown={handleResizeStart}
+        >
+          <div className="w-1 h-10 rounded-full bg-muted-foreground/30 group-hover:bg-primary/60 transition-colors" />
+        </div>
+      )}
 
       {viewingDoc && (
         <DocumentViewer
