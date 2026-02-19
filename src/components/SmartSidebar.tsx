@@ -388,7 +388,7 @@ function formatSize(bytes: number): string {
 function DocRow({ doc, onShowImage }: { doc: DocumentRecord; onShowImage: (p: string) => void }) {
   const isImage = doc.file_type === "image";
   return (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs hover:bg-accent group">
+    <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs hover:bg-accent group text-right" dir="rtl">
       {fileIcon(doc.file_type)}
       <span className="flex-1 truncate">{doc.title}</span>
       {doc.is_tashrit === 1 && (
@@ -521,8 +521,8 @@ function DataTab({
   const emptyGushim = gushim.filter((g) => g.plan_count === 0 && g.permit_count === 0);
 
   return (
-    <ScrollArea className="h-full">
-      <div className="px-2 py-2 space-y-2">
+    <ScrollArea className="h-full" dir="rtl">
+      <div className="px-2 py-2 space-y-2 text-right" dir="rtl">
         {/* Stats bar */}
         {stats && (
           <div className="flex gap-2 flex-wrap text-[11px] text-muted-foreground px-1 justify-end" dir="rtl">
@@ -573,7 +573,8 @@ function DataTab({
                     <div key={pKey}>
                       <button
                         onClick={() => toggleParcel(p.gush, p.helka)}
-                        className="w-full flex items-center justify-between px-4 py-1.5 hover:bg-accent/50 text-xs border-b"
+                        className="w-full flex items-center px-4 py-1.5 hover:bg-accent/50 text-xs border-b text-right"
+                        dir="rtl"
                       >
                         <span className="flex items-center gap-1.5">
                           {isExpanded ? (
@@ -584,7 +585,7 @@ function DataTab({
                           <FolderOpen className="h-3.5 w-3.5 text-amber-600" />
                           חלקה {p.helka}
                         </span>
-                        <span className="flex gap-2 text-[10px] text-muted-foreground">
+                        <span className="flex gap-2 text-[10px] text-muted-foreground mr-auto">
                           {p.doc_count} מסמכים
                           {p.has_tashrit === 1 && (
                             <span className="bg-blue-100 text-blue-700 px-1 rounded">
@@ -599,7 +600,7 @@ function DataTab({
                             parcelDocs.by_plan.map((bp, idx) => (
                               <div key={idx} className="border-b last:border-b-0">
                                 {bp.plan_number && (
-                                  <div className="px-5 py-1 text-[11px] font-medium bg-muted/40 flex items-center gap-1">
+                                  <div className="px-5 py-1 text-[11px] font-medium bg-muted/40 flex items-center gap-1 text-right" dir="rtl">
                                     <FileText className="h-3 w-3 text-primary" />
                                     תוכנית: {bp.plan_number}
                                   </div>
@@ -713,8 +714,8 @@ function AerialTab({ onSelectAerialYear }: { onSelectAerialYear: (y: string) => 
   if (loading) return <div className="p-4 text-center text-muted-foreground text-sm">טוען...</div>;
 
   return (
-    <ScrollArea className="h-full">
-      <div className="px-2 py-2 space-y-2">
+    <ScrollArea className="h-full" dir="rtl">
+      <div className="px-2 py-2 space-y-2 text-right" dir="rtl">
         {years.length === 0 && (
           <div className="text-center py-8">
             <Plane className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
@@ -817,8 +818,8 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
   }, [searchText, category, fileType]);
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="shrink-0 px-2 pt-2 space-y-2">
+    <div className="h-full flex flex-col text-right" dir="rtl">
+      <div className="shrink-0 px-2 pt-2 space-y-2" dir="rtl">
         <div className="flex gap-1">
           <Input
             placeholder="חפש לפי שם, תוכנית, קובץ..."
@@ -894,8 +895,8 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
 
 function ToolsTab() {
   return (
-    <ScrollArea className="h-full">
-      <div className="px-3 py-3 space-y-3">
+    <ScrollArea className="h-full" dir="rtl">
+      <div className="px-3 py-3 space-y-3 text-right" dir="rtl">
         <p className="text-xs text-muted-foreground">כלים זמינים במפה:</p>
 
         <ToolCard
@@ -976,8 +977,8 @@ function SettingsTab() {
   if (loading) return <div className="p-4 text-center text-muted-foreground text-sm">טוען...</div>;
 
   return (
-    <ScrollArea className="h-full">
-      <div className="px-3 py-3 space-y-4">
+    <ScrollArea className="h-full" dir="rtl">
+      <div className="px-3 py-3 space-y-4 text-right" dir="rtl">
         {/* System info */}
         <div className="border rounded-lg p-3">
           <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">
