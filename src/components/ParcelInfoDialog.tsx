@@ -641,13 +641,14 @@ function PlanCard({
   documents: DocumentRecord[];
 }) {
   return (
-    <div className="rounded-lg border bg-card overflow-hidden">
+    <div className="rounded-2xl overflow-hidden" style={{ border: '1.5px solid hsl(222.2 47.4% 11.2%)' }}>
       <button
         onClick={onToggle}
         className="w-full flex items-center gap-3 px-3 py-2.5 text-right hover:bg-accent/50 transition-colors"
       >
+        <div className="shrink-0 w-1 h-8 rounded-full" style={{ backgroundColor: 'hsl(43 56% 52%)' }} />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">{plan.plan_number}</p>
+          <p className="text-sm font-medium truncate" style={{ color: 'hsl(222.2 47.4% 11.2%)' }}>{plan.plan_number}</p>
           {plan.plan_name && (
             <p className="text-xs text-muted-foreground truncate mt-0.5">
               {plan.plan_name}
@@ -661,15 +662,15 @@ function PlanCard({
             </Badge>
           )}
           {expanded ? (
-            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            <ChevronUp className="h-4 w-4" style={{ color: 'hsl(43 56% 52%)' }} />
           ) : (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            <ChevronDown className="h-4 w-4" style={{ color: 'hsl(43 56% 52%)' }} />
           )}
         </div>
       </button>
 
       {expanded && (
-        <div className="border-t px-3 py-2 bg-muted/30 space-y-1">
+        <div className="px-3 py-2 bg-muted/30 space-y-1" style={{ borderTop: '1px solid hsl(222.2 47.4% 11.2% / 0.2)' }}>
           {plan.plan_type && (
             <p className="text-xs text-muted-foreground">סוג: {plan.plan_type}</p>
           )}
@@ -754,7 +755,8 @@ function LocalPlansSection({
               return (
                 <div
                   key={plan.plan_name}
-                  className="rounded-lg border bg-card overflow-hidden"
+                  className="rounded-2xl overflow-hidden"
+                  style={{ border: '1.5px solid hsl(222.2 47.4% 11.2%)' }}
                 >
                   <button
                     onClick={() =>
@@ -762,8 +764,9 @@ function LocalPlansSection({
                     }
                     className="w-full flex items-center gap-2 px-3 py-2 text-right hover:bg-accent/50 transition-colors"
                   >
+                    <div className="shrink-0 w-1 h-8 rounded-full" style={{ backgroundColor: 'hsl(43 56% 52%)' }} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{plan.plan_name}</p>
+                      <p className="text-sm font-medium truncate" style={{ color: 'hsl(222.2 47.4% 11.2%)' }}>{plan.plan_name}</p>
                       {plan.plan_display_name && (
                         <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
                           {plan.plan_display_name}
@@ -792,15 +795,15 @@ function LocalPlansSection({
                         </Badge>
                       )}
                       {isExpanded ? (
-                        <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+                        <ChevronUp className="h-3.5 w-3.5" style={{ color: 'hsl(43 56% 52%)' }} />
                       ) : (
-                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                        <ChevronDown className="h-3.5 w-3.5" style={{ color: 'hsl(43 56% 52%)' }} />
                       )}
                     </div>
                   </button>
 
                   {isExpanded && (
-                    <div className="border-t px-3 py-2 bg-muted/30 space-y-2">
+                    <div className="px-3 py-2 bg-muted/30 space-y-2" style={{ borderTop: '1px solid hsl(222.2 47.4% 11.2% / 0.2)' }}>
                       {/* Plan metadata */}
                       {(plan.entity_subtype || plan.authority || plan.area_dunam || plan.status_date) && (
                         <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] mb-2 pb-2 border-b">
@@ -896,7 +899,7 @@ function LocalPlansSection({
 
           <div className="space-y-1.5">
             {data.taba_outlines.map((taba: TabaOutline, i: number) => (
-              <div key={taba.pl_number || i} className="rounded-lg border bg-card p-2.5">
+              <div key={taba.pl_number || i} className="rounded-2xl bg-card p-2.5" style={{ border: '1.5px solid hsl(222.2 47.4% 11.2%)' }}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">
