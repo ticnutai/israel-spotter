@@ -9,3 +9,20 @@
   width: 100%;
   height: 100%;
 }
+
+/* Parcel number labels on map */
+.parcel-number-label {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid #dc2626 !important;
+  border-radius: 3px !important;
+  padding: 1px 4px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #991b1b !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+  pointer-events: none !important;
+}
+
+.parcel-number-label::before {
+  display: none !important;
+}
