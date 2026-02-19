@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback, Component, type ReactNode } f
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { GeoResult } from "@/lib/geocode";
-import { fetchBoundaries, type BoundaryResult } from "@/lib/boundaries";
+import { fetchBoundaries, fetchParcelLandUse, type BoundaryResult } from "@/lib/boundaries";
 import { MapLayerSwitcher, MAP_LAYERS, LABELS_LAYER_URL, type MapLayerOption } from "./MapLayerSwitcher";
 import { MapMeasure } from "./MapMeasure";
 import { ScaleBarControl } from "./ScaleBarControl";
@@ -111,8 +111,9 @@ function getParcelStyle(
   borderFillOpacity?: number
 ) {
   if (mode === "landuse") {
-    // Try to match land use from status text or other available data
-    const lu = getLandUseByName(parcel.status || "");
+    // Use landUse from DB data (enriched parcel)
+    const landUseName = (parcel as any).landUse || parcel.status || "";
+    const lu = getLandUseByName(landUseName);
     if (lu) {
       return { color: lu.border, weight: borderWeight ?? 2, fillColor: lu.fill, fillOpacity: 0.3 };
     }
@@ -148,6 +149,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeLayerId, setActiveLayerId] = useState("osm");
   const [mapReady, setMapReady] = useState(false);
+  const [landUseMap, setLandUseMap] = useState<Map<number, { landUse: string; lotNumber?: number }>>(new Map());
 
   // Layer store
   const { layers: storeLayers, paintedParcels, labelSettings, borderSettings } = useLayerStore();
@@ -283,6 +285,18 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
     }
   }, [result]);
 
+  // Fetch land use data when boundaries change
+  useEffect(() => {
+    if (!boundaries || !boundaries.allParcels.length) {
+      setLandUseMap(new Map());
+      return;
+    }
+    const gush = boundaries.allParcels[0]?.gush;
+    if (!gush) return;
+
+    fetchParcelLandUse(gush).then(setLandUseMap).catch(() => setLandUseMap(new Map()));
+  }, [boundaries]);
+
   // Update boundary layers – show block outline + all parcel subdivisions
   useEffect(() => {
     if (!mapRef.current) return;
@@ -312,12 +326,22 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
     // Show all parcels within the gush
     if (boundaries.allParcels && boundaries.allParcels.length > 0) {
       for (const parcel of boundaries.allParcels) {
-        const style = getParcelStyle(parcel, parcelColorMode, borderSettings.color, borderSettings.weight, borderSettings.fillOpacity);
+        // Enrich parcel with land use data from DB
+        const luInfo = landUseMap.get(parcel.helka);
+        const enrichedParcel = luInfo
+          ? { ...parcel, landUse: luInfo.landUse, lotNumber: luInfo.lotNumber }
+          : parcel;
+
+        const style = getParcelStyle(enrichedParcel, parcelColorMode, borderSettings.color, borderSettings.weight, borderSettings.fillOpacity);
         const pLayer = L.geoJSON(parcel.geometry as any, { style }).addTo(layerGroup);
 
-        // Add tooltip with helka number (respects label settings)
+        // Build tooltip label: helka + optional lot number
         if (parcel.helka > 0 && labelSettings.visible) {
-          pLayer.bindTooltip(String(parcel.helka), {
+          let tooltipText = String(parcel.helka);
+          if (luInfo?.lotNumber) {
+            tooltipText += `\nמגרש ${luInfo.lotNumber}`;
+          }
+          pLayer.bindTooltip(tooltipText, {
             permanent: true,
             direction: "center",
             className: "parcel-number-label",
@@ -329,6 +353,8 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
           `<div dir="rtl" style="text-align:right;font-size:13px;">` +
           `<b>חלקה ${parcel.helka}</b><br/>` +
           `גוש ${parcel.gush}<br/>` +
+          (luInfo?.lotNumber ? `<b>מגרש ${luInfo.lotNumber}</b><br/>` : "") +
+          (luInfo?.landUse ? `יעוד: ${luInfo.landUse}<br/>` : "") +
           (parcel.legalArea ? `שטח רשום: ${parcel.legalArea.toLocaleString()} מ"ר<br/>` : "") +
           (parcel.status ? `סטטוס: ${parcel.status}` : "") +
           `</div>`
@@ -365,7 +391,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
     }
 
     boundaryLayerRef.current = layerGroup;
-  }, [boundaries, parcelColorMode, labelSettings.visible, borderSettings]);
+  }, [boundaries, parcelColorMode, labelSettings.visible, borderSettings, landUseMap]);
 
   // ── Dynamic CSS for parcel label styling ──
   useEffect(() => {
