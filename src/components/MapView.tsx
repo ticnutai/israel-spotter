@@ -343,7 +343,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
         // Build tooltip label: helka + optional lot number
         if (parcel.helka > 0 && labelSettings.visible) {
           let tooltipText = String(parcel.helka);
-          if (luInfo?.lotNumber) {
+          if (labelSettings.showLotNumbers && luInfo?.lotNumber) {
             tooltipText += `\nמגרש ${luInfo.lotNumber}`;
           }
           pLayer.bindTooltip(tooltipText, {

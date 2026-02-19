@@ -1,4 +1,4 @@
-import { Move, Palette, Paintbrush } from "lucide-react";
+import { Move, Palette, Paintbrush, Hash } from "lucide-react";
 import type { ParcelColorMode } from "./MapView";
 import { getCategoryColors } from "@/lib/land-use-colors";
 import { useLayerStore, DEFAULT_BORDER_SETTINGS } from "@/hooks/use-layer-store";
@@ -17,7 +17,7 @@ const COLOR_MODES: { id: ParcelColorMode; label: string }[] = [
 ];
 
 export function MapLegend({ colorMode, onColorModeChange }: MapLegendProps) {
-  const { borderSettings, updateBorderSettings } = useLayerStore();
+  const { borderSettings, updateBorderSettings, labelSettings, updateLabelSettings } = useLayerStore();
   const [showBorderSettings, setShowBorderSettings] = useState(false);
   const categoryColors = getCategoryColors();
 
@@ -44,6 +44,32 @@ export function MapLegend({ colorMode, onColorModeChange }: MapLegendProps) {
             <option key={m.id} value={m.id}>{m.label}</option>
           ))}
         </select>
+      </div>
+
+      {/* Label toggles */}
+      <div className="flex flex-col gap-1 mb-2 p-1.5 bg-muted/30 rounded border border-border">
+        <div className="flex items-center gap-1.5">
+          <Hash className="h-3 w-3 text-muted-foreground shrink-0" />
+          <span className="text-[10px] font-semibold text-muted-foreground">תוויות</span>
+        </div>
+        <label className="flex items-center gap-1.5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={labelSettings.visible}
+            onChange={(e) => updateLabelSettings({ visible: e.target.checked })}
+            className="w-3 h-3 accent-primary"
+          />
+          <span className="text-[10px] text-muted-foreground">מספרי חלקות</span>
+        </label>
+        <label className="flex items-center gap-1.5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={labelSettings.showLotNumbers}
+            onChange={(e) => updateLabelSettings({ showLotNumbers: e.target.checked })}
+            className="w-3 h-3 accent-primary"
+          />
+          <span className="text-[10px] text-muted-foreground">מספרי מגרשים</span>
+        </label>
       </div>
 
       {/* Border settings toggle */}

@@ -35,6 +35,7 @@ export interface MapLayer {
 
 export interface ParcelLabelSettings {
   visible: boolean;
+  showLotNumbers: boolean;  // show lot (מגרש) numbers on map
   fontSize: number;       // px
   bgEnabled: boolean;     // show background
   bgColor: string;        // background color
@@ -55,6 +56,7 @@ export interface ParcelBorderSettings {
 
 export const DEFAULT_LABEL_SETTINGS: ParcelLabelSettings = {
   visible: true,
+  showLotNumbers: true,
   fontSize: 11,
   bgEnabled: true,
   bgColor: "rgba(255,255,255,0.85)",
