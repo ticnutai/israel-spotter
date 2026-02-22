@@ -311,7 +311,10 @@ export function MapToolbar({ map }: MapToolbarProps) {
       }
 
       if (tool === "text") {
-        placeText(e.latlng, textInput);
+        const finalText = textInput.trim() || window.prompt("הזן טקסט:") || "";
+        if (finalText.trim()) {
+          placeText(e.latlng, finalText);
+        }
         return;
       }
 
@@ -392,10 +395,8 @@ export function MapToolbar({ map }: MapToolbarProps) {
       map.getContainer().style.cursor = tool === "none" ? "" : "crosshair";
     }
 
-    // Show sub-panel if needed
-    if (tool === "marker") setShowPanel("marker");
-    else if (tool === "text") setShowPanel("text");
-    else if (tool === "goto") setShowPanel("goto");
+    // Only goto requires a mandatory input panel
+    if (tool === "goto") setShowPanel("goto");
     else setShowPanel(null);
   }, [activeTool, deactivate, map]);
 
@@ -562,67 +563,66 @@ export function MapToolbar({ map }: MapToolbarProps) {
             </Button>
           </div>
 
-          {/* Active tool indicator */}
+          {/* Active tool indicator with inline config */}
           {activeTool !== "none" && (
-            <div className="flex items-center justify-between px-2 py-1 bg-primary/10 rounded text-xs">
-              <span className="text-primary font-medium">
-                {activeTool === "marker" && "לחץ על המפה להנחת סמן"}
-                {activeTool === "coord-tag" && "לחץ להנחת תג קואורדינטות"}
-                {activeTool === "polyline" && `לחץ להוספת נקודות (${polyPoints.length}) • Enter/דאבל-קליק לסיום`}
-                {activeTool === "polygon" && `לחץ להוספת קודקודים (${polyPoints.length}) • Enter/דאבל-קליק לסיום`}
-                {activeTool === "text" && "לחץ על המפה להנחת הערה"}
-                {activeTool === "goto" && "הזן קואורדינטות למטה"}
-                {activeTool === "locate" && "לחץ על המפה לראות קואורדינטות"}
-              </span>
-              <button onClick={deactivate} className="text-muted-foreground hover:text-foreground">
-                <X className="h-3.5 w-3.5" />
-              </button>
+            <div className="px-2 py-1.5 bg-primary/10 rounded space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-primary font-medium">
+                  {activeTool === "marker" && "לחץ על המפה להנחת סמן"}
+                  {activeTool === "coord-tag" && "לחץ להנחת תג קואורדינטות"}
+                  {activeTool === "polyline" && `לחץ להוספת נקודות (${polyPoints.length}) • Enter/דאבל-קליק לסיום`}
+                  {activeTool === "polygon" && `לחץ להוספת קודקודים (${polyPoints.length}) • Enter/דאבל-קליק לסיום`}
+                  {activeTool === "text" && "לחץ על המפה להנחת הערה"}
+                  {activeTool === "goto" && "הזן קואורדינטות למטה"}
+                  {activeTool === "locate" && "לחץ על המפה לראות קואורדינטות"}
+                </span>
+                <button onClick={deactivate} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              {/* Inline marker label (optional) */}
+              {activeTool === "marker" && (
+                <div className="space-y-1">
+                  <Input
+                    value={markerLabel}
+                    onChange={(e) => setMarkerLabel(e.target.value)}
+                    placeholder="שם / תיאור (אופציונלי)"
+                    className="h-6 text-xs"
+                    dir="rtl"
+                  />
+                  <div className="flex gap-0.5">
+                    {PIN_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => setPinColor(c)}
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 transition-all",
+                          pinColor === c ? "border-foreground scale-110" : "border-transparent hover:border-muted-foreground/50"
+                        )}
+                        style={{ background: c }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Inline text input (optional – if empty, prompt on click) */}
+              {activeTool === "text" && (
+                <Input
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  placeholder="טקסט (או לחץ על המפה להקליד)"
+                  className="h-6 text-xs"
+                  dir="rtl"
+                />
+              )}
             </div>
           )}
         </div>
       )}
 
       {/* ── Sub-panels ── */}
-      {showPanel === "marker" && expanded && (
-        <div className="bg-card/95 backdrop-blur border rounded-lg shadow-lg p-3 min-w-[200px]">
-          <div className="text-xs font-medium text-muted-foreground mb-2">תווית סמן</div>
-          <Input
-            value={markerLabel}
-            onChange={(e) => setMarkerLabel(e.target.value)}
-            placeholder="שם / תיאור (אופציונלי)"
-            className="h-8 text-sm mb-2"
-            dir="rtl"
-          />
-          <div className="flex gap-1 flex-wrap">
-            {PIN_COLORS.map((c) => (
-              <button
-                key={c}
-                onClick={() => setPinColor(c)}
-                className={cn(
-                  "w-6 h-6 rounded-full border-2 transition-all",
-                  pinColor === c ? "border-foreground scale-110" : "border-transparent hover:border-muted-foreground/50"
-                )}
-                style={{ background: c }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {showPanel === "text" && expanded && (
-        <div className="bg-card/95 backdrop-blur border rounded-lg shadow-lg p-3 min-w-[200px]">
-          <div className="text-xs font-medium text-muted-foreground mb-2">טקסט הערה</div>
-          <Input
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
-            placeholder="הזן טקסט..."
-            className="h-8 text-sm"
-            dir="rtl"
-            onKeyDown={(e) => { if (e.key === "Enter") toast.info("עכשיו לחץ על המפה"); }}
-          />
-        </div>
-      )}
-
       {showPanel === "goto" && expanded && (
         <div className="bg-card/95 backdrop-blur border rounded-lg shadow-lg p-3 min-w-[220px]">
           <div className="text-xs font-medium text-muted-foreground mb-2">נווט לקואורדינטות</div>
