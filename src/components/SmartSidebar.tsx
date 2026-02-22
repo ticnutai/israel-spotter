@@ -45,6 +45,7 @@ import {
 import { cn } from "@/lib/utils";
 import { lazy, Suspense } from "react";
 import { useTheme } from "next-themes";
+import { subcategoryMeta, SUBCATEGORY_OPTIONS } from "@/lib/subcategory-meta";
 import type { ParsedGisLayer } from "@/lib/gis-parser";
 
 // Lazy-load heavy tab components
@@ -466,6 +467,7 @@ function formatSize(bytes: number): string {
 
 function DocRow({ doc, onShowImage, onViewDoc }: { doc: DocumentRecord; onShowImage: (p: string) => void; onViewDoc: (doc: DocumentRecord) => void }) {
   const isImage = doc.file_type === "image";
+  const meta = subcategoryMeta(doc.subcategory);
   return (
     <div
       className="flex items-center gap-1.5 px-3 py-1.5 text-xs hover:bg-accent group text-right cursor-pointer"
@@ -474,9 +476,8 @@ function DocRow({ doc, onShowImage, onViewDoc }: { doc: DocumentRecord; onShowIm
     >
       {fileIcon(doc.file_type)}
       <span className="flex-1 truncate">{doc.title}</span>
-      {doc.is_tashrit === 1 && (
-        <span className="text-[10px] bg-blue-100 text-blue-700 px-1 rounded">תשריט</span>
-      )}
+      {/* Subcategory badge */}
+      <span className={`text-[10px] px-1 rounded ${meta.bgColor} ${meta.textColor}`}>{meta.label}</span>
       {doc.is_georef === 1 && (
         <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded">GEO</span>
       )}
@@ -899,6 +900,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
   const [searchText, setSearchText] = useState("");
   const [category, setCategory] = useState<string>("");
   const [fileType, setFileType] = useState<string>("");
+  const [subcategoryFilter, setSubcategoryFilter] = useState<string>("");
   const [gushFilter, setGushFilter] = useState("");
   const [helkaFilter, setHelkaFilter] = useState("");
   const [results, setResults] = useState<DocumentRecord[]>([]);
@@ -909,12 +911,13 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
   const PAGE_SIZE = 50;
 
   const doSearch = useCallback(async () => {
-    if (!searchText.trim() && !category && !fileType && !gushFilter && !helkaFilter) return;
+    if (!searchText.trim() && !category && !fileType && !gushFilter && !helkaFilter && !subcategoryFilter) return;
     setSearching(true);
     try {
       const res = await getDocuments({
         search: searchText.trim() || undefined,
         category: category || undefined,
+        subcategory: subcategoryFilter || undefined,
         file_type: fileType || undefined,
         gush: gushFilter ? Number(gushFilter) : undefined,
         helka: helkaFilter ? Number(helkaFilter) : undefined,
@@ -928,7 +931,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
     } finally {
       setSearching(false);
     }
-  }, [searchText, category, fileType, gushFilter, helkaFilter]);
+  }, [searchText, category, fileType, subcategoryFilter, gushFilter, helkaFilter]);
 
   const loadMore = useCallback(async () => {
     setLoadingMore(true);
@@ -936,6 +939,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
       const res = await getDocuments({
         search: searchText.trim() || undefined,
         category: category || undefined,
+        subcategory: subcategoryFilter || undefined,
         file_type: fileType || undefined,
         gush: gushFilter ? Number(gushFilter) : undefined,
         helka: helkaFilter ? Number(helkaFilter) : undefined,
@@ -947,7 +951,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
     finally {
       setLoadingMore(false);
     }
-  }, [searchText, category, fileType, gushFilter, helkaFilter, results.length]);
+  }, [searchText, category, fileType, subcategoryFilter, gushFilter, helkaFilter, results.length]);
 
   return (
     <div className="h-full flex flex-col text-right" dir="rtl">
@@ -983,6 +987,18 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
             <option value="pdf">PDF</option>
             <option value="image">תמונה</option>
             <option value="other">אחר</option>
+          </select>
+        </div>
+        <div className="flex gap-1">
+          <select
+            className="flex-1 h-7 rounded-md border bg-background px-2 text-xs"
+            value={subcategoryFilter}
+            onChange={(e) => setSubcategoryFilter(e.target.value)}
+          >
+            <option value="">כל סוגי תיוג</option>
+            {SUBCATEGORY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
         </div>
         <div className="flex gap-1">
@@ -1022,7 +1038,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
             </div>
           ))}
         </div>
-        {results.length === 0 && (searchText || category || fileType || gushFilter || helkaFilter) && !searching && (
+        {results.length === 0 && (searchText || category || fileType || gushFilter || helkaFilter || subcategoryFilter) && !searching && (
           <div className="text-center py-6">
             <Search className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
             <p className="text-xs text-muted-foreground">לא נמצאו תוצאות</p>
@@ -1045,7 +1061,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
             </Button>
           </div>
         )}
-        {results.length === 0 && !searchText && !category && !fileType && !gushFilter && !helkaFilter && (
+        {results.length === 0 && !searchText && !category && !fileType && !gushFilter && !helkaFilter && !subcategoryFilter && (
           <div className="text-center py-6">
             <Search className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
             <p className="text-xs text-muted-foreground">הזן מילות חיפוש או בחר פילטר</p>

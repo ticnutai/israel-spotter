@@ -67,20 +67,28 @@ const MIN_DIALOG_WIDTH = 340;
 const MAX_DIALOG_WIDTH = 700;
 const DEFAULT_DIALOG_WIDTH = 460;
 
-// ── Category helpers ─────────────────────────────────────────────────────────
+// ── Subcategory system (shared) ──────────────────────────────────────────────
+import { subcategoryMeta, sortBySubcategory, SUBCATEGORY_META } from "@/lib/subcategory-meta";
+import {
+  CheckCircle, Gavel, Map, Box, Grid3X3, ScanLine,
+} from "lucide-react";
 
-const CATEGORY_META: Record<string, { icon: React.ReactNode; label: string }> = {
-  "תשריט": { icon: <Image className="h-4 w-4 text-purple-600" />, label: "תשריטים" },
-  "תקנון": { icon: <ClipboardList className="h-4 w-4 text-blue-600" />, label: "תקנונים" },
-  "נספח": { icon: <FileText className="h-4 w-4 text-green-600" />, label: "נספחים" },
-  "הוראות": { icon: <ClipboardList className="h-4 w-4 text-amber-600" />, label: "הוראות" },
-  "החלטה": { icon: <FileText className="h-4 w-4 text-red-600" />, label: "החלטות" },
-  "גיאורפרנס": { icon: <Globe className="h-4 w-4 text-teal-600" />, label: "גיאורפרנס" },
-  "אחר": { icon: <FileText className="h-4 w-4 text-gray-500" />, label: "אחר" },
-};
-
-function categoryMeta(cat: string) {
-  return CATEGORY_META[cat] ?? CATEGORY_META["אחר"];
+// Icon factory for subcategory (enriches shared metadata with JSX icons)
+function subcatIcon(sub: string): React.ReactNode {
+  const iconMap: Record<string, React.ReactNode> = {
+    tashrit: <Image className="h-4 w-4 text-purple-600" />,
+    takanon: <ClipboardList className="h-4 w-4 text-blue-600" />,
+    approved_status: <CheckCircle className="h-4 w-4 text-green-600" />,
+    decision: <Gavel className="h-4 w-4 text-red-600" />,
+    blue_line: <Map className="h-4 w-4 text-sky-600" />,
+    area_cells: <Grid3X3 className="h-4 w-4 text-amber-600" />,
+    kml: <Globe className="h-4 w-4 text-teal-600" />,
+    dwg: <Box className="h-4 w-4 text-orange-600" />,
+    shapefile: <Globe className="h-4 w-4 text-violet-600" />,
+    local_scan: <ScanLine className="h-4 w-4 text-indigo-600" />,
+    other: <FileText className="h-4 w-4 text-gray-500" />,
+  };
+  return iconMap[sub] ?? iconMap["other"];
 }
 
 function formatArea(sqm: number | null): string {
@@ -244,12 +252,23 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
     });
   };
 
-  // Group documents by category
-  const docsByCategory = documents.reduce<Record<string, DocumentRecord[]>>((acc, d) => {
-    const cat = d.category || "אחר";
-    (acc[cat] ??= []).push(d);
-    return acc;
-  }, {});
+  // Group documents by subcategory (sorted by priority)
+  const docsBySubcategory = useMemo(() => {
+    const groups = documents.reduce<Record<string, DocumentRecord[]>>((acc, d) => {
+      const sub = d.subcategory || "other";
+      (acc[sub] ??= []).push(d);
+      return acc;
+    }, {});
+    // Sort groups by priority, sort docs within each group
+    const sorted = Object.entries(groups).sort(
+      ([a], [b]) => subcategoryMeta(a).priority - subcategoryMeta(b).priority
+    );
+    return sorted.map(([sub, docs]) => ({
+      key: sub,
+      meta: subcategoryMeta(sub),
+      docs: sortBySubcategory(docs),
+    }));
+  }, [documents]);
 
   const open = data !== null;
   const itmCoords = useMemo(() => (data ? wgs84ToItm(data.lat, data.lng) : null), [data]);
@@ -451,33 +470,30 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
                 </Section>
               )}
 
-              {/* Documents by category (Supabase fallback) */}
-              {(!localPlansData || localPlansData.plan_count === 0) && Object.keys(docsByCategory).length > 0 && (
+              {/* Documents by subcategory (Supabase fallback) */}
+              {(!localPlansData || localPlansData.plan_count === 0) && docsBySubcategory.length > 0 && (
                 <Section
                   icon={<FileText className="h-4 w-4" />}
                   title="מסמכים לפי קטגוריה"
                   count={documents.length}
                 >
                   <div className="space-y-3">
-                    {Object.entries(docsByCategory).map(([cat, docs]) => {
-                      const meta = categoryMeta(cat);
-                      return (
-                        <div key={cat}>
-                          <div className="flex items-center gap-2 mb-1.5">
-                            {meta.icon}
-                            <span className="text-sm font-medium">{meta.label}</span>
-                            <Badge variant="secondary" className="text-xs">
-                              {docs.length}
-                            </Badge>
-                          </div>
-                          <div className="space-y-1 mr-6">
-                            {docs.map((doc) => (
-                              <DocRow key={doc.id} doc={doc} onViewDoc={setViewingDoc} />
-                            ))}
-                          </div>
+                    {docsBySubcategory.map(({ key, meta, docs }) => (
+                      <div key={key}>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          {subcatIcon(key)}
+                          <span className="text-sm font-medium">{meta.labelPlural}</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {docs.length}
+                          </Badge>
                         </div>
-                      );
-                    })}
+                        <div className="space-y-1 mr-6">
+                          {docs.map((doc) => (
+                            <DocRow key={doc.id} doc={doc} onViewDoc={setViewingDoc} />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </Section>
               )}
@@ -937,22 +953,21 @@ function PlanCard({
 }
 
 function DocRow({ doc, onViewDoc }: { doc: DocumentRecord; onViewDoc?: (doc: DocumentRecord) => void }) {
-  const meta = categoryMeta(doc.category);
+  const meta = subcategoryMeta(doc.subcategory);
   return (
     <div
       className="flex items-center gap-2 py-1 px-2 rounded hover:bg-accent/40 transition-colors cursor-pointer"
       onClick={() => onViewDoc?.(doc)}
     >
-      <span className="shrink-0">{meta.icon}</span>
+      <span className="shrink-0">{subcatIcon(doc.subcategory)}</span>
       <span className="flex-1 text-xs truncate">{doc.title || doc.file_name}</span>
       <span className="text-[10px] text-muted-foreground shrink-0">
         {formatFileSize(doc.file_size)}
       </span>
-      {doc.is_tashrit === 1 && (
-        <Badge className="text-[10px] px-1 py-0 bg-purple-100 text-purple-700">
-          תשריט
-        </Badge>
-      )}
+      {/* Subcategory badge */}
+      <Badge className={`text-[10px] px-1 py-0 ${meta.bgColor} ${meta.textColor} border-0`}>
+        {meta.label}
+      </Badge>
       {doc.is_georef === 1 && (
         <Badge className="text-[10px] px-1 py-0 bg-teal-100 text-teal-700">
           GIS

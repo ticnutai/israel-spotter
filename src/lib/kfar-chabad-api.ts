@@ -104,7 +104,9 @@ export interface DocumentRecord {
   file_size: number;
   file_type: string;
   category: string;
+  subcategory: string;
   is_tashrit: number;
+  is_takanon: number;
   is_georef: number;
   downloaded_at: string | null;
 }
@@ -345,6 +347,7 @@ export async function getPlanDetail(planNumber: string): Promise<{
 
 export async function getDocuments(params?: {
   category?: string;
+  subcategory?: string;
   gush?: number;
   helka?: number;
   plan_number?: string;
@@ -357,6 +360,7 @@ export async function getDocuments(params?: {
     async () => {
       const sp = new URLSearchParams();
       if (params?.category) sp.set("category", params.category);
+      if (params?.subcategory) sp.set("subcategory", params.subcategory);
       if (params?.gush) sp.set("gush", String(params.gush));
       if (params?.helka !== undefined) sp.set("helka", String(params.helka));
       if (params?.plan_number) sp.set("plan_number", params.plan_number);
@@ -370,6 +374,7 @@ export async function getDocuments(params?: {
       let filter = "select=*";
       let countFilter = "";
       if (params?.category) { filter += `&category=eq.${encodeURIComponent(params.category)}`; countFilter += `&category=eq.${encodeURIComponent(params.category)}`; }
+      if (params?.subcategory) { filter += `&subcategory=eq.${encodeURIComponent(params.subcategory)}`; countFilter += `&subcategory=eq.${encodeURIComponent(params.subcategory)}`; }
       if (params?.gush) { filter += `&gush=eq.${params.gush}`; countFilter += `&gush=eq.${params.gush}`; }
       if (params?.helka !== undefined) { filter += `&helka=eq.${params.helka}`; countFilter += `&helka=eq.${params.helka}`; }
       if (params?.plan_number) { filter += `&plan_number=eq.${encodeURIComponent(params.plan_number)}`; countFilter += `&plan_number=eq.${encodeURIComponent(params.plan_number)}`; }
@@ -744,7 +749,9 @@ function mapDocument(r: any): DocumentRecord {
     file_size: r.file_size ?? 0,
     file_type: r.file_type ?? "",
     category: r.category ?? "",
+    subcategory: r.subcategory ?? "other",
     is_tashrit: r.is_tashrit ?? 0,
+    is_takanon: r.is_takanon ?? 0,
     is_georef: r.is_georef ?? 0,
     downloaded_at: r.downloaded_at ?? null,
   };

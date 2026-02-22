@@ -654,6 +654,7 @@ async def serve_local_file(file_path: str):
 @app.get("/api/documents")
 async def list_documents(
     category: Optional[str] = None,
+    subcategory: Optional[str] = None,
     gush: Optional[int] = None,
     helka: Optional[int] = None,
     plan_number: Optional[str] = None,
@@ -671,6 +672,9 @@ async def list_documents(
             if category:
                 where_parts.append("category = ?")
                 params.append(category)
+            if subcategory:
+                where_parts.append("subcategory = ?")
+                params.append(subcategory)
             if gush:
                 where_parts.append("gush = ?")
                 params.append(gush)
@@ -705,6 +709,8 @@ async def list_documents(
     filters = []
     if category:
         filters.append(f"category=eq.{category}")
+    if subcategory:
+        filters.append(f"subcategory=eq.{subcategory}")
     if gush:
         filters.append(f"gush=eq.{gush}")
     if helka is not None:
