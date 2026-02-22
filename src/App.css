@@ -10,6 +10,23 @@
   height: 100%;
 }
 
+/* Smoother tile rendering during fractional zoom */
+.leaflet-tile {
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: opacity;
+}
+
+.leaflet-zoom-anim .leaflet-tile {
+  will-change: transform, opacity;
+}
+
+/* Smoother zoom animation */
+.leaflet-zoom-anim .leaflet-zoom-animated {
+  transition: transform 0.25s cubic-bezier(0, 0, 0.25, 1) !important;
+}
+
 /* Parcel number labels on map – base styles (dynamic overrides via JS) */
 .parcel-number-label {
   border-radius: 3px !important;
