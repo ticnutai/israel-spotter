@@ -10,6 +10,7 @@ import { CoordinateDisplay } from "./CoordinateDisplay";
 import { AerialOverlay } from "./AerialOverlay";
 import { PlanOverlay } from "./PlanOverlay";
 import { GeorefTool } from "./GeorefTool";
+import { MapToolbar } from "./MapToolbar";
 import { useStoreLayers, useStorePaintedParcels, useStoreLabelSettings, useStoreBorderSettings } from "@/hooks/use-layer-store";
 import { getLandUseByName } from "@/lib/land-use-colors";
 
@@ -710,6 +711,7 @@ const MapViewInner = memo(function MapViewInner({ result, boundaries, aerialYear
     <div className="h-full w-full relative">
       <div ref={containerRef} className="absolute inset-0 z-0" />
       <MapLayerSwitcher activeLayerId={activeLayerId} onLayerChange={handleLayerChange} />
+      {mapReady && <MapToolbar map={mapRef.current} />}
       {mapReady && <MapMeasure map={mapRef.current} />}
       {mapReady && <ScaleBarControl map={mapRef.current} />}
       {mapReady && <CoordinateDisplay map={mapRef.current} />}
