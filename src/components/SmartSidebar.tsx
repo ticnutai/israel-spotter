@@ -30,6 +30,9 @@ import {
   ArrowUp,
   ArrowDown,
   Loader2,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -41,6 +44,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { lazy, Suspense } from "react";
+import { useTheme } from "next-themes";
 import type { ParsedGisLayer } from "@/lib/gis-parser";
 
 // Lazy-load heavy tab components
@@ -895,6 +899,8 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
   const [searchText, setSearchText] = useState("");
   const [category, setCategory] = useState<string>("");
   const [fileType, setFileType] = useState<string>("");
+  const [gushFilter, setGushFilter] = useState("");
+  const [helkaFilter, setHelkaFilter] = useState("");
   const [results, setResults] = useState<DocumentRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [searching, setSearching] = useState(false);
@@ -903,13 +909,15 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
   const PAGE_SIZE = 50;
 
   const doSearch = useCallback(async () => {
-    if (!searchText.trim() && !category && !fileType) return;
+    if (!searchText.trim() && !category && !fileType && !gushFilter && !helkaFilter) return;
     setSearching(true);
     try {
       const res = await getDocuments({
         search: searchText.trim() || undefined,
         category: category || undefined,
         file_type: fileType || undefined,
+        gush: gushFilter ? Number(gushFilter) : undefined,
+        helka: helkaFilter ? Number(helkaFilter) : undefined,
         limit: PAGE_SIZE,
       });
       setResults(res.documents);
@@ -920,7 +928,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
     } finally {
       setSearching(false);
     }
-  }, [searchText, category, fileType]);
+  }, [searchText, category, fileType, gushFilter, helkaFilter]);
 
   const loadMore = useCallback(async () => {
     setLoadingMore(true);
@@ -929,6 +937,8 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
         search: searchText.trim() || undefined,
         category: category || undefined,
         file_type: fileType || undefined,
+        gush: gushFilter ? Number(gushFilter) : undefined,
+        helka: helkaFilter ? Number(helkaFilter) : undefined,
         limit: PAGE_SIZE,
         offset: results.length,
       });
@@ -937,7 +947,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
     finally {
       setLoadingMore(false);
     }
-  }, [searchText, category, fileType, results.length]);
+  }, [searchText, category, fileType, gushFilter, helkaFilter, results.length]);
 
   return (
     <div className="h-full flex flex-col text-right" dir="rtl">
@@ -975,6 +985,24 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
             <option value="other">אחר</option>
           </select>
         </div>
+        <div className="flex gap-1">
+          <Input
+            type="number"
+            placeholder="גוש"
+            className="flex-1 h-7 text-xs"
+            value={gushFilter}
+            onChange={(e) => setGushFilter(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && doSearch()}
+          />
+          <Input
+            type="number"
+            placeholder="חלקה"
+            className="flex-1 h-7 text-xs"
+            value={helkaFilter}
+            onChange={(e) => setHelkaFilter(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && doSearch()}
+          />
+        </div>
       </div>
 
       <ScrollArea className="flex-1 px-2 pb-2 mt-1">
@@ -994,7 +1022,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
             </div>
           ))}
         </div>
-        {results.length === 0 && (searchText || category || fileType) && !searching && (
+        {results.length === 0 && (searchText || category || fileType || gushFilter || helkaFilter) && !searching && (
           <div className="text-center py-6">
             <Search className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
             <p className="text-xs text-muted-foreground">לא נמצאו תוצאות</p>
@@ -1017,7 +1045,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
             </Button>
           </div>
         )}
-        {results.length === 0 && !searchText && !category && !fileType && (
+        {results.length === 0 && !searchText && !category && !fileType && !gushFilter && !helkaFilter && (
           <div className="text-center py-6">
             <Search className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
             <p className="text-xs text-muted-foreground">הזן מילות חיפוש או בחר פילטר</p>
@@ -1122,6 +1150,7 @@ function ToolCard({
 function SettingsTab({ tabOrder, onReorderTabs }: { tabOrder: string[]; onReorderTabs: (order: string[]) => void }) {
   const [config, setConfig] = useState<KfarChabadConfig | null>(null);
   const [loading, setLoading] = useState(true);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     getConfig().then(setConfig).finally(() => setLoading(false));
@@ -1144,6 +1173,30 @@ function SettingsTab({ tabOrder, onReorderTabs }: { tabOrder: string[]; onReorde
   return (
     <ScrollArea className="h-full" dir="rtl">
       <div className="px-3 py-3 space-y-4 text-right" dir="rtl">
+        {/* Theme toggle */}
+        <div className="border rounded-lg p-3">
+          <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">
+            <Sun className="h-4 w-4" style={{ color: "hsl(43 56% 52%)" }} />
+            מראה
+          </h3>
+          <div className="flex gap-1">
+            {(["light", "dark", "system"] as const).map((t) => (
+              <Button
+                key={t}
+                variant={theme === t ? "default" : "outline"}
+                size="sm"
+                className="flex-1 h-7 text-xs gap-1"
+                onClick={() => setTheme(t)}
+              >
+                {t === "light" && <Sun className="h-3 w-3" />}
+                {t === "dark" && <Moon className="h-3 w-3" />}
+                {t === "system" && <Monitor className="h-3 w-3" />}
+                {t === "light" ? "בהיר" : t === "dark" ? "כהה" : "מערכת"}
+              </Button>
+            ))}
+          </div>
+        </div>
+
         {/* Tab order */}
         <div className="border rounded-lg p-3">
           <div className="flex items-center justify-between mb-2">
@@ -1266,6 +1319,27 @@ function SettingsTab({ tabOrder, onReorderTabs }: { tabOrder: string[]; onReorde
           >
             נקה מטמון
           </Button>
+        </div>
+
+        {/* Keyboard shortcuts */}
+        <div className="border rounded-lg p-3">
+          <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">
+            ⌨️ קיצורי מקלדת
+          </h3>
+          <div className="space-y-1 text-xs">
+            {([
+              ["Esc", "ביטול כלי פעיל"],
+              ["Enter", "סיום ציור קו / פוליגון"],
+              ["דאבל-קליק", "סיום ציור קו / פוליגון"],
+              ["+/−", "זום פנימה / החוצה"],
+              ["גרירה", "הזזת המפה"],
+            ] as const).map(([key, desc]) => (
+              <div key={key} className="flex justify-between items-center">
+                <span className="text-muted-foreground">{desc}</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono border">{key}</kbd>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Version */}

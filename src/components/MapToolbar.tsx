@@ -18,6 +18,7 @@ import L from "leaflet";
 import {
   MapPin, Tag, Pencil, Pentagon, Type, Navigation, Camera,
   Home, Trash2, X, Check, ChevronDown, ChevronUp, Move, LocateFixed,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ interface Annotation {
   type: "marker" | "coord-tag" | "polyline" | "polygon" | "text";
   leafletLayers: L.Layer[];
   label?: string;
+  color?: string;
 }
 
 interface MapToolbarProps {
@@ -63,6 +65,102 @@ function coloredIcon(color: string) {
       <circle cx="14" cy="14" r="5" fill="#fff" opacity="0.9"/>
     </svg>`,
   });
+}
+
+// ── Annotation persistence ───────────────────────────────────────────────────
+const ANNOTATIONS_KEY = "map-annotations-v1";
+
+interface SerializedAnnotation {
+  id: string;
+  type: Annotation["type"];
+  label?: string;
+  color: string;
+  coords: [number, number][];
+}
+
+function serializeAnnotation(ann: Annotation): SerializedAnnotation {
+  const coords: [number, number][] = [];
+  const first = ann.leafletLayers[0];
+  if (ann.type === "polyline") {
+    ((first as L.Polyline).getLatLngs() as L.LatLng[]).forEach((ll) => coords.push([ll.lat, ll.lng]));
+  } else if (ann.type === "polygon") {
+    ((first as L.Polygon).getLatLngs()[0] as L.LatLng[]).forEach((ll) => coords.push([ll.lat, ll.lng]));
+  } else {
+    const ll = (first as L.Marker).getLatLng();
+    coords.push([ll.lat, ll.lng]);
+  }
+  return { id: ann.id, type: ann.type, label: ann.label, color: ann.color || "#dc2626", coords };
+}
+
+function rebuildLayers(s: SerializedAnnotation): L.Layer[] {
+  const latlng = L.latLng(s.coords[0][0], s.coords[0][1]);
+
+  switch (s.type) {
+    case "marker": {
+      const marker = L.marker(latlng, { icon: coloredIcon(s.color), draggable: true });
+      const popup = `<div dir="rtl" style="text-align:right;font-size:13px"><b>${s.label || "סימון"}</b><br/><span style="font-size:11px;color:#666">${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}</span></div>`;
+      marker.bindPopup(popup);
+      if (s.label) marker.bindTooltip(s.label, { permanent: true, direction: "top", offset: [0, -40], className: "annotation-tooltip" });
+      return [marker];
+    }
+    case "coord-tag": {
+      const [e, n] = wgs84ToItm(latlng.lat, latlng.lng);
+      const icon = L.divIcon({
+        className: "", iconSize: [0, 0], iconAnchor: [0, 20],
+        html: `<div style="background:#1e293b;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;white-space:nowrap;border:2px solid #f59e0b;font-family:monospace;box-shadow:0 2px 8px rgba(0,0,0,.3);pointer-events:auto;cursor:move"><div style="font-weight:600;color:#fbbf24;margin-bottom:1px">📍 ITM</div><div>E ${e.toFixed(1)}  N ${n.toFixed(1)}</div><div style="color:#94a3b8;font-size:10px">${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}</div></div>`,
+      });
+      return [L.marker(latlng, { icon, draggable: true })];
+    }
+    case "text": {
+      const icon = L.divIcon({
+        className: "", iconSize: [0, 0],
+        html: `<div style="background:hsl(48 96% 53% / 0.9);color:#1a1a1a;font-size:13px;font-weight:600;padding:4px 10px;border-radius:6px;white-space:nowrap;border:1px solid #b8860b;box-shadow:0 2px 6px rgba(0,0,0,.2);cursor:move;direction:rtl">${s.label}</div>`,
+      });
+      return [L.marker(latlng, { icon, draggable: true })];
+    }
+    case "polyline": {
+      const pts = s.coords.map(([la, ln]) => L.latLng(la, ln));
+      let dist = 0;
+      for (let i = 1; i < pts.length; i++) dist += pts[i - 1].distanceTo(pts[i]);
+      const distLabel = dist < 1000 ? `${Math.round(dist)} מ'` : `${(dist / 1000).toFixed(2)} ק"מ`;
+      const polyline = L.polyline(pts, { color: s.color, weight: 3, dashArray: "6,4" });
+      const mid = pts[Math.floor(pts.length / 2)];
+      const tooltip = L.marker(mid, {
+        icon: L.divIcon({
+          className: "", iconSize: [0, 0],
+          html: `<span style="background:#fff;color:#333;padding:2px 6px;border-radius:4px;font-size:11px;border:1px solid #ccc;box-shadow:0 1px 3px rgba(0,0,0,.15);white-space:nowrap">${distLabel}</span>`,
+        }),
+        interactive: false,
+      });
+      return [polyline, tooltip];
+    }
+    case "polygon": {
+      const pts = s.coords.map(([la, ln]) => L.latLng(la, ln));
+      const polygon = L.polygon(pts, { color: s.color, weight: 2, fillColor: s.color, fillOpacity: 0.15 });
+      const earthRadius = 6371000;
+      let sphericalArea = 0;
+      for (let i = 0; i < pts.length; i++) {
+        const j = (i + 1) % pts.length;
+        const lat1 = (pts[i].lat * Math.PI) / 180;
+        const lat2 = (pts[j].lat * Math.PI) / 180;
+        const dLng = ((pts[j].lng - pts[i].lng) * Math.PI) / 180;
+        sphericalArea += dLng * (2 + Math.sin(lat1) + Math.sin(lat2));
+      }
+      sphericalArea = Math.abs((sphericalArea * earthRadius * earthRadius) / 2);
+      const areaLabel = sphericalArea > 10000 ? `${(sphericalArea / 10000).toFixed(2)} דונם` : `${Math.round(sphericalArea)} מ"ר`;
+      const center = polygon.getBounds().getCenter();
+      const areaMarker = L.marker(center, {
+        icon: L.divIcon({
+          className: "", iconSize: [0, 0],
+          html: `<div style="background:rgba(255,255,255,0.95);color:#333;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid ${s.color};box-shadow:0 2px 6px rgba(0,0,0,.2);white-space:nowrap;text-align:center;direction:rtl"><div>שטח</div><div style="color:${s.color}">${areaLabel}</div></div>`,
+        }),
+        interactive: false,
+      });
+      return [polygon, areaMarker];
+    }
+    default:
+      return [];
+  }
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
@@ -89,18 +187,40 @@ export function MapToolbar({ map }: MapToolbarProps) {
   polyPointsRef.current = polyPoints;
   annotationsRef.current = annotations;
 
-  // Initialize layer groups
+  // Initialize layer groups + restore saved annotations
   useEffect(() => {
     if (!map) return;
     const lg = L.layerGroup().addTo(map);
     const tl = L.layerGroup().addTo(map);
     layerGroupRef.current = lg;
     tempLayerRef.current = tl;
+    // Restore persisted annotations
+    try {
+      const raw = localStorage.getItem(ANNOTATIONS_KEY);
+      if (raw) {
+        const stored: SerializedAnnotation[] = JSON.parse(raw);
+        const restored: Annotation[] = stored.map((s) => {
+          const layers = rebuildLayers(s);
+          layers.forEach((l) => lg.addLayer(l));
+          return { id: s.id, type: s.type, leafletLayers: layers, label: s.label, color: s.color };
+        });
+        setAnnotations(restored);
+      }
+    } catch (e) {
+      console.warn("Failed to restore annotations:", e);
+    }
     return () => {
       lg.remove();
       tl.remove();
     };
   }, [map]);
+
+  // Persist annotations to localStorage on every change
+  useEffect(() => {
+    try {
+      localStorage.setItem(ANNOTATIONS_KEY, JSON.stringify(annotations.map(serializeAnnotation)));
+    } catch { /* localStorage full or unavailable */ }
+  }, [annotations]);
 
   // ── Deactivate tool ──
   const deactivate = useCallback(() => {
@@ -156,6 +276,7 @@ export function MapToolbar({ map }: MapToolbarProps) {
       type: "marker",
       leafletLayers: [marker],
       label: label || "סימון",
+      color,
     });
   }, [map, addAnnotation]);
 
@@ -184,6 +305,7 @@ export function MapToolbar({ map }: MapToolbarProps) {
       type: "coord-tag",
       leafletLayers: [marker],
       label: itmText,
+      color: "#1e293b",
     });
 
     toast.success("תג קואורדינטות נוסף");
@@ -206,6 +328,7 @@ export function MapToolbar({ map }: MapToolbarProps) {
       type: "text",
       leafletLayers: [marker],
       label: text,
+      color: "#f59e0b",
     });
 
     setTextInput("");
@@ -237,6 +360,7 @@ export function MapToolbar({ map }: MapToolbarProps) {
       type: "polyline",
       leafletLayers: [polyline, tooltip],
       label,
+      color: pinColor,
     });
 
     deactivate();
@@ -287,6 +411,7 @@ export function MapToolbar({ map }: MapToolbarProps) {
       type: "polygon",
       leafletLayers: [polygon, areaMarker],
       label: `פוליגון – ${areaLabel}`,
+      color: pinColor,
     });
 
     deactivate();
@@ -475,6 +600,33 @@ export function MapToolbar({ map }: MapToolbarProps) {
     if (!map) return;
     map.setView([31.9604, 34.8536], 14);
   }, [map]);
+
+  // ── Export annotations as GeoJSON ──
+  const exportGeoJSON = useCallback(() => {
+    const features = annotations.map((ann) => {
+      const s = serializeAnnotation(ann);
+      let geometry: GeoJSON.Geometry;
+      if (s.type === "polyline") {
+        geometry = { type: "LineString", coordinates: s.coords.map(([lat, lng]) => [lng, lat]) };
+      } else if (s.type === "polygon") {
+        const ring = s.coords.map(([lat, lng]) => [lng, lat]);
+        ring.push(ring[0]);
+        geometry = { type: "Polygon", coordinates: [ring] };
+      } else {
+        geometry = { type: "Point", coordinates: [s.coords[0][1], s.coords[0][0]] };
+      }
+      return { type: "Feature" as const, properties: { type: s.type, label: s.label || "", color: s.color }, geometry };
+    });
+    const geojson = { type: "FeatureCollection" as const, features };
+    const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: "application/geo+json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `annotations-${new Date().toISOString().slice(0, 10)}.geojson`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("GeoJSON יוצא בהצלחה");
+  }, [annotations]);
 
   // ── Keyboard shortcuts ──
   useEffect(() => {
@@ -677,8 +829,15 @@ export function MapToolbar({ map }: MapToolbarProps) {
 
       {showPanel === "list" && expanded && (
         <div className="bg-card/95 backdrop-blur border rounded-lg shadow-lg p-3 min-w-[200px] max-h-[300px] overflow-auto">
-          <div className="text-xs font-medium text-muted-foreground mb-2">
-            סימונים ({annotations.length})
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs font-medium text-muted-foreground">
+              סימונים ({annotations.length})
+            </div>
+            {annotations.length > 0 && (
+              <Button size="sm" variant="ghost" className="h-6 text-xs gap-1 px-1.5" onClick={exportGeoJSON} title="ייצא GeoJSON">
+                <Download className="h-3 w-3" />
+              </Button>
+            )}
           </div>
           {annotations.length === 0 && (
             <div className="text-xs text-muted-foreground py-2 text-center">אין סימונים</div>

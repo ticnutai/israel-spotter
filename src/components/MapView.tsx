@@ -11,6 +11,7 @@ import { AerialOverlay } from "./AerialOverlay";
 import { PlanOverlay } from "./PlanOverlay";
 import { GeorefTool } from "./GeorefTool";
 import { MapToolbar } from "./MapToolbar";
+import { MiniMap } from "./MiniMap";
 import { useStoreLayers, useStorePaintedParcels, useStoreLabelSettings, useStoreBorderSettings } from "@/hooks/use-layer-store";
 import { getLandUseByName } from "@/lib/land-use-colors";
 
@@ -718,6 +719,7 @@ const MapViewInner = memo(function MapViewInner({ result, boundaries, aerialYear
       {mapReady && <MapMeasure map={mapRef.current} />}
       {mapReady && <ScaleBarControl map={mapRef.current} />}
       {mapReady && <CoordinateDisplay map={mapRef.current} />}
+      {mapReady && <MiniMap map={mapRef.current} />}
       {mapReady && <AerialOverlay map={mapRef.current} year={aerialYear ?? null} onClose={onClearAerial} />}
       {mapReady && (
         <PlanOverlay

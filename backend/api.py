@@ -125,6 +125,13 @@ def get_db():
 
 
 # ─── Root ─────────────────────────────────────────────────────────────────────
+@app.get("/api/health")
+async def health():
+    """Health check for monitoring / load balancers."""
+    db_ok = _has_local_db()
+    return {"status": "ok", "db": db_ok, "timestamp": datetime.utcnow().isoformat()}
+
+
 @app.get("/")
 async def root():
     return {

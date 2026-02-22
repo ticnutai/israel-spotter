@@ -23,6 +23,7 @@ import {
   Star,
   Bell,
   BellOff,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReverseParcelResult } from "@/lib/geocode";
@@ -747,6 +748,37 @@ function ParcelDetails({ data, narrow = false }: { data: ParcelDialogData; narro
             </div>
           </div>
         ))}
+      </div>
+
+      {/* External links to government portals */}
+      <div className="flex flex-wrap gap-1.5 mt-3">
+        <a
+          href={`https://www.govmap.gov.il/?c=${data.lng},${data.lat}&z=9&b=1`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors dark:bg-blue-950 dark:text-blue-300"
+        >
+          <ExternalLink className="h-3 w-3" />
+          GovMap
+        </a>
+        <a
+          href={`https://mavat.iplan.gov.il/SV4/1/${data.gush}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md bg-green-50 text-green-700 hover:bg-green-100 transition-colors dark:bg-green-950 dark:text-green-300"
+        >
+          <ExternalLink className="h-3 w-3" />
+          מאבאת
+        </a>
+        <a
+          href={`https://land.gov.il/Gush/Pages/Gush_${data.gush}.aspx`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors dark:bg-amber-950 dark:text-amber-300"
+        >
+          <ExternalLink className="h-3 w-3" />
+          רמ"י
+        </a>
       </div>
     </div>
   );
