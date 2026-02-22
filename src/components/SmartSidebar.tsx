@@ -39,13 +39,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { UploadPanel } from "./UploadPanel";
-import { DocumentViewer } from "./DocumentViewer";
+import { lazy, Suspense } from "react";
 import type { ParsedGisLayer } from "@/lib/gis-parser";
-import { PdfExport } from "./PdfExport";
-import { PlanTimeline } from "./PlanTimeline";
-import { StatsCharts } from "./StatsCharts";
-import { LayerManager } from "./LayerManager";
+
+// Lazy-load heavy tab components
+const UploadPanel = lazy(() => import("./UploadPanel").then(m => ({ default: m.UploadPanel })));
+const DocumentViewer = lazy(() => import("./DocumentViewer").then(m => ({ default: m.DocumentViewer })));
+const PdfExport = lazy(() => import("./PdfExport").then(m => ({ default: m.PdfExport })));
+const PlanTimeline = lazy(() => import("./PlanTimeline").then(m => ({ default: m.PlanTimeline })));
+const StatsCharts = lazy(() => import("./StatsCharts").then(m => ({ default: m.StatsCharts })));
+const LayerManager = lazy(() => import("./LayerManager").then(m => ({ default: m.LayerManager })));
 
 // ─── Tab definitions ─────────────────────────────────────────────────────────
 
@@ -376,10 +379,10 @@ export function SmartSidebar({
             {activeTab === "search" && (
               <SearchTab onSelectPlanImage={onSelectPlanImage} />
             )}
-            {activeTab === "upload" && <UploadPanel onShowGisLayer={onShowGisLayer} />}
-            {activeTab === "layers" && <LayerManager />}
-            {activeTab === "timeline" && <PlanTimeline />}
-            {activeTab === "stats" && <StatsCharts />}
+            {activeTab === "upload" && <Suspense fallback={<div className="p-4 text-center text-xs text-muted-foreground">טוען...</div>}><UploadPanel onShowGisLayer={onShowGisLayer} /></Suspense>}
+            {activeTab === "layers" && <Suspense fallback={<div className="p-4 text-center text-xs text-muted-foreground">טוען...</div>}><LayerManager /></Suspense>}
+            {activeTab === "timeline" && <Suspense fallback={<div className="p-4 text-center text-xs text-muted-foreground">טוען...</div>}><PlanTimeline /></Suspense>}
+            {activeTab === "stats" && <Suspense fallback={<div className="p-4 text-center text-xs text-muted-foreground">טוען...</div>}><StatsCharts /></Suspense>}
             {activeTab === "tools" && <ToolsTab onActivateGeoref={onActivateGeoref} />}
             {activeTab === "settings" && (
               <SettingsTab
@@ -763,12 +766,12 @@ function DataTab({
     </ScrollArea>
 
     {viewingDoc && (
-      <DocumentViewer
+      <Suspense fallback={null}><DocumentViewer
         url={documentFileUrl(viewingDoc.id)}
         title={viewingDoc.title}
         fileType={viewingDoc.file_type as "pdf" | "image" | "other"}
         onClose={() => setViewingDoc(null)}
-      />
+      /></Suspense>
     )}
     </>
   );
@@ -964,12 +967,12 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
       </ScrollArea>
 
       {viewingDoc && (
-        <DocumentViewer
+        <Suspense fallback={null}><DocumentViewer
           url={documentFileUrl(viewingDoc.id)}
           title={viewingDoc.title}
           fileType={viewingDoc.file_type as "pdf" | "image" | "other"}
           onClose={() => setViewingDoc(null)}
-        />
+        /></Suspense>
       )}
     </div>
   );
@@ -1016,7 +1019,7 @@ function ToolsTab({ onActivateGeoref }: { onActivateGeoref?: () => void }) {
         <div className="border-t pt-3 mt-3">
           <p className="text-xs font-medium text-muted-foreground mb-2">ייצוא מפה:</p>
         </div>
-        <PdfExport />
+        <Suspense fallback={<div className="text-xs text-muted-foreground">טוען...</div>}><PdfExport /></Suspense>
       </div>
     </ScrollArea>
   );

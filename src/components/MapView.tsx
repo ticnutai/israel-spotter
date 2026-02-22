@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, Component, type ReactNode } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo, memo, Component, type ReactNode } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { GeoResult } from "@/lib/geocode";
@@ -10,7 +10,7 @@ import { CoordinateDisplay } from "./CoordinateDisplay";
 import { AerialOverlay } from "./AerialOverlay";
 import { PlanOverlay } from "./PlanOverlay";
 import { GeorefTool } from "./GeorefTool";
-import { useLayerStore } from "@/hooks/use-layer-store";
+import { useStoreLayers, useStorePaintedParcels, useStoreLabelSettings, useStoreBorderSettings } from "@/hooks/use-layer-store";
 import { getLandUseByName } from "@/lib/land-use-colors";
 
 
@@ -141,7 +141,7 @@ function getParcelStyle(
   };
 }
 
-function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, onMapClick, highlightGeometry, gisOverlay, parcelColorMode = "default", georefActive = false, onGeorefClose }: MapViewProps) {
+const MapViewInner = memo(function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, onMapClick, highlightGeometry, gisOverlay, parcelColorMode = "default", georefActive = false, onGeorefClose }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const boundaryLayerRef = useRef<L.LayerGroup | null>(null);
@@ -156,8 +156,11 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
   const [mapReady, setMapReady] = useState(false);
   const [landUseMap, setLandUseMap] = useState<Map<number, { landUse: string; lotNumber?: number }>>(new Map());
 
-  // Layer store
-  const { layers: storeLayers, paintedParcels, labelSettings, borderSettings } = useLayerStore();
+  // Layer store – granular subscriptions to avoid unnecessary re-renders
+  const storeLayers = useStoreLayers();
+  const paintedParcels = useStorePaintedParcels();
+  const labelSettings = useStoreLabelSettings();
+  const borderSettings = useStoreBorderSettings();
 
   // Initialize map – wait until container has non-zero dimensions
   useEffect(() => {
@@ -678,7 +681,7 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
       )}
     </div>
   );
-}
+});
 
 // Wrap with error boundary so Leaflet crashes don't kill the entire app
 export function MapView(props: MapViewProps) {

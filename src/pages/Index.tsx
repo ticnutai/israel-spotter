@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SearchPanel } from "@/components/SearchPanel";
 import { MapView, type ParcelColorMode } from "@/components/MapView";
@@ -100,6 +100,18 @@ const Index = () => {
     }
   }, [toast, setSearchParams]);
 
+  // Stable callbacks to prevent child re-renders
+  const handleClearPlan = useCallback(() => setPlanPath(null), []);
+  const handleShowGisLayer = useCallback((layer: ParsedGisLayer | null) => setGisOverlay(layer ? layer.geojson : null), []);
+  const handleActivateGeoref = useCallback(() => setGeorefActive(true), []);
+  const handleDeactivateGeoref = useCallback(() => setGeorefActive(false), []);
+  const handleCloseParcelDialog = useCallback(() => {
+    setParcelDialog(null);
+    setHighlightGeometry(null);
+    setSearchParams({}, { replace: true });
+  }, [setSearchParams]);
+  const handleShowPlan = useCallback((path: string) => setPlanPath(path), []);
+
   if (isMobile) {
     return (
       <div className="flex flex-col h-[100dvh] bg-background overflow-x-hidden overflow-y-auto" dir="rtl">
@@ -152,7 +164,7 @@ const Index = () => {
             boundaries={boundaries}
             aerialYear={aerialYear}
             planPath={planPath}
-            onClearPlan={() => setPlanPath(null)}
+            onClearPlan={handleClearPlan}
             onMapClick={handleMapClick}
             highlightGeometry={highlightGeometry}
             gisOverlay={gisOverlay}
@@ -161,12 +173,8 @@ const Index = () => {
           {boundaries && <MapLegend colorMode={parcelColorMode} onColorModeChange={setParcelColorMode} />}
           <ParcelInfoDialog
             data={parcelDialog}
-            onClose={() => {
-              setParcelDialog(null);
-              setHighlightGeometry(null);
-              setSearchParams({}, { replace: true });
-            }}
-            onShowPlan={(path) => setPlanPath(path)}
+            onClose={handleCloseParcelDialog}
+            onShowPlan={handleShowPlan}
           />
         </div>
       </div>
@@ -180,8 +188,8 @@ const Index = () => {
         onSelectGush={handleSelectGush}
         onSelectAerialYear={setAerialYear}
         onSelectPlanImage={setPlanPath}
-        onShowGisLayer={(layer) => setGisOverlay(layer ? layer.geojson : null)}
-        onActivateGeoref={() => setGeorefActive(true)}
+        onShowGisLayer={handleShowGisLayer}
+        onActivateGeoref={handleActivateGeoref}
       />
 
       {/* Main content */}
@@ -198,13 +206,13 @@ const Index = () => {
             boundaries={boundaries}
             aerialYear={aerialYear}
             planPath={planPath}
-            onClearPlan={() => setPlanPath(null)}
+            onClearPlan={handleClearPlan}
             onMapClick={handleMapClick}
             highlightGeometry={highlightGeometry}
             gisOverlay={gisOverlay}
             parcelColorMode={parcelColorMode}
             georefActive={georefActive}
-            onGeorefClose={() => setGeorefActive(false)}
+            onGeorefClose={handleDeactivateGeoref}
           />
           {boundaries && <MapLegend colorMode={parcelColorMode} onColorModeChange={setParcelColorMode} />}
           
@@ -215,12 +223,8 @@ const Index = () => {
 
           <ParcelInfoDialog
             data={parcelDialog}
-            onClose={() => {
-              setParcelDialog(null);
-              setHighlightGeometry(null);
-              setSearchParams({}, { replace: true });
-            }}
-            onShowPlan={(path) => setPlanPath(path)}
+            onClose={handleCloseParcelDialog}
+            onShowPlan={handleShowPlan}
           />
         </div>
       </div>
