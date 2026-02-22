@@ -12,6 +12,7 @@ import {
   RefreshCw,
   PieChart as PieChartIcon,
   TrendingUp,
+  Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getDocumentStats, type DocumentStats } from "@/lib/kfar-chabad-api";
@@ -64,6 +65,7 @@ export function StatsCharts() {
   const [stats, setStats] = useState<DocumentStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filterGush, setFilterGush] = useState<number | null>(null);
 
   async function load() {
     setLoading(true);
@@ -81,6 +83,21 @@ export function StatsCharts() {
   useEffect(() => {
     load();
   }, []);
+
+  // Extract gush numbers for filter
+  const gushNumbers = useMemo(() => {
+    if (!stats) return [];
+    return stats.by_gush.map((g) => g.gush).sort();
+  }, [stats]);
+
+  // Filtered totals for summary cards when gush selected
+  const filteredSummary = useMemo(() => {
+    if (!stats) return { total: 0, plans: 0, permits: 0 };
+    if (!filterGush) return { total: stats.total, plans: stats.by_category.plans || 0, permits: stats.by_category.permits || 0 };
+    const g = stats.by_gush.find((x) => x.gush === filterGush);
+    if (!g) return { total: 0, plans: 0, permits: 0 };
+    return { total: g.plan_count + g.permit_count, plans: g.plan_count, permits: g.permit_count };
+  }, [stats, filterGush]);
 
   // Prepare chart data
   const categoryData = useMemo(() => {
@@ -103,15 +120,18 @@ export function StatsCharts() {
 
   const gushData = useMemo(() => {
     if (!stats) return [];
-    return stats.by_gush
-      .sort((a, b) => b.plan_count + b.permit_count - (a.plan_count + a.permit_count))
-      .map((g) => ({
+    const sorted = stats.by_gush
+      .sort((a, b) => b.plan_count + b.permit_count - (a.plan_count + a.permit_count));
+    const data = filterGush
+      ? sorted.filter((g) => g.gush === filterGush)
+      : sorted;
+    return data.map((g) => ({
         name: String(g.gush),
         תוכניות: g.plan_count,
         היתרים: g.permit_count,
         חלקות: g.parcel_count,
       }));
-  }, [stats]);
+  }, [stats, filterGush]);
 
   if (loading) {
     return (
@@ -138,11 +158,28 @@ export function StatsCharts() {
     <div className="h-full flex flex-col">
       <ScrollArea className="flex-1">
         <div className="px-3 py-3 space-y-5">
+          {/* Gush filter */}
+          {gushNumbers.length > 1 && (
+            <div className="flex items-center gap-2">
+              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+              <select
+                className="flex-1 h-7 rounded-md border bg-background px-2 text-xs"
+                value={filterGush ?? ""}
+                onChange={(e) => setFilterGush(e.target.value ? Number(e.target.value) : null)}
+              >
+                <option value="">כל הגושים</option>
+                {gushNumbers.map((g) => (
+                  <option key={g} value={g}>גוש {g}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Summary cards */}
           <div className="grid grid-cols-3 gap-2">
             <StatCard
-              label="סה״כ מסמכים"
-              value={stats.total}
+              label={filterGush ? `מסמכים (${filterGush})` : "סה״כ מסמכים"}
+              value={filterGush ? filteredSummary.total : stats.total}
               icon={<BarChart3 className="h-4 w-4" />}
               color="text-blue-600"
             />

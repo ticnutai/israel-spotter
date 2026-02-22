@@ -14,6 +14,7 @@ import {
   ChevronUp,
   ExternalLink,
   Filter,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getPlans, getPlanDetail, type PlanSummary, type DocumentRecord } from "@/lib/kfar-chabad-api";
@@ -22,7 +23,11 @@ import { getPlans, getPlanDetail, type PlanSummary, type DocumentRecord } from "
 /*  Plan Timeline Component                                           */
 /* ------------------------------------------------------------------ */
 
-export function PlanTimeline() {
+interface PlanTimelineProps {
+  onSelectGush?: (gush: number) => void;
+}
+
+export function PlanTimeline({ onSelectGush }: PlanTimelineProps) {
   const [plans, setPlans] = useState<PlanSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -244,6 +249,31 @@ export function PlanTimeline() {
                           </span>
                         )}
                       </div>
+
+                      {/* Navigate to gush buttons */}
+                      {onSelectGush && plan.gush_list && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {plan.gush_list.split(",").map((g) => {
+                            const gNum = parseInt(g.trim());
+                            if (isNaN(gNum)) return null;
+                            return (
+                              <Button
+                                key={gNum}
+                                variant="ghost"
+                                size="sm"
+                                className="h-5 px-1.5 text-[10px] text-primary hover:text-primary/80"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSelectGush(gNum);
+                                }}
+                              >
+                                <MapPin className="h-2.5 w-2.5 ml-0.5" />
+                                גוש {gNum}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      )}
 
                       {/* Expanded: documents */}
                       {expandedPlan === plan.plan_number && (

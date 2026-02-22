@@ -9,7 +9,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { X, Upload, RotateCw, Move, Save, Maximize2 } from "lucide-react";
+import { X, Upload, RotateCw, Move, Save, Maximize2, Download, Copy } from "lucide-react";
 
 interface GeorefToolProps {
   map: L.Map | null;
@@ -57,6 +57,50 @@ export function GeorefTool({ map, active, onClose }: GeorefToolProps) {
   const rotateMarkerRef = useRef<L.Marker | null>(null);
   const boundsRef = useRef<L.LatLngBounds | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+
+  // Export georef data as JSON
+  const exportGeoref = useCallback(() => {
+    if (!boundsRef.current || !imageDims) return;
+    const sw = boundsRef.current.getSouthWest();
+    const ne = boundsRef.current.getNorthEast();
+    const data = {
+      bounds: { south: sw.lat, west: sw.lng, north: ne.lat, east: ne.lng },
+      center: { lat: boundsRef.current.getCenter().lat, lng: boundsRef.current.getCenter().lng },
+      rotation,
+      opacity,
+      imageSize: imageDims,
+      timestamp: new Date().toISOString(),
+    };
+    return data;
+  }, [rotation, opacity, imageDims]);
+
+  const handleSave = useCallback(() => {
+    const data = exportGeoref();
+    if (!data) return;
+    const json = JSON.stringify(data, null, 2);
+    // Copy to clipboard
+    navigator.clipboard.writeText(json).catch(() => {});
+    // Download as file
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `georef_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setSaveStatus("נשמר!");
+    setTimeout(() => setSaveStatus(null), 2000);
+  }, [exportGeoref]);
+
+  const handleCopyCoords = useCallback(() => {
+    const data = exportGeoref();
+    if (!data) return;
+    const text = `SW: ${data.bounds.south.toFixed(6)}, ${data.bounds.west.toFixed(6)}\nNE: ${data.bounds.north.toFixed(6)}, ${data.bounds.east.toFixed(6)}\nRotation: ${data.rotation}°`;
+    navigator.clipboard.writeText(text).catch(() => {});
+    setSaveStatus("הועתק!");
+    setTimeout(() => setSaveStatus(null), 2000);
+  }, [exportGeoref]);
 
   // Clean up everything
   const cleanup = useCallback(() => {
@@ -452,6 +496,31 @@ export function GeorefTool({ map, active, onClose }: GeorefToolProps) {
               מרכז
             </Button>
           </div>
+
+          {/* Save & Export */}
+          <div className="flex gap-2 pt-1">
+            <Button
+              variant="default"
+              size="sm"
+              className="flex-1 text-xs"
+              onClick={handleSave}
+            >
+              <Save className="h-3 w-3 ml-1" />
+              שמור JSON
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 text-xs"
+              onClick={handleCopyCoords}
+            >
+              <Copy className="h-3 w-3 ml-1" />
+              העתק קואורדינטות
+            </Button>
+          </div>
+          {saveStatus && (
+            <p className="text-[10px] text-center text-green-600 font-medium">{saveStatus}</p>
+          )}
         </div>
       )}
     </div>

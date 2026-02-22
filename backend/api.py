@@ -315,6 +315,18 @@ async def list_plans(
     return {"plans": rows, "source": "cloud"}
 
 
+# ─── Plan image serving (MUST be before /api/plans/{plan_number:path}) ────────
+@app.get("/api/plans/image/{path:path}")
+async def get_plan_image(path: str):
+    """Serve a plan map image."""
+    fpath = PLANS_DIR / path
+    if not fpath.exists():
+        raise HTTPException(404, "Plan image not found")
+    ext = fpath.suffix.lower()
+    media_map = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".tif": "image/tiff"}
+    return FileResponse(fpath, media_type=media_map.get(ext, "application/octet-stream"))
+
+
 @app.get("/api/plans/{plan_number:path}")
 async def get_plan_detail(plan_number: str):
     """Get all documents associated with a plan number."""
@@ -919,18 +931,6 @@ async def get_georef_config():
         raise HTTPException(404, "No georef config file")
     with open(config_path, "r", encoding="utf-8") as f:
         return json.load(f)
-
-
-# ─── Plan image serving ──────────────────────────────────────────────────────
-@app.get("/api/plans/image/{path:path}")
-async def get_plan_image(path: str):
-    """Serve a plan map image."""
-    fpath = PLANS_DIR / path
-    if not fpath.exists():
-        raise HTTPException(404, "Plan image not found")
-    ext = fpath.suffix.lower()
-    media_map = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".tif": "image/tiff"}
-    return FileResponse(fpath, media_type=media_map.get(ext, "application/octet-stream"))
 
 
 # ─── WMTS Tile Proxy ─────────────────────────────────────────────────────────

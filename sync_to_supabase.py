@@ -56,6 +56,11 @@ TABLES_ORDER = [
     "permit_documents",
     "taba_outlines",
     "plan_georef",
+    "gis_layers",
+    "migrash_data",
+    "mmg_layers",
+    "building_rights",
+    "plan_instructions",
 ]
 
 
@@ -180,7 +185,9 @@ def upload_table(client: httpx.Client, table: str, rows: list[dict]) -> bool:
 
     # Remove 'id' for auto-increment tables (let Supabase generate)
     auto_id_tables = {"parcels", "plans", "plan_blocks", "documents",
-                      "permits", "permit_documents", "taba_outlines", "plan_georef"}
+                      "permits", "permit_documents", "taba_outlines", "plan_georef",
+                      "gis_layers", "migrash_data", "mmg_layers",
+                      "building_rights", "plan_instructions"}
 
     if table in auto_id_tables:
         for r in rows:

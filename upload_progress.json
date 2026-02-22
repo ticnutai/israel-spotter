@@ -1,0 +1,1567 @@
+{
+  "uploaded": {
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_7311_boundary.geojson": {
+      "size": 51759,
+      "at": "2026-02-22 16:11:07"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_7311_parcels.geojson": {
+      "size": 491514,
+      "at": "2026-02-22 16:11:08"
+    },
+    "kfar_chabad_data/cbs/kfar_chabad_localities.json": {
+      "size": 526,
+      "at": "2026-02-22 16:11:08"
+    },
+    "kfar_chabad_data/cadastre/blocks_kfar_chabad.geojson": {
+      "size": 1963838,
+      "at": "2026-02-22 16:11:09"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/all_migrashim_by_gush.json": {
+      "size": 29317,
+      "at": "2026-02-22 16:11:10"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_3969.json": {
+      "size": 16881,
+      "at": "2026-02-22 16:11:10"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_3970.json": {
+      "size": 40327,
+      "at": "2026-02-22 16:11:10"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_3999.json": {
+      "size": 22584,
+      "at": "2026-02-22 16:11:11"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_4000.json": {
+      "size": 31850,
+      "at": "2026-02-22 16:11:11"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_4001.json": {
+      "size": 4696,
+      "at": "2026-02-22 16:11:12"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_4225.json": {
+      "size": 46866,
+      "at": "2026-02-22 16:11:13"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_4226.json": {
+      "size": 33743,
+      "at": "2026-02-22 16:11:13"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_4227.json": {
+      "size": 46964,
+      "at": "2026-02-22 16:11:13"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_4229.json": {
+      "size": 13165,
+      "at": "2026-02-22 16:11:14"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_4980.json": {
+      "size": 40248,
+      "at": "2026-02-22 16:11:15"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_4981.json": {
+      "size": 46861,
+      "at": "2026-02-22 16:11:15"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_4982.json": {
+      "size": 46781,
+      "at": "2026-02-22 16:11:16"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_4983.json": {
+      "size": 40383,
+      "at": "2026-02-22 16:11:17"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_5990.json": {
+      "size": 46744,
+      "at": "2026-02-22 16:11:17"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6028.json": {
+      "size": 33672,
+      "at": "2026-02-22 16:11:18"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6058.json": {
+      "size": 20606,
+      "at": "2026-02-22 16:11:18"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6060.json": {
+      "size": 20643,
+      "at": "2026-02-22 16:11:18"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6061.json": {
+      "size": 20683,
+      "at": "2026-02-22 16:11:19"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6069.json": {
+      "size": 46895,
+      "at": "2026-02-22 16:11:20"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6070.json": {
+      "size": 23441,
+      "at": "2026-02-22 16:11:20"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6076.json": {
+      "size": 46861,
+      "at": "2026-02-22 16:11:21"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6077.json": {
+      "size": 46879,
+      "at": "2026-02-22 16:11:21"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6078.json": {
+      "size": 18769,
+      "at": "2026-02-22 16:11:22"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6079.json": {
+      "size": 43084,
+      "at": "2026-02-22 16:11:22"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6080.json": {
+      "size": 34739,
+      "at": "2026-02-22 16:11:23"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6249.json": {
+      "size": 46986,
+      "at": "2026-02-22 16:11:24"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6254.json": {
+      "size": 21527,
+      "at": "2026-02-22 16:11:24"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6255.json": {
+      "size": 46901,
+      "at": "2026-02-22 16:11:25"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6256.json": {
+      "size": 46804,
+      "at": "2026-02-22 16:11:25"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6257.json": {
+      "size": 38524,
+      "at": "2026-02-22 16:11:26"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6258.json": {
+      "size": 29061,
+      "at": "2026-02-22 16:11:27"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6259.json": {
+      "size": 46869,
+      "at": "2026-02-22 16:11:27"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6260.json": {
+      "size": 46886,
+      "at": "2026-02-22 16:11:27"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6261.json": {
+      "size": 46940,
+      "at": "2026-02-22 16:11:28"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6262.json": {
+      "size": 46790,
+      "at": "2026-02-22 16:11:29"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6263.json": {
+      "size": 46817,
+      "at": "2026-02-22 16:11:29"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6264.json": {
+      "size": 45168,
+      "at": "2026-02-22 16:11:30"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6266.json": {
+      "size": 22460,
+      "at": "2026-02-22 16:11:30"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6267.json": {
+      "size": 23441,
+      "at": "2026-02-22 16:11:31"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6269.json": {
+      "size": 46891,
+      "at": "2026-02-22 16:11:32"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6271.json": {
+      "size": 34622,
+      "at": "2026-02-22 16:11:32"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6272.json": {
+      "size": 47123,
+      "at": "2026-02-22 16:11:33"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6273.json": {
+      "size": 29077,
+      "at": "2026-02-22 16:11:34"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6274.json": {
+      "size": 46912,
+      "at": "2026-02-22 16:11:34"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6278.json": {
+      "size": 27518,
+      "at": "2026-02-22 16:11:35"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6279.json": {
+      "size": 7838,
+      "at": "2026-02-22 16:11:35"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6280.json": {
+      "size": 20871,
+      "at": "2026-02-22 16:11:36"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6795.json": {
+      "size": 46232,
+      "at": "2026-02-22 16:11:36"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6796.json": {
+      "size": 46296,
+      "at": "2026-02-22 16:11:37"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6835.json": {
+      "size": 20896,
+      "at": "2026-02-22 16:11:37"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_6838.json": {
+      "size": 38759,
+      "at": "2026-02-22 16:11:38"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/api_calls_gush_7188.json": {
+      "size": 41044,
+      "at": "2026-02-22 16:11:39"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/complot_wsdl.xml": {
+      "size": 49558,
+      "at": "2026-02-22 16:11:39"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/complot_parsed.json": {
+      "size": 149164,
+      "at": "2026-02-22 16:11:39"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/download_summary.json": {
+      "size": 3253,
+      "at": "2026-02-22 16:11:41"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrashim_7188.json": {
+      "size": 635,
+      "at": "2026-02-22 16:11:41"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_3969.json": {
+      "size": 1409,
+      "at": "2026-02-22 16:11:42"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_3970.json": {
+      "size": 3873,
+      "at": "2026-02-22 16:11:43"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_3999.json": {
+      "size": 1973,
+      "at": "2026-02-22 16:11:43"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_4000.json": {
+      "size": 2903,
+      "at": "2026-02-22 16:11:44"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_4001.json": {
+      "size": 117,
+      "at": "2026-02-22 16:11:45"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_4225.json": {
+      "size": 6375,
+      "at": "2026-02-22 16:11:45"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_4226.json": {
+      "size": 3135,
+      "at": "2026-02-22 16:11:46"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_4227.json": {
+      "size": 6839,
+      "at": "2026-02-22 16:11:47"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_4228.json": {
+      "size": 3481,
+      "at": "2026-02-22 16:11:47"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_4229.json": {
+      "size": 1047,
+      "at": "2026-02-22 16:11:48"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_4980.json": {
+      "size": 3701,
+      "at": "2026-02-22 16:11:49"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_4981.json": {
+      "size": 7875,
+      "at": "2026-02-22 16:11:49"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_4982.json": {
+      "size": 5091,
+      "at": "2026-02-22 16:11:49"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_4983.json": {
+      "size": 3819,
+      "at": "2026-02-22 16:11:50"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_5990.json": {
+      "size": 13133,
+      "at": "2026-02-22 16:11:50"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6028.json": {
+      "size": 3127,
+      "at": "2026-02-22 16:11:50"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6058.json": {
+      "size": 1743,
+      "at": "2026-02-22 16:11:51"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6060.json": {
+      "size": 1743,
+      "at": "2026-02-22 16:11:51"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6061.json": {
+      "size": 1743,
+      "at": "2026-02-22 16:11:51"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6064.json": {
+      "size": 1627,
+      "at": "2026-02-22 16:11:51"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6068.json": {
+      "size": 4061,
+      "at": "2026-02-22 16:11:52"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6069.json": {
+      "size": 9039,
+      "at": "2026-02-22 16:11:52"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6070.json": {
+      "size": 2091,
+      "at": "2026-02-22 16:11:52"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6076.json": {
+      "size": 25861,
+      "at": "2026-02-22 16:11:52"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6077.json": {
+      "size": 7321,
+      "at": "2026-02-22 16:11:52"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6078.json": {
+      "size": 1623,
+      "at": "2026-02-22 16:11:52"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6080.json": {
+      "size": 3245,
+      "at": "2026-02-22 16:11:53"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6249.json": {
+      "size": 7409,
+      "at": "2026-02-22 16:11:53"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6079.json": {
+      "size": 4045,
+      "at": "2026-02-22 16:11:53"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6254.json": {
+      "size": 1891,
+      "at": "2026-02-22 16:11:54"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6255.json": {
+      "size": 12355,
+      "at": "2026-02-22 16:11:54"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6256.json": {
+      "size": 5127,
+      "at": "2026-02-22 16:11:54"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6259.json": {
+      "size": 4511,
+      "at": "2026-02-22 16:11:54"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6257.json": {
+      "size": 3657,
+      "at": "2026-02-22 16:11:55"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6260.json": {
+      "size": 6037,
+      "at": "2026-02-22 16:11:55"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6261.json": {
+      "size": 5439,
+      "at": "2026-02-22 16:11:55"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6258.json": {
+      "size": 2671,
+      "at": "2026-02-22 16:11:55"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6262.json": {
+      "size": 4629,
+      "at": "2026-02-22 16:11:56"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6263.json": {
+      "size": 5593,
+      "at": "2026-02-22 16:11:56"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6264.json": {
+      "size": 4331,
+      "at": "2026-02-22 16:11:56"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6266.json": {
+      "size": 1973,
+      "at": "2026-02-22 16:11:57"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6267.json": {
+      "size": 2091,
+      "at": "2026-02-22 16:11:57"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6269.json": {
+      "size": 5861,
+      "at": "2026-02-22 16:11:57"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6271.json": {
+      "size": 3251,
+      "at": "2026-02-22 16:11:58"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6272.json": {
+      "size": 10873,
+      "at": "2026-02-22 16:11:58"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6273.json": {
+      "size": 2681,
+      "at": "2026-02-22 16:11:58"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6274.json": {
+      "size": 4715,
+      "at": "2026-02-22 16:11:59"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6278.json": {
+      "size": 2555,
+      "at": "2026-02-22 16:11:59"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6279.json": {
+      "size": 467,
+      "at": "2026-02-22 16:11:59"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6280.json": {
+      "size": 1749,
+      "at": "2026-02-22 16:12:00"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6795.json": {
+      "size": 8005,
+      "at": "2026-02-22 16:12:00"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6796.json": {
+      "size": 9731,
+      "at": "2026-02-22 16:12:00"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6838.json": {
+      "size": 3585,
+      "at": "2026-02-22 16:12:01"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_6835.json": {
+      "size": 1743,
+      "at": "2026-02-22 16:12:01"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/migrash_data_gush_7188.json": {
+      "size": 11307,
+      "at": "2026-02-22 16:12:01"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetBakashotInMeeting.xml": {
+      "size": 375,
+      "at": "2026-02-22 16:12:01"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetClients.xml": {
+      "size": 306,
+      "at": "2026-02-22 16:12:02"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetGushim.xml": {
+      "size": 938,
+      "at": "2026-02-22 16:12:02"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_3969.xml": {
+      "size": 970,
+      "at": "2026-02-22 16:12:02"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_3999.xml": {
+      "size": 967,
+      "at": "2026-02-22 16:12:03"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_3970.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:03"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_4000.xml": {
+      "size": 967,
+      "at": "2026-02-22 16:12:03"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_4001.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:03"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_4225.xml": {
+      "size": 852,
+      "at": "2026-02-22 16:12:04"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_4226.xml": {
+      "size": 567,
+      "at": "2026-02-22 16:12:04"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_4227.xml": {
+      "size": 972,
+      "at": "2026-02-22 16:12:04"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_4228.xml": {
+      "size": 966,
+      "at": "2026-02-22 16:12:05"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_4229.xml": {
+      "size": 909,
+      "at": "2026-02-22 16:12:05"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_4980.xml": {
+      "size": 965,
+      "at": "2026-02-22 16:12:05"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_4981.xml": {
+      "size": 972,
+      "at": "2026-02-22 16:12:06"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_4982.xml": {
+      "size": 959,
+      "at": "2026-02-22 16:12:06"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_4983.xml": {
+      "size": 965,
+      "at": "2026-02-22 16:12:06"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_5990.xml": {
+      "size": 966,
+      "at": "2026-02-22 16:12:07"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6028.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:07"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6058.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:07"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6060.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:08"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6061.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:08"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6064.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:08"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6068.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:09"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6069.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:09"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6070.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:09"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6076.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:10"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6077.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:10"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6078.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:10"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6079.xml": {
+      "size": 956,
+      "at": "2026-02-22 16:12:11"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6080.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:11"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6254.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:12"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6249.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:12"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6255.xml": {
+      "size": 569,
+      "at": "2026-02-22 16:12:12"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6257.xml": {
+      "size": 957,
+      "at": "2026-02-22 16:12:13"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6256.xml": {
+      "size": 618,
+      "at": "2026-02-22 16:12:13"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6258.xml": {
+      "size": 795,
+      "at": "2026-02-22 16:12:13"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6259.xml": {
+      "size": 795,
+      "at": "2026-02-22 16:12:14"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6260.xml": {
+      "size": 966,
+      "at": "2026-02-22 16:12:14"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6261.xml": {
+      "size": 963,
+      "at": "2026-02-22 16:12:14"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6262.xml": {
+      "size": 964,
+      "at": "2026-02-22 16:12:15"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6263.xml": {
+      "size": 510,
+      "at": "2026-02-22 16:12:15"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6264.xml": {
+      "size": 624,
+      "at": "2026-02-22 16:12:15"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6266.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:16"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6267.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:16"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6269.xml": {
+      "size": 957,
+      "at": "2026-02-22 16:12:16"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6271.xml": {
+      "size": 970,
+      "at": "2026-02-22 16:12:17"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6272.xml": {
+      "size": 961,
+      "at": "2026-02-22 16:12:17"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6273.xml": {
+      "size": 511,
+      "at": "2026-02-22 16:12:17"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6274.xml": {
+      "size": 955,
+      "at": "2026-02-22 16:12:17"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6278.xml": {
+      "size": 911,
+      "at": "2026-02-22 16:12:18"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6279.xml": {
+      "size": 571,
+      "at": "2026-02-22 16:12:18"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6280.xml": {
+      "size": 796,
+      "at": "2026-02-22 16:12:19"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6796.xml": {
+      "size": 963,
+      "at": "2026-02-22 16:12:19"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6795.xml": {
+      "size": 969,
+      "at": "2026-02-22 16:12:19"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6835.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:19"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6838.xml": {
+      "size": 963,
+      "at": "2026-02-22 16:12:20"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6839.xml": {
+      "size": 964,
+      "at": "2026-02-22 16:12:20"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6889.xml": {
+      "size": 963,
+      "at": "2026-02-22 16:12:20"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_6890.xml": {
+      "size": 970,
+      "at": "2026-02-22 16:12:21"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_7187.xml": {
+      "size": 972,
+      "at": "2026-02-22 16:12:21"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_7188.xml": {
+      "size": 970,
+      "at": "2026-02-22 16:12:22"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_7196.xml": {
+      "size": 962,
+      "at": "2026-02-22 16:12:22"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_7311.xml": {
+      "size": 915,
+      "at": "2026-02-22 16:12:22"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetMigrashimForGush_7387.xml": {
+      "size": 453,
+      "at": "2026-02-22 16:12:23"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetShchunot.xml": {
+      "size": 348,
+      "at": "2026-02-22 16:12:23"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetTabaNames.xml": {
+      "size": 69623,
+      "at": "2026-02-22 16:12:23"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetTabaNumbers.xml": {
+      "size": 48318,
+      "at": "2026-02-22 16:12:24"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetTabaStatusTypes.xml": {
+      "size": 673,
+      "at": "2026-02-22 16:12:24"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetTabaTypes.xml": {
+      "size": 6758,
+      "at": "2026-02-22 16:12:24"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/soap_GetYeshuvim.xml": {
+      "size": 1620,
+      "at": "2026-02-22 16:12:25"
+    },
+    "kfar_chabad_data/complot_kfar_chabad/xpa_gush_7188.json": {
+      "size": 22803,
+      "at": "2026-02-22 16:12:25"
+    },
+    "kfar_chabad_data/data_gov_il/relevant_datasets.json": {
+      "size": 6313,
+      "at": "2026-02-22 16:12:25"
+    },
+    "kfar_chabad_data/docs/_download_summary.json": {
+      "size": 2445,
+      "at": "2026-02-22 16:12:26"
+    },
+    "kfar_chabad_data/docs/_new_plans_download_summary.json": {
+      "size": 7602,
+      "at": "2026-02-22 16:12:27"
+    },
+    "kfar_chabad_data/docs/_new_plans_progress.json": {
+      "size": 6713,
+      "at": "2026-02-22 16:12:28"
+    },
+    "kfar_chabad_data/docs/425-0117390/_plan_data.json": {
+      "size": 41090,
+      "at": "2026-02-22 16:12:47"
+    },
+    "kfar_chabad_data/docs/425-0449702/_plan_data.json": {
+      "size": 22760,
+      "at": "2026-02-22 16:13:06"
+    },
+    "kfar_chabad_data/docs/425-0486316/_plan_data.json": {
+      "size": 32148,
+      "at": "2026-02-22 16:14:01"
+    },
+    "kfar_chabad_data/docs/425-0498865/_plan_data.json": {
+      "size": 25526,
+      "at": "2026-02-22 16:14:32"
+    },
+    "kfar_chabad_data/docs/425-0541870/_plan_data.json": {
+      "size": 28390,
+      "at": "2026-02-22 16:15:10"
+    },
+    "kfar_chabad_data/docs/425-0589184/_plan_data.json": {
+      "size": 24569,
+      "at": "2026-02-22 16:15:47"
+    },
+    "kfar_chabad_data/docs/425-0712950/_plan_data.json": {
+      "size": 57921,
+      "at": "2026-02-22 16:16:49"
+    },
+    "kfar_chabad_data/docs/425-0736678/_plan_data.json": {
+      "size": 26463,
+      "at": "2026-02-22 16:17:26"
+    },
+    "kfar_chabad_data/docs/425-0774018/_plan_data.json": {
+      "size": 24251,
+      "at": "2026-02-22 16:17:54"
+    },
+    "kfar_chabad_data/docs/425-0800557/_plan_data.json": {
+      "size": 24504,
+      "at": "2026-02-22 16:18:17"
+    },
+    "kfar_chabad_data/docs/425-1030113/_plan_data.json": {
+      "size": 40547,
+      "at": "2026-02-22 16:19:10"
+    },
+    "kfar_chabad_data/docs/425-1153212/_plan_data.json": {
+      "size": 40531,
+      "at": "2026-02-22 16:20:03"
+    },
+    "kfar_chabad_data/docs/425-1248244/_plan_data.json": {
+      "size": 29822,
+      "at": "2026-02-22 16:20:40"
+    }
+  },
+  "failed": {
+    "kfar_chabad_data/all_plans_by_block.json": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:08:39"
+    },
+    "kfar_chabad_data/all_documents_index.json": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:08:41"
+    },
+    "kfar_chabad_data/blocks_parcels_by_plan.json": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:08:49"
+    },
+    "kfar_chabad_data/building_rights_summary.json": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:08:50"
+    },
+    "kfar_chabad_data/migrash_helka_mapping.json": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:09:00"
+    },
+    "kfar_chabad_data/blocks_central.zip": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:09:11"
+    },
+    "kfar_chabad_data/plan_instructions_summary.json": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:09:11"
+    },
+    "kfar_chabad_data/mavat_extracted_metadata.json": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:09:18"
+    },
+    "kfar_chabad_data/taba_kfar_chabad.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:09:21"
+    },
+    "kfar_chabad_data/arcgis_cadastral/all_blocks.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:09:30"
+    },
+    "kfar_chabad_data/arcgis_cadastral/parcels_data.csv": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:09:38"
+    },
+    "kfar_chabad_data/yeudei_karka_merkaz.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:09:39"
+    },
+    "kfar_chabad_data/arcgis_cadastral/all_parcels.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:09:45"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6256_boundary.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:09:49"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6256_parcels.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:09:50"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6258_boundary.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:09:56"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6258_parcels.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:09:59"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6260_boundary.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:02"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6260_parcels.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:08"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6261_boundary.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:10"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6261_parcels.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:12"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6262_boundary.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:18"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6262_parcels.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:21"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6269_boundary.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:23"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6269_parcels.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:29"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6272_boundary.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:33"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6272_parcels.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:35"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6280_boundary.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:40"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_6280_parcels.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:43"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_7187_boundary.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:45"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_7187_parcels.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:51"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_7188_boundary.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:53"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_7188_parcels.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:10:56"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_7196_boundary.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:11:02"
+    },
+    "kfar_chabad_data/arcgis_cadastral/geojson/gush_7196_parcels.geojson": {
+      "error": "HTTP 400: {\"statusCode\":\"403\",\"error\":\"Unauthorized\",\"message\":\"new row violates row-level security policy\"}",
+      "at": "2026-02-22 16:11:05"
+    },
+    "kfar_chabad_data/data_gov_il/דרישות_בטיחות_אש_להיתרי_בניה.csv": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/data_gov_il/דרישות_בטיחות_אש_להיתרי_בניה.csv\"}",
+      "at": "2026-02-22 16:12:33"
+    },
+    "kfar_chabad_data/data_gov_il/פנקס_הקבלנים_הרשומים.csv": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/data_gov_il/פנקס_הקבלנים_הרשומים.csv\"}",
+      "at": "2026-02-22 16:12:34"
+    },
+    "kfar_chabad_data/docs/425-0117390/425-0117390_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0117390/425-0117390_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:12:36"
+    },
+    "kfar_chabad_data/docs/425-0117390/425-0117390_ישויות פוליגונליות, קוויות ונקודתיות.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0117390/425-0117390_ישויות פוליגונליות, קוויות ונקודתיות.dwg\"}",
+      "at": "2026-02-22 16:12:42"
+    },
+    "kfar_chabad_data/docs/425-0117390/425-0117390_החלטה_09_09_2013.docx": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0117390/425-0117390_החלטה_09_09_2013.docx\"}",
+      "at": "2026-02-22 16:12:42"
+    },
+    "kfar_chabad_data/docs/425-0117390/425-0117390_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0117390/425-0117390_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:12:46"
+    },
+    "kfar_chabad_data/docs/425-0117390/425-0117390_קו כחול.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0117390/425-0117390_קו כחול.dwg\"}",
+      "at": "2026-02-22 16:12:50"
+    },
+    "kfar_chabad_data/docs/425-0117390/425-0117390_תשריט מצב מוצע.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0117390/425-0117390_תשריט מצב מוצע.pdf\"}",
+      "at": "2026-02-22 16:12:52"
+    },
+    "kfar_chabad_data/docs/425-0449702/425-0449702_גבול התכנית(KML) לצפיה ב google earth.kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0449702/425-0449702_גבול התכנית(KML) לצפיה ב google earth.kml\"}",
+      "at": "2026-02-22 16:12:55"
+    },
+    "kfar_chabad_data/docs/425-0449702/425-0449702_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0449702/425-0449702_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:12:58"
+    },
+    "kfar_chabad_data/docs/425-0449702/425-0449702_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0449702/425-0449702_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:13:02"
+    },
+    "kfar_chabad_data/docs/425-0449702/425-0449702_קבצי התכנית (SHP).zip": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0449702/425-0449702_קבצי התכנית (SHP).zip\"}",
+      "at": "2026-02-22 16:13:03"
+    },
+    "kfar_chabad_data/docs/425-0449702/425-0449702_קו כחול.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0449702/425-0449702_קו כחול.dwg\"}",
+      "at": "2026-02-22 16:13:05"
+    },
+    "kfar_chabad_data/docs/425-0449702/425-0449702_תאי שטח.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0449702/425-0449702_תאי שטח.dwg\"}",
+      "at": "2026-02-22 16:13:10"
+    },
+    "kfar_chabad_data/docs/425-0486316/425-0486316_גבול התכנית תלת מימד (KML).kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0486316/425-0486316_גבול התכנית תלת מימד (KML).kml\"}",
+      "at": "2026-02-22 16:13:22"
+    },
+    "kfar_chabad_data/docs/425-0449702/425-0449702_תשריט מצב מוצע.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0449702/425-0449702_תשריט מצב מוצע.pdf\"}",
+      "at": "2026-02-22 16:13:24"
+    },
+    "kfar_chabad_data/docs/425-0486316/425-0486316_גבול התכנית(KML) לצפיה ב google earth.kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0486316/425-0486316_גבול התכנית(KML) לצפיה ב google earth.kml\"}",
+      "at": "2026-02-22 16:13:30"
+    },
+    "kfar_chabad_data/docs/425-0486316/425-0486316_בינוי.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0486316/425-0486316_בינוי.pdf\"}",
+      "at": "2026-02-22 16:13:30"
+    },
+    "kfar_chabad_data/docs/425-0486316/425-0486316_ישויות פוליגונליות, קוויות ונקודתיות.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0486316/425-0486316_ישויות פוליגונליות, קוויות ונקודתיות.dwg\"}",
+      "at": "2026-02-22 16:13:37"
+    },
+    "kfar_chabad_data/docs/425-0486316/425-0486316_קבצי התכנית (SHP).zip": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0486316/425-0486316_קבצי התכנית (SHP).zip\"}",
+      "at": "2026-02-22 16:13:46"
+    },
+    "kfar_chabad_data/docs/425-0486316/425-0486316_קו כחול.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0486316/425-0486316_קו כחול.dwg\"}",
+      "at": "2026-02-22 16:13:53"
+    },
+    "kfar_chabad_data/docs/425-0486316/425-0486316_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0486316/425-0486316_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:13:59"
+    },
+    "kfar_chabad_data/docs/425-0486316/425-0486316_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0486316/425-0486316_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:14:01"
+    },
+    "kfar_chabad_data/docs/425-0486316/425-0486316_תאי שטח.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0486316/425-0486316_תאי שטח.dwg\"}",
+      "at": "2026-02-22 16:14:02"
+    },
+    "kfar_chabad_data/docs/425-0498865/425-0498865_גבול התכנית(KML) לצפיה ב google earth.kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0498865/425-0498865_גבול התכנית(KML) לצפיה ב google earth.kml\"}",
+      "at": "2026-02-22 16:14:10"
+    },
+    "kfar_chabad_data/docs/425-0498865/425-0498865_גבול התכנית תלת מימד (KML).kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0498865/425-0498865_גבול התכנית תלת מימד (KML).kml\"}",
+      "at": "2026-02-22 16:14:12"
+    },
+    "kfar_chabad_data/docs/425-0486316/425-0486316_תשריט מצב מוצע.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0486316/425-0486316_תשריט מצב מוצע.pdf\"}",
+      "at": "2026-02-22 16:14:12"
+    },
+    "kfar_chabad_data/docs/425-0498865/425-0498865_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0498865/425-0498865_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:14:22"
+    },
+    "kfar_chabad_data/docs/425-0498865/425-0498865_ישויות פוליגונליות, קוויות ונקודתיות.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0498865/425-0498865_ישויות פוליגונליות, קוויות ונקודתיות.dwg\"}",
+      "at": "2026-02-22 16:14:22"
+    },
+    "kfar_chabad_data/docs/425-0498865/425-0498865_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0498865/425-0498865_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:14:28"
+    },
+    "kfar_chabad_data/docs/425-0498865/425-0498865_קבצי התכנית (SHP).zip": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0498865/425-0498865_קבצי התכנית (SHP).zip\"}",
+      "at": "2026-02-22 16:14:31"
+    },
+    "kfar_chabad_data/docs/425-0498865/425-0498865_קו כחול.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0498865/425-0498865_קו כחול.dwg\"}",
+      "at": "2026-02-22 16:14:32"
+    },
+    "kfar_chabad_data/docs/425-0498865/425-0498865_תאי שטח.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0498865/425-0498865_תאי שטח.dwg\"}",
+      "at": "2026-02-22 16:14:36"
+    },
+    "kfar_chabad_data/docs/425-0498865/425-0498865_תשריט מצב מוצע.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0498865/425-0498865_תשריט מצב מוצע.pdf\"}",
+      "at": "2026-02-22 16:14:42"
+    },
+    "kfar_chabad_data/docs/425-0541870/425-0541870_גבול התכנית תלת מימד (KML).kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0541870/425-0541870_גבול התכנית תלת מימד (KML).kml\"}",
+      "at": "2026-02-22 16:14:45"
+    },
+    "kfar_chabad_data/docs/425-0541870/425-0541870_בינוי.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0541870/425-0541870_בינוי.pdf\"}",
+      "at": "2026-02-22 16:14:46"
+    },
+    "kfar_chabad_data/docs/425-0541870/425-0541870_גבול התכנית(KML) לצפיה ב google earth.kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0541870/425-0541870_גבול התכנית(KML) לצפיה ב google earth.kml\"}",
+      "at": "2026-02-22 16:14:51"
+    },
+    "kfar_chabad_data/docs/425-0541870/425-0541870_ישויות פוליגונליות, קוויות ונקודתיות.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0541870/425-0541870_ישויות פוליגונליות, קוויות ונקודתיות.dwg\"}",
+      "at": "2026-02-22 16:14:54"
+    },
+    "kfar_chabad_data/docs/425-0541870/425-0541870_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0541870/425-0541870_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:15:01"
+    },
+    "kfar_chabad_data/docs/425-0541870/425-0541870_קבצי התכנית (SHP).zip": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0541870/425-0541870_קבצי התכנית (SHP).zip\"}",
+      "at": "2026-02-22 16:15:02"
+    },
+    "kfar_chabad_data/docs/425-0541870/425-0541870_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0541870/425-0541870_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:15:06"
+    },
+    "kfar_chabad_data/docs/425-0541870/425-0541870_קו כחול.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0541870/425-0541870_קו כחול.dwg\"}",
+      "at": "2026-02-22 16:15:09"
+    },
+    "kfar_chabad_data/docs/425-0541870/425-0541870_תאי שטח.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0541870/425-0541870_תאי שטח.dwg\"}",
+      "at": "2026-02-22 16:15:09"
+    },
+    "kfar_chabad_data/docs/425-0589184/425-0589184_גבול התכנית תלת מימד (KML).kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0589184/425-0589184_גבול התכנית תלת מימד (KML).kml\"}",
+      "at": "2026-02-22 16:15:18"
+    },
+    "kfar_chabad_data/docs/425-0589184/425-0589184_גבול התכנית(KML) לצפיה ב google earth.kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0589184/425-0589184_גבול התכנית(KML) לצפיה ב google earth.kml\"}",
+      "at": "2026-02-22 16:15:18"
+    },
+    "kfar_chabad_data/docs/425-0541870/425-0541870_תשריט מצב מוצע.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0541870/425-0541870_תשריט מצב מוצע.pdf\"}",
+      "at": "2026-02-22 16:15:23"
+    },
+    "kfar_chabad_data/docs/425-0589184/425-0589184_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0589184/425-0589184_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:15:30"
+    },
+    "kfar_chabad_data/docs/425-0589184/425-0589184_ישויות פוליגונליות, קוויות ונקודתיות.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0589184/425-0589184_ישויות פוליגונליות, קוויות ונקודתיות.dwg\"}",
+      "at": "2026-02-22 16:15:30"
+    },
+    "kfar_chabad_data/docs/425-0589184/425-0589184_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0589184/425-0589184_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:15:36"
+    },
+    "kfar_chabad_data/docs/425-0589184/425-0589184_קבצי התכנית (SHP).zip": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0589184/425-0589184_קבצי התכנית (SHP).zip\"}",
+      "at": "2026-02-22 16:15:45"
+    },
+    "kfar_chabad_data/docs/425-0589184/425-0589184_קו כחול.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0589184/425-0589184_קו כחול.dwg\"}",
+      "at": "2026-02-22 16:15:45"
+    },
+    "kfar_chabad_data/docs/425-0589184/425-0589184_תאי שטח.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0589184/425-0589184_תאי שטח.dwg\"}",
+      "at": "2026-02-22 16:15:50"
+    },
+    "kfar_chabad_data/docs/425-0589184/425-0589184_תשריט מצב מוצע.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0589184/425-0589184_תשריט מצב מוצע.pdf\"}",
+      "at": "2026-02-22 16:15:58"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_גבול התכנית תלת מימד (KML).kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_גבול התכנית תלת מימד (KML).kml\"}",
+      "at": "2026-02-22 16:16:01"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_גבול התכנית(KML) לצפיה ב google earth.kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_גבול התכנית(KML) לצפיה ב google earth.kml\"}",
+      "at": "2026-02-22 16:16:03"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_הוראות התכנית - מאושרות - חתום.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_הוראות התכנית - מאושרות - חתום.pdf\"}",
+      "at": "2026-02-22 16:16:09"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:16:12"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_זכויות והוראות בניה XLS.xls": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_זכויות והוראות בניה XLS.xls\"}",
+      "at": "2026-02-22 16:16:12"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_ישויות פוליגונליות, קוויות ונקודתיות.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_ישויות פוליגונליות, קוויות ונקודתיות.dwg\"}",
+      "at": "2026-02-22 16:16:17"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_נוסח הודעה על אישור תכנית _ בקשה.doc": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_נוסח הודעה על אישור תכנית _ בקשה.doc\"}",
+      "at": "2026-02-22 16:16:20"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:16:24"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_נוסח הודעה על הפקדת תכנית _ בקשה.doc": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_נוסח הודעה על הפקדת תכנית _ בקשה.doc\"}",
+      "at": "2026-02-22 16:16:25"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_נוסח פרסום חתום - pdf.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_נוסח פרסום חתום - pdf.pdf\"}",
+      "at": "2026-02-22 16:16:28"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_נוסח פרסום עברית -word.doc": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_נוסח פרסום עברית -word.doc\"}",
+      "at": "2026-02-22 16:16:31"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_פרוטוקול_20_11_2023.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_פרוטוקול_20_11_2023.pdf\"}",
+      "at": "2026-02-22 16:16:33"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_קבצי התכנית (SHP).zip": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_קבצי התכנית (SHP).zip\"}",
+      "at": "2026-02-22 16:16:36"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_קו כחול.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_קו כחול.dwg\"}",
+      "at": "2026-02-22 16:16:40"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_תאי שטח.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_תאי שטח.dwg\"}",
+      "at": "2026-02-22 16:16:42"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_תשריט התכנית - מאושר - חתום.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_תשריט התכנית - מאושר - חתום.pdf\"}",
+      "at": "2026-02-22 16:16:47"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_תשריט מצב מוצע חתום.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_תשריט מצב מוצע חתום.pdf\"}",
+      "at": "2026-02-22 16:16:51"
+    },
+    "kfar_chabad_data/docs/425-0712950/425-0712950_תשריט מצב מוצע.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0712950/425-0712950_תשריט מצב מוצע.pdf\"}",
+      "at": "2026-02-22 16:16:57"
+    },
+    "kfar_chabad_data/docs/425-0736678/425-0736678_גבול התכנית(KML) לצפיה ב google earth.kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0736678/425-0736678_גבול התכנית(KML) לצפיה ב google earth.kml\"}",
+      "at": "2026-02-22 16:17:05"
+    },
+    "kfar_chabad_data/docs/425-0736678/425-0736678_גבול התכנית תלת מימד (KML).kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0736678/425-0736678_גבול התכנית תלת מימד (KML).kml\"}",
+      "at": "2026-02-22 16:17:05"
+    },
+    "kfar_chabad_data/docs/425-0736678/425-0736678_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0736678/425-0736678_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:17:09"
+    },
+    "kfar_chabad_data/docs/425-0736678/425-0736678_ישויות פוליגונליות, קוויות ונקודתיות.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0736678/425-0736678_ישויות פוליגונליות, קוויות ונקודתיות.dwg\"}",
+      "at": "2026-02-22 16:17:15"
+    },
+    "kfar_chabad_data/docs/425-0736678/425-0736678_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0736678/425-0736678_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:17:17"
+    },
+    "kfar_chabad_data/docs/425-0736678/425-0736678_קבצי התכנית (SHP).zip": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0736678/425-0736678_קבצי התכנית (SHP).zip\"}",
+      "at": "2026-02-22 16:17:21"
+    },
+    "kfar_chabad_data/docs/425-0736678/425-0736678_קו כחול.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0736678/425-0736678_קו כחול.dwg\"}",
+      "at": "2026-02-22 16:17:25"
+    },
+    "kfar_chabad_data/docs/425-0736678/425-0736678_תאי שטח.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0736678/425-0736678_תאי שטח.dwg\"}",
+      "at": "2026-02-22 16:17:27"
+    },
+    "kfar_chabad_data/docs/425-0736678/425-0736678_תשריט מצב מוצע.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0736678/425-0736678_תשריט מצב מוצע.pdf\"}",
+      "at": "2026-02-22 16:17:33"
+    },
+    "kfar_chabad_data/docs/425-0774018/425-0774018_גבול התכנית תלת מימד (KML).kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0774018/425-0774018_גבול התכנית תלת מימד (KML).kml\"}",
+      "at": "2026-02-22 16:17:34"
+    },
+    "kfar_chabad_data/docs/425-0774018/425-0774018_גבול התכנית(KML) לצפיה ב google earth.kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0774018/425-0774018_גבול התכנית(KML) לצפיה ב google earth.kml\"}",
+      "at": "2026-02-22 16:17:35"
+    },
+    "kfar_chabad_data/docs/425-0774018/425-0774018_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0774018/425-0774018_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:17:41"
+    },
+    "kfar_chabad_data/docs/425-0774018/425-0774018_ישויות פוליגונליות, קוויות ונקודתיות.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0774018/425-0774018_ישויות פוליגונליות, קוויות ונקודתיות.dwg\"}",
+      "at": "2026-02-22 16:17:41"
+    },
+    "kfar_chabad_data/docs/425-0774018/425-0774018_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0774018/425-0774018_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:17:43"
+    },
+    "kfar_chabad_data/docs/425-0774018/425-0774018_קבצי התכנית (SHP).zip": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0774018/425-0774018_קבצי התכנית (SHP).zip\"}",
+      "at": "2026-02-22 16:17:51"
+    },
+    "kfar_chabad_data/docs/425-0774018/425-0774018_קו כחול.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0774018/425-0774018_קו כחול.dwg\"}",
+      "at": "2026-02-22 16:17:52"
+    },
+    "kfar_chabad_data/docs/425-0774018/425-0774018_תאי שטח.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0774018/425-0774018_תאי שטח.dwg\"}",
+      "at": "2026-02-22 16:17:54"
+    },
+    "kfar_chabad_data/docs/425-0774018/425-0774018_תשריט מצב מוצע.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0774018/425-0774018_תשריט מצב מוצע.pdf\"}",
+      "at": "2026-02-22 16:18:05"
+    },
+    "kfar_chabad_data/docs/425-0800557/425-0800557_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0800557/425-0800557_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:18:06"
+    },
+    "kfar_chabad_data/docs/425-0800557/425-0800557_בינוי.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0800557/425-0800557_בינוי.pdf\"}",
+      "at": "2026-02-22 16:18:11"
+    },
+    "kfar_chabad_data/docs/425-0800557/425-0800557_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0800557/425-0800557_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:18:17"
+    },
+    "kfar_chabad_data/docs/425-0800557/425-0800557_ישויות פוליגונליות, קוויות ונקודתיות.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0800557/425-0800557_ישויות פוליגונליות, קוויות ונקודתיות.dwg\"}",
+      "at": "2026-02-22 16:18:17"
+    },
+    "kfar_chabad_data/docs/425-0800557/425-0800557_תשריט מצב מוצע.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-0800557/425-0800557_תשריט מצב מוצע.pdf\"}",
+      "at": "2026-02-22 16:18:22"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_גבול התכנית(KML) לצפיה ב google earth.kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_גבול התכנית(KML) לצפיה ב google earth.kml\"}",
+      "at": "2026-02-22 16:18:25"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_גבול התכנית תלת מימד (KML).kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_גבול התכנית תלת מימד (KML).kml\"}",
+      "at": "2026-02-22 16:18:25"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:18:29"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_ישויות פוליגונליות, קוויות ונקודתיות.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_ישויות פוליגונליות, קוויות ונקודתיות.dwg\"}",
+      "at": "2026-02-22 16:18:33"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_נוסח הודעה על אישור תכנית _ בקשה.doc": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_נוסח הודעה על אישור תכנית _ בקשה.doc\"}",
+      "at": "2026-02-22 16:18:37"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:18:38"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_נוסח הודעה על הפקדת תכנית _ בקשה.doc": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_נוסח הודעה על הפקדת תכנית _ בקשה.doc\"}",
+      "at": "2026-02-22 16:18:42"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_נוסח פרסום חתום - pdf.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_נוסח פרסום חתום - pdf.pdf\"}",
+      "at": "2026-02-22 16:18:50"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_נוסח פרסום עברית -word.doc": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_נוסח פרסום עברית -word.doc\"}",
+      "at": "2026-02-22 16:18:51"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_פרוטוקול_30_11_2022.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_פרוטוקול_30_11_2022.pdf\"}",
+      "at": "2026-02-22 16:18:55"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_קבצי התכנית (SHP).zip": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_קבצי התכנית (SHP).zip\"}",
+      "at": "2026-02-22 16:19:03"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_קו כחול.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_קו כחול.dwg\"}",
+      "at": "2026-02-22 16:19:03"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_תאי שטח.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_תאי שטח.dwg\"}",
+      "at": "2026-02-22 16:19:05"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_תשריט מצב מוצע חתום.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_תשריט מצב מוצע חתום.pdf\"}",
+      "at": "2026-02-22 16:19:17"
+    },
+    "kfar_chabad_data/docs/425-1030113/425-1030113_תשריט מצב מוצע.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1030113/425-1030113_תשריט מצב מוצע.pdf\"}",
+      "at": "2026-02-22 16:19:17"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_גבול התכנית(KML) לצפיה ב google earth.kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_גבול התכנית(KML) לצפיה ב google earth.kml\"}",
+      "at": "2026-02-22 16:19:23"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:19:29"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_ישויות פוליגונליות, קוויות ונקודתיות.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_ישויות פוליגונליות, קוויות ונקודתיות.dwg\"}",
+      "at": "2026-02-22 16:19:30"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:19:37"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_נוסח הודעה על אישור תכנית _ בקשה.doc": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_נוסח הודעה על אישור תכנית _ בקשה.doc\"}",
+      "at": "2026-02-22 16:19:41"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_נוסח הודעה על הפקדת תכנית _ בקשה.doc": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_נוסח הודעה על הפקדת תכנית _ בקשה.doc\"}",
+      "at": "2026-02-22 16:19:44"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_נוסח פרסום חתום - pdf.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_נוסח פרסום חתום - pdf.pdf\"}",
+      "at": "2026-02-22 16:19:51"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_נוסח פרסום עברית -word.doc": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_נוסח פרסום עברית -word.doc\"}",
+      "at": "2026-02-22 16:19:53"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_פרוטוקול_31_01_2023.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_פרוטוקול_31_01_2023.pdf\"}",
+      "at": "2026-02-22 16:19:55"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_קבצי התכנית (SHP).zip": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_קבצי התכנית (SHP).zip\"}",
+      "at": "2026-02-22 16:20:00"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_קו כחול.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_קו כחול.dwg\"}",
+      "at": "2026-02-22 16:20:01"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_תאי שטח.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_תאי שטח.dwg\"}",
+      "at": "2026-02-22 16:20:02"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_תשריט מצב מוצע חתום.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_תשריט מצב מוצע חתום.pdf\"}",
+      "at": "2026-02-22 16:20:10"
+    },
+    "kfar_chabad_data/docs/425-1153212/425-1153212_תשריט מצב מוצע.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1153212/425-1153212_תשריט מצב מוצע.pdf\"}",
+      "at": "2026-02-22 16:20:10"
+    },
+    "kfar_chabad_data/docs/425-1248244/425-1248244_בינוי ופיתוח.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1248244/425-1248244_בינוי ופיתוח.pdf\"}",
+      "at": "2026-02-22 16:20:11"
+    },
+    "kfar_chabad_data/docs/425-1248244/425-1248244_גבול התכנית(KML) לצפיה ב google earth.kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1248244/425-1248244_גבול התכנית(KML) לצפיה ב google earth.kml\"}",
+      "at": "2026-02-22 16:20:17"
+    },
+    "kfar_chabad_data/docs/425-1248244/425-1248244_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1248244/425-1248244_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:20:20"
+    },
+    "kfar_chabad_data/docs/425-1248244/425-1248244_זכויות והוראות בניה XLS.xls": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1248244/425-1248244_זכויות והוראות בניה XLS.xls\"}",
+      "at": "2026-02-22 16:20:22"
+    },
+    "kfar_chabad_data/docs/425-1248244/425-1248244_ישויות פוליגונליות, קוויות ונקודתיות.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1248244/425-1248244_ישויות פוליגונליות, קוויות ונקודתיות.dwg\"}",
+      "at": "2026-02-22 16:20:31"
+    },
+    "kfar_chabad_data/docs/425-1248244/425-1248244_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1248244/425-1248244_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:20:33"
+    },
+    "kfar_chabad_data/docs/425-1248244/425-1248244_קבצי התכנית (SHP).zip": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1248244/425-1248244_קבצי התכנית (SHP).zip\"}",
+      "at": "2026-02-22 16:20:33"
+    },
+    "kfar_chabad_data/docs/425-1248244/425-1248244_קו כחול.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1248244/425-1248244_קו כחול.dwg\"}",
+      "at": "2026-02-22 16:20:39"
+    },
+    "kfar_chabad_data/docs/425-1248244/425-1248244_תאי שטח.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1248244/425-1248244_תאי שטח.dwg\"}",
+      "at": "2026-02-22 16:20:42"
+    },
+    "kfar_chabad_data/docs/425-1248244/425-1248244_תשריט מצב מוצע.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1248244/425-1248244_תשריט מצב מוצע.pdf\"}",
+      "at": "2026-02-22 16:20:43"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_גבול התכנית תלת מימד (KML).kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_גבול התכנית תלת מימד (KML).kml\"}",
+      "at": "2026-02-22 16:20:54"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_גבול התכנית(KML) לצפיה ב google earth.kml": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_גבול התכנית(KML) לצפיה ב google earth.kml\"}",
+      "at": "2026-02-22 16:20:55"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_בינוי ופיתוח.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_בינוי ופיתוח.pdf\"}",
+      "at": "2026-02-22 16:20:58"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_דוח תאי שטח לתכנית (XLS).xls": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_דוח תאי שטח לתכנית (XLS).xls\"}",
+      "at": "2026-02-22 16:21:08"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_הוראות התכנית - מאושרות - חתום.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_הוראות התכנית - מאושרות - חתום.pdf\"}",
+      "at": "2026-02-22 16:21:09"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_הוראות התכנית.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_הוראות התכנית.pdf\"}",
+      "at": "2026-02-22 16:21:11"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_זכויות והוראות בניה XLS.xls": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_זכויות והוראות בניה XLS.xls\"}",
+      "at": "2026-02-22 16:21:22"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_ישויות פוליגונליות, קוויות ונקודתיות.dwg": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_ישויות פוליגונליות, קוויות ונקודתיות.dwg\"}",
+      "at": "2026-02-22 16:21:24"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_חוות דעת לפי סע' 96א.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_חוות דעת לפי סע' 96א.pdf\"}",
+      "at": "2026-02-22 16:21:28"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_מצב מאושר.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_מצב מאושר.pdf\"}",
+      "at": "2026-02-22 16:21:34"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_נוסח הודעה על אישור תכנית _ בקשה.doc": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_נוסח הודעה על אישור תכנית _ בקשה.doc\"}",
+      "at": "2026-02-22 16:21:35"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_נוסח הודעה על הפקדת תכנית _ בקשה.doc": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_נוסח הודעה על הפקדת תכנית _ בקשה.doc\"}",
+      "at": "2026-02-22 16:21:37"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_נוסח פרסום חתום - pdf.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_נוסח פרסום חתום - pdf.pdf\"}",
+      "at": "2026-02-22 16:21:45"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_נוסח פרסום עברית -word.doc": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_נוסח פרסום עברית -word.doc\"}",
+      "at": "2026-02-22 16:21:45"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_נוסח פרסום.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_נוסח פרסום.pdf\"}",
+      "at": "2026-02-22 16:21:51"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_פרוטוקול _ החלטות.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_פרוטוקול _ החלטות.pdf\"}",
+      "at": "2026-02-22 16:22:01"
+    },
+    "kfar_chabad_data/docs/425-1254218/425-1254218_פרוטוקול_04_08_2025.pdf": {
+      "error": "HTTP 400: {\"statusCode\":\"400\",\"error\":\"InvalidKey\",\"message\":\"Invalid key: kfar_chabad_data/docs/425-1254218/425-1254218_פרוטוקול_04_08_2025.pdf\"}",
+      "at": "2026-02-22 16:22:05"
+    }
+  },
+  "started_at": "2026-02-22 16:08:29"
+}

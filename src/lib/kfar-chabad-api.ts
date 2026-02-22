@@ -507,6 +507,176 @@ export async function getPlansForTimeline(): Promise<PlanSummary[]> {
   );
 }
 
+// --------------- GIS Layers ---------------
+
+export interface GisLayerInfo {
+  id?: number;
+  layer_name: string;
+  display_name?: string;
+  category?: string;
+  source?: string;
+  file_path?: string;
+  file_size?: number;
+  feature_count?: number;
+  geometry_type?: string;
+}
+
+export async function getGisLayers(params?: {
+  category?: string;
+  source?: string;
+  search?: string;
+}): Promise<GisLayerInfo[]> {
+  return withFallback(
+    async () => {
+      const sp = new URLSearchParams();
+      if (params?.category) sp.set("category", params.category);
+      if (params?.source) sp.set("source", params.source);
+      if (params?.search) sp.set("search", params.search);
+      const qs = sp.toString();
+      const data = await fetchJSON<{ layers: GisLayerInfo[]; total: number }>(
+        `${API_BASE}/gis-layers${qs ? "?" + qs : ""}`
+      );
+      return data.layers;
+    },
+    () => withCache("gis-layers", async () => {
+      const rows = await supabaseGet<GisLayerInfo>("gis_layers", "select=*&order=category,layer_name");
+      return rows;
+    })
+  );
+}
+
+export function gisLayerGeoJsonUrl(layerName: string): string {
+  return `${API_BASE}/gis-layers/${encodeURIComponent(layerName)}/geojson`;
+}
+
+// --------------- Migrash (lot data from Complot) ---------------
+
+export interface MigrashRecord {
+  id?: number;
+  gush: number;
+  helka: number;
+  migrash?: string | number;
+  migrash_number?: string;
+  plan_number?: string;
+  area_sqm?: number;
+  land_use?: string;
+  notes?: string;
+  [key: string]: any;
+}
+
+export async function getMigrashData(gush: number, helka?: number): Promise<MigrashRecord[]> {
+  return withFallback(
+    async () => {
+      const sp = new URLSearchParams({ gush: String(gush) });
+      if (helka !== undefined) sp.set("helka", String(helka));
+      const data = await fetchJSON<{ migrash: MigrashRecord[]; total: number }>(
+        `${API_BASE}/migrash?${sp}`
+      );
+      return data.migrash;
+    },
+    () => withCache(`migrash:${gush}:${helka ?? "all"}`, async () => {
+      let filter = `select=*&gush=eq.${gush}`;
+      if (helka !== undefined) filter += `&helka=eq.${helka}`;
+      return supabaseGet<MigrashRecord>("migrash_data", filter);
+    })
+  );
+}
+
+// --------------- MMG Layers ---------------
+
+export interface MmgPlan {
+  plan_number: string;
+  layers: string[];
+  layer_count: number;
+}
+
+export async function getMmgPlans(): Promise<MmgPlan[]> {
+  return withFallback(
+    async () => {
+      const data = await fetchJSON<{ plans: MmgPlan[]; total: number }>(`${API_BASE}/mmg`);
+      return data.plans;
+    },
+    () => withCache("mmg-plans", async () => {
+      const rows = await supabaseGet<any>("mmg_layers", "select=plan_number,layer_name");
+      const grouped: Record<string, string[]> = {};
+      for (const r of rows) {
+        if (!grouped[r.plan_number]) grouped[r.plan_number] = [];
+        grouped[r.plan_number].push(r.layer_name);
+      }
+      return Object.entries(grouped).map(([plan_number, layers]) => ({
+        plan_number,
+        layers,
+        layer_count: layers.length,
+      }));
+    })
+  );
+}
+
+export function mmgLayerGeoJsonUrl(planNumber: string, layerName: string): string {
+  return `${API_BASE}/mmg/${encodeURIComponent(planNumber)}/${encodeURIComponent(layerName)}.geojson`;
+}
+
+// --------------- Building Rights ---------------
+
+export interface BuildingRight {
+  id?: number;
+  plan_number: string;
+  zone?: string;
+  land_use?: string;
+  building_percentage?: number;
+  max_floors?: number;
+  max_height?: number;
+  max_units?: number;
+  notes?: string;
+  data?: any;
+  [key: string]: any;
+}
+
+export async function getBuildingRights(planNumber?: string): Promise<BuildingRight[]> {
+  return withFallback(
+    async () => {
+      const sp = planNumber ? `?plan_number=${encodeURIComponent(planNumber)}` : "";
+      const data = await fetchJSON<{ rights: BuildingRight[]; total: number }>(
+        `${API_BASE}/building-rights${sp}`
+      );
+      return data.rights;
+    },
+    () => withCache(`building-rights:${planNumber ?? "all"}`, async () => {
+      let filter = "select=*";
+      if (planNumber) filter += `&plan_number=eq.${encodeURIComponent(planNumber)}`;
+      return supabaseGet<BuildingRight>("building_rights", filter);
+    })
+  );
+}
+
+// --------------- Plan Instructions ---------------
+
+export interface PlanInstruction {
+  id?: number;
+  plan_number: string;
+  section?: string;
+  content?: string;
+  text?: string;
+  [key: string]: any;
+}
+
+export async function getPlanInstructions(planNumber?: string): Promise<PlanInstruction[]> {
+  return withFallback(
+    async () => {
+      const sp = planNumber ? `?plan_number=${encodeURIComponent(planNumber)}` : "";
+      const data = await fetchJSON<{ instructions: PlanInstruction[]; total: number }>(
+        `${API_BASE}/plan-instructions${sp}`
+      );
+      return data.instructions;
+    },
+    () => withCache(`plan-instructions:${planNumber ?? "all"}`, async () => {
+      let filter = "select=*";
+      if (planNumber) filter += `&plan_number=eq.${encodeURIComponent(planNumber)}`;
+      return supabaseGet<PlanInstruction>("plan_instructions", filter);
+    })
+  );
+}
+
 // --------------- Supabase row mappers ---------------
 
 function mapPlan(r: any): PlanSummary {

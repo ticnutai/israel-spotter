@@ -29,6 +29,7 @@ import {
   GripVertical,
   ArrowUp,
   ArrowDown,
+  Loader2,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -146,6 +147,16 @@ export function SmartSidebar({
   useEffect(() => {
     localStorage.setItem("sidebar-pinned", String(pinned));
   }, [pinned]);
+
+  // Listen for tab switch events (e.g. from AerialTab "go to upload")
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const tabId = (e as CustomEvent).detail;
+      if (tabId && typeof tabId === "string") setActiveTab(tabId);
+    };
+    window.addEventListener("sidebar-switch-tab", handler);
+    return () => window.removeEventListener("sidebar-switch-tab", handler);
+  }, []);
 
   // Determine if the panel content should be visible
   const isOpen = pinned || hovered;
@@ -381,7 +392,7 @@ export function SmartSidebar({
             )}
             {activeTab === "upload" && <Suspense fallback={<div className="p-4 text-center text-xs text-muted-foreground">טוען...</div>}><UploadPanel onShowGisLayer={onShowGisLayer} /></Suspense>}
             {activeTab === "layers" && <Suspense fallback={<div className="p-4 text-center text-xs text-muted-foreground">טוען...</div>}><LayerManager /></Suspense>}
-            {activeTab === "timeline" && <Suspense fallback={<div className="p-4 text-center text-xs text-muted-foreground">טוען...</div>}><PlanTimeline /></Suspense>}
+            {activeTab === "timeline" && <Suspense fallback={<div className="p-4 text-center text-xs text-muted-foreground">טוען...</div>}><PlanTimeline onSelectGush={onSelectGush} /></Suspense>}
             {activeTab === "stats" && <Suspense fallback={<div className="p-4 text-center text-xs text-muted-foreground">טוען...</div>}><StatsCharts /></Suspense>}
             {activeTab === "tools" && <ToolsTab onActivateGeoref={onActivateGeoref} />}
             {activeTab === "settings" && (
@@ -414,6 +425,7 @@ import {
   getDocumentStats,
   getConfig,
   documentFileUrl,
+  clearLocalCache,
   type AerialYearInfo,
   type GushInfo,
   type ParcelInfo,
@@ -852,11 +864,20 @@ function AerialTab({ onSelectAerialYear }: { onSelectAerialYear: (y: string) => 
           </div>
         ))}
 
-        {/* Upload CTA */}
-        <div className="border-2 border-dashed border-muted-foreground/20 rounded-lg p-4 text-center">
-          <Upload className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-          <p className="text-xs text-muted-foreground">
-            בקרוב: העלאת צילומי אוויר ומפות ישירות למערכת
+        {/* Upload CTA – link to Upload tab */}
+        <div className="border-2 border-dashed border-primary/20 rounded-lg p-4 text-center hover:bg-accent/30 transition-colors cursor-pointer"
+             onClick={() => {
+               // Navigate to upload tab
+               const event = new CustomEvent("sidebar-switch-tab", { detail: "upload" });
+               window.dispatchEvent(event);
+             }}
+        >
+          <Upload className="h-8 w-8 mx-auto text-primary/40 mb-2" />
+          <p className="text-xs font-medium text-primary/70">
+            העלאת צילומי אוויר ומפות
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            לחץ לעבור ללשונית העלאת קבצים
           </p>
         </div>
       </div>
@@ -875,7 +896,9 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
   const [results, setResults] = useState<DocumentRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [searching, setSearching] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [viewingDoc, setViewingDoc] = useState<DocumentRecord | null>(null);
+  const PAGE_SIZE = 50;
 
   const doSearch = useCallback(async () => {
     if (!searchText.trim() && !category && !fileType) return;
@@ -885,7 +908,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
         search: searchText.trim() || undefined,
         category: category || undefined,
         file_type: fileType || undefined,
-        limit: 50,
+        limit: PAGE_SIZE,
       });
       setResults(res.documents);
       setTotal(res.total);
@@ -896,6 +919,23 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
       setSearching(false);
     }
   }, [searchText, category, fileType]);
+
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true);
+    try {
+      const res = await getDocuments({
+        search: searchText.trim() || undefined,
+        category: category || undefined,
+        file_type: fileType || undefined,
+        limit: PAGE_SIZE,
+        offset: results.length,
+      });
+      setResults((prev) => [...prev, ...res.documents]);
+    } catch { /* ignore */ }
+    finally {
+      setLoadingMore(false);
+    }
+  }, [searchText, category, fileType, results.length]);
 
   return (
     <div className="h-full flex flex-col text-right" dir="rtl">
@@ -956,6 +996,23 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
           <div className="text-center py-6">
             <Search className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
             <p className="text-xs text-muted-foreground">לא נמצאו תוצאות</p>
+          </div>
+        )}
+        {results.length > 0 && results.length < total && (
+          <div className="text-center py-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-7"
+              onClick={loadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? (
+                <><Loader2 className="h-3 w-3 animate-spin ml-1" />טוען...</>
+              ) : (
+                <>טען עוד ({total - results.length} נותרו)</>
+              )}
+            </Button>
           </div>
         )}
         {results.length === 0 && !searchText && !category && !fileType && (
@@ -1188,6 +1245,26 @@ function SettingsTab({ tabOrder, onReorderTabs }: { tabOrder: string[]; onReorde
           </div>
         )}
 
+
+        {/* Cache management */}
+        <div className="border rounded-lg p-3">
+          <h3 className="text-sm font-medium mb-2">ניהול מטמון</h3>
+          <p className="text-[11px] text-muted-foreground mb-2">
+            ניקוי מטמון מקומי (IndexedDB) יאלץ טעינה מחדש של כל הנתונים
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full text-xs h-7"
+            onClick={() => {
+              clearLocalCache();
+              // Also clear localStorage sidebar prefs — keep them
+              alert("המטמון נוקה בהצלחה. הנתונים ייטענו מחדש.");
+            }}
+          >
+            נקה מטמון
+          </Button>
+        </div>
 
         {/* Version */}
         <p className="text-[11px] text-muted-foreground text-center">

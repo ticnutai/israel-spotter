@@ -38,6 +38,12 @@ import {
   type DocumentRecord,
   type LocalPlansResponse,
   type TabaOutline,
+  getMigrashData,
+  getBuildingRights,
+  getPlanInstructions,
+  type MigrashRecord,
+  type BuildingRight,
+  type PlanInstruction,
 } from "@/lib/kfar-chabad-api";
 import { documentFileUrl } from "@/lib/kfar-chabad-api";
 import { DocumentViewer } from "./DocumentViewer";
@@ -108,6 +114,10 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
   const [localPlansData, setLocalPlansData] = useState<LocalPlansResponse | null>(null);
   const [loadingLocalPlans, setLoadingLocalPlans] = useState(false);
+  // New data: building rights, plan instructions, migrash
+  const [migrashData, setMigrashData] = useState<MigrashRecord[]>([]);
+  const [buildingRights, setBuildingRights] = useState<BuildingRight[]>([]);
+  const [planInstructions, setPlanInstructions] = useState<PlanInstruction[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [dialogWidth, setDialogWidth] = useState(() => {
@@ -163,12 +173,16 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
     setDocuments([]);
     setPlans([]);
     setExpandedPlans(new Set());
+    setMigrashData([]);
+    setBuildingRights([]);
+    setPlanInstructions([]);
 
     try {
-      const [gushData, docsData, plansData] = await Promise.all([
+      const [gushData, docsData, plansData, migrash] = await Promise.all([
         getGush(gush).catch(() => null),
         getParcelDocuments(gush, helka).catch(() => null),
         getPlans(gush).catch(() => null),
+        getMigrashData(gush, helka).catch(() => []),
       ]);
 
       if (gushData) {
@@ -177,7 +191,20 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
         setParcelInfo(parcel);
       }
       if (docsData) setDocuments(docsData.documents);
-      if (plansData) setPlans(plansData);
+      if (plansData) {
+        setPlans(plansData);
+        // Fetch building rights & instructions for relevant plans
+        const planNumbers = plansData.map((p) => p.plan_number);
+        if (planNumbers.length > 0) {
+          const [rights, instructions] = await Promise.all([
+            Promise.all(planNumbers.map((pn) => getBuildingRights(pn).catch(() => []))),
+            Promise.all(planNumbers.map((pn) => getPlanInstructions(pn).catch(() => []))),
+          ]);
+          setBuildingRights(rights.flat());
+          setPlanInstructions(instructions.flat());
+        }
+      }
+      if (migrash) setMigrashData(migrash);
     } catch {
       // DB data is optional – ArcGIS data is still shown
     } finally {
@@ -436,8 +463,134 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
                 </Section>
               )}
 
+              {/* ─── Migrash (lot) data ─── */}
+              {migrashData.length > 0 && (
+                <Section
+                  icon={<MapPinned className="h-4 w-4 text-orange-600" />}
+                  title="נתוני מגרש (Complot)"
+                  count={migrashData.length}
+                >
+                  <div className="space-y-2">
+                    {migrashData.map((m, i) => (
+                      <div key={i} className="rounded-lg border bg-card p-3">
+                        <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-xs">
+                          {m.migrash != null && (
+                            <>
+                              <span className="text-muted-foreground">מגרש</span>
+                              <span className="font-medium">{m.migrash}</span>
+                            </>
+                          )}
+                          {m.plan_number && (
+                            <>
+                              <span className="text-muted-foreground">תוכנית</span>
+                              <span className="font-medium">{m.plan_number}</span>
+                            </>
+                          )}
+                          {m.area_sqm != null && (
+                            <>
+                              <span className="text-muted-foreground">שטח</span>
+                              <span className="font-medium">{formatArea(m.area_sqm)}</span>
+                            </>
+                          )}
+                          {m.land_use && (
+                            <>
+                              <span className="text-muted-foreground">ייעוד</span>
+                              <span className="font-medium">{m.land_use}</span>
+                            </>
+                          )}
+                          {m.notes && (
+                            <>
+                              <span className="text-muted-foreground">הערות</span>
+                              <span className="font-medium">{m.notes}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {/* ─── Building Rights ─── */}
+              {buildingRights.length > 0 && (
+                <Section
+                  icon={<Building2 className="h-4 w-4 text-indigo-600" />}
+                  title="זכויות בנייה"
+                  count={buildingRights.length}
+                >
+                  <div className="space-y-2">
+                    {buildingRights.map((br, i) => (
+                      <div key={i} className="rounded-lg border bg-card p-3">
+                        <p className="text-xs font-medium mb-1.5" dir="ltr">{br.plan_number}</p>
+                        <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-xs">
+                          {br.zone && (
+                            <>
+                              <span className="text-muted-foreground">אזור</span>
+                              <span className="font-medium">{br.zone}</span>
+                            </>
+                          )}
+                          {br.land_use && (
+                            <>
+                              <span className="text-muted-foreground">ייעוד</span>
+                              <span className="font-medium">{br.land_use}</span>
+                            </>
+                          )}
+                          {br.building_percentage != null && (
+                            <>
+                              <span className="text-muted-foreground">אחוזי בנייה</span>
+                              <span className="font-medium">{br.building_percentage}%</span>
+                            </>
+                          )}
+                          {br.max_floors != null && (
+                            <>
+                              <span className="text-muted-foreground">קומות מקסימום</span>
+                              <span className="font-medium">{br.max_floors}</span>
+                            </>
+                          )}
+                          {br.max_height != null && (
+                            <>
+                              <span className="text-muted-foreground">גובה מקסימום</span>
+                              <span className="font-medium">{br.max_height} מ'</span>
+                            </>
+                          )}
+                          {br.max_units != null && (
+                            <>
+                              <span className="text-muted-foreground">יח"ד מקסימום</span>
+                              <span className="font-medium">{br.max_units}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {/* ─── Plan Instructions ─── */}
+              {planInstructions.length > 0 && (
+                <Section
+                  icon={<ClipboardList className="h-4 w-4 text-amber-600" />}
+                  title="הוראות תוכנית"
+                  count={planInstructions.length}
+                >
+                  <div className="space-y-2">
+                    {planInstructions.map((pi, i) => (
+                      <div key={i} className="rounded-lg border bg-card p-3">
+                        <p className="text-xs font-medium mb-1" dir="ltr">{pi.plan_number}</p>
+                        {pi.section && (
+                          <p className="text-[11px] text-muted-foreground mb-1">{pi.section}</p>
+                        )}
+                        <p className="text-xs leading-relaxed whitespace-pre-wrap">
+                          {pi.content || pi.text || "—"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
               {/* No data at all */}
-              {(!localPlansData || (localPlansData.plan_count === 0 && localPlansData.permit_count === 0 && localPlansData.taba_count === 0)) && documents.length === 0 && plans.length === 0 && (
+              {(!localPlansData || (localPlansData.plan_count === 0 && localPlansData.permit_count === 0 && localPlansData.taba_count === 0)) && documents.length === 0 && plans.length === 0 && migrashData.length === 0 && (
                 <div className="rounded-lg border border-dashed p-4 text-center text-muted-foreground">
                   <Info className="h-6 w-6 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">לא נמצאו תוכניות או מסמכים</p>

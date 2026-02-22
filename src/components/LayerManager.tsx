@@ -13,6 +13,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { fetchTabaOutlinesGeoJSON } from "@/lib/taba-outlines";
 import { getLandUseByName } from "@/lib/land-use-colors";
+import { getGisLayers, gisLayerGeoJsonUrl, getMmgPlans, mmgLayerGeoJsonUrl, type GisLayerInfo, type MmgPlan } from "@/lib/kfar-chabad-api";
 import {
   DndContext,
   closestCenter,
@@ -576,9 +577,13 @@ export function LayerManager() {
   const [paintHelka, setPaintHelka] = useState("");
   const [paintColor, setPaintColor] = useState(PARCEL_PAINT_COLORS[0]);
   const [loadingTaba, setLoadingTaba] = useState(false);
+  const [loadingGis, setLoadingGis] = useState(false);
+  const [loadingMmg, setLoadingMmg] = useState(false);
 
   // Check if TABA layer already exists
   const tabaLayerExists = store.layers.some((l) => l.id.startsWith("taba-outlines"));
+  const gisLayersExist = store.layers.some((l) => l.id.startsWith("gis-db-"));
+  const mmgLayersExist = store.layers.some((l) => l.id.startsWith("mmg-"));
 
   const handleLoadTaba = useCallback(async () => {
     if (tabaLayerExists || loadingTaba) return;
@@ -625,6 +630,95 @@ export function LayerManager() {
       setLoadingTaba(false);
     }
   }, [tabaLayerExists, loadingTaba, store]);
+
+  // Load GIS layers from database
+  const handleLoadGisLayers = useCallback(async () => {
+    if (gisLayersExist || loadingGis) return;
+    setLoadingGis(true);
+    try {
+      const layers = await getGisLayers();
+      for (const layerInfo of layers) {
+        try {
+          const res = await fetch(gisLayerGeoJsonUrl(layerInfo.layer_name));
+          if (!res.ok) continue;
+          const geojson = await res.json();
+          const features = geojson.features || [];
+          if (features.length === 0) continue;
+
+          const categoryColors: Record<string, { color: string; fill: string }> = {
+            "iPlan": { color: "#2563eb", fill: "#3b82f6" },
+            "TAMA": { color: "#16a34a", fill: "#22c55e" },
+            "TMM": { color: "#7c3aed", fill: "#8b5cf6" },
+            "GovMap": { color: "#ea580c", fill: "#f97316" },
+            "cadastre": { color: "#dc2626", fill: "#ef4444" },
+          };
+          const cc = categoryColors[layerInfo.category || ""] || { color: "#6b7280", fill: "#9ca3af" };
+
+          store.addLayer({
+            name: layerInfo.display_name || layerInfo.layer_name,
+            kind: "geojson",
+            visible: true,
+            opacity: 1,
+            color: cc.color,
+            fillColor: cc.fill,
+            fillOpacity: 0.25,
+            weight: 2,
+            locked: false,
+            data: geojson,
+            featureCount: features.length,
+            geometryTypes: [...new Set(features.map((f: any) => f.geometry?.type))] as string[],
+          });
+        } catch {
+          // Skip layers that fail to load
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to load GIS layers:", err);
+    } finally {
+      setLoadingGis(false);
+    }
+  }, [gisLayersExist, loadingGis, store]);
+
+  // Load MMG (SHP) layers
+  const handleLoadMmgLayers = useCallback(async () => {
+    if (mmgLayersExist || loadingMmg) return;
+    setLoadingMmg(true);
+    try {
+      const plans = await getMmgPlans();
+      for (const plan of plans) {
+        for (const layerName of plan.layers) {
+          try {
+            const res = await fetch(mmgLayerGeoJsonUrl(plan.plan_number, layerName));
+            if (!res.ok) continue;
+            const geojson = await res.json();
+            const features = geojson.features || [];
+            if (features.length === 0) continue;
+
+            store.addLayer({
+              name: `MMG ${plan.plan_number} - ${layerName}`,
+              kind: "geojson",
+              visible: true,
+              opacity: 1,
+              color: "#ec4899",
+              fillColor: "#f472b6",
+              fillOpacity: 0.2,
+              weight: 2,
+              locked: false,
+              data: geojson,
+              featureCount: features.length,
+              geometryTypes: [...new Set(features.map((f: any) => f.geometry?.type))] as string[],
+            });
+          } catch {
+            // Skip layers that fail to load
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to load MMG layers:", err);
+    } finally {
+      setLoadingMmg(false);
+    }
+  }, [mmgLayersExist, loadingMmg, store]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -721,6 +815,28 @@ export function LayerManager() {
                 {loadingTaba ? "טוען..." : "טען תב״ע"}
               </button>
             )}
+            {!gisLayersExist && (
+              <button
+                onClick={handleLoadGisLayers}
+                disabled={loadingGis}
+                className="text-[10px] text-green-700 hover:text-green-800 flex items-center gap-0.5 px-1.5 py-0.5 rounded hover:bg-green-50 font-medium"
+                title="טען שכבות GIS מהמאגר"
+              >
+                {loadingGis ? <Loader2 className="h-3 w-3 animate-spin" /> : <Layers className="h-3 w-3" />}
+                {loadingGis ? "טוען..." : "שכבות GIS"}
+              </button>
+            )}
+            {!mmgLayersExist && (
+              <button
+                onClick={handleLoadMmgLayers}
+                disabled={loadingMmg}
+                className="text-[10px] text-pink-700 hover:text-pink-800 flex items-center gap-0.5 px-1.5 py-0.5 rounded hover:bg-pink-50 font-medium"
+                title="טען שכבות MMG (SHP)"
+              >
+                {loadingMmg ? <Loader2 className="h-3 w-3 animate-spin" /> : <Layers className="h-3 w-3" />}
+                {loadingMmg ? "טוען..." : "שכבות MMG"}
+              </button>
+            )}
             <button
               onClick={() => store.layers.forEach((l) => { if (!l.visible) store.toggleVisibility(l.id); })}
               className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 px-1.5 py-0.5 rounded hover:bg-muted"
@@ -766,6 +882,26 @@ export function LayerManager() {
                     >
                       {loadingTaba ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Map className="h-3.5 w-3.5" />}
                       {loadingTaba ? "טוען שכבות תב״ע..." : "טען שכבות תב״ע מהדאטאבייס"}
+                    </button>
+                  )}
+                  {!gisLayersExist && (
+                    <button
+                      onClick={handleLoadGisLayers}
+                      disabled={loadingGis}
+                      className="text-xs text-green-700 hover:text-green-800 flex items-center gap-1 mx-auto px-3 py-1.5 rounded-md border border-green-300 hover:bg-green-50 mt-2"
+                    >
+                      {loadingGis ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Layers className="h-3.5 w-3.5" />}
+                      {loadingGis ? "טוען שכבות GIS..." : "טען שכבות GIS מהמאגר"}
+                    </button>
+                  )}
+                  {!mmgLayersExist && (
+                    <button
+                      onClick={handleLoadMmgLayers}
+                      disabled={loadingMmg}
+                      className="text-xs text-pink-700 hover:text-pink-800 flex items-center gap-1 mx-auto px-3 py-1.5 rounded-md border border-pink-300 hover:bg-pink-50 mt-2"
+                    >
+                      {loadingMmg ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Layers className="h-3.5 w-3.5" />}
+                      {loadingMmg ? "טוען שכבות MMG..." : "טען שכבות MMG (SHP)"}
                     </button>
                   )}
                 </div>
