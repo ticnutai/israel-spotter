@@ -451,7 +451,12 @@ export function aerialWorldfileUrl(year: string, level: number = 7): string {
 export function planImageUrl(path: string): string {
   if (_backendAvailable === false) {
     // Supabase Storage fallback – plans are stored under plans/ prefix
-    return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/plans/${path}`;
+    const encoded = path
+      .replace(/\\/g, "/")
+      .split("/")
+      .map((seg) => encodeURIComponent(seg))
+      .join("/");
+    return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/plans/${encoded}`;
   }
   return `${API_BASE}/plans/image/${path}`;
 }
@@ -472,11 +477,19 @@ export function isBackendAvailable(): boolean {
 /**
  * Build a Supabase Storage public URL for a document by its file_path.
  * Use this when you have the file_path from a DocumentRecord and the backend is down.
+ * Each path segment is URI-encoded to handle Hebrew/special characters
+ * (matching the upload script's urllib.parse.quote behaviour).
  */
 export function documentStorageUrl(filePath: string): string {
   // Strip leading ./kfar_chabad_data/ prefix if present
   const cleaned = filePath.replace(/^\.?\/?(kfar_chabad_data\/)/, "");
-  return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${cleaned}`;
+  // Encode each segment individually so slashes are preserved
+  const encoded = cleaned
+    .replace(/\\/g, "/")
+    .split("/")
+    .map((seg) => encodeURIComponent(seg))
+    .join("/");
+  return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${encoded}`;
 }
 
 // --------------- Upload ---------------
