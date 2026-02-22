@@ -41,7 +41,6 @@ import type { ParsedGisLayer } from "@/lib/gis-parser";
 import { PdfExport } from "./PdfExport";
 import { PlanTimeline } from "./PlanTimeline";
 import { StatsCharts } from "./StatsCharts";
-import { SettingsDialog } from "./SettingsDialog";
 import { LayerManager } from "./LayerManager";
 
 // ─── Tab definitions ─────────────────────────────────────────────────────────
@@ -54,11 +53,11 @@ export interface SidebarTab {
 }
 
 const SIDEBAR_TABS: SidebarTab[] = [
-  { id: "data", label: "נתונים", icon: <Database className="h-5 w-5" /> },
-  { id: "aerial", label: "צילום אוויר", icon: <Plane className="h-5 w-5" /> },
-  { id: "search", label: "חיפוש מסמכים", icon: <Search className="h-5 w-5" /> },
-  { id: "upload", label: "העלאת קבצים", icon: <Upload className="h-5 w-5" /> },
+  { id: "data", label: "חיפוש גוש/חלקה", icon: <Database className="h-5 w-5" /> },
   { id: "layers", label: "ניהול שכבות", icon: <Layers className="h-5 w-5" /> },
+  { id: "search", label: "חיפוש מסמכים", icon: <Search className="h-5 w-5" /> },
+  { id: "aerial", label: "צילום אוויר", icon: <Plane className="h-5 w-5" /> },
+  { id: "upload", label: "העלאת קבצים", icon: <Upload className="h-5 w-5" /> },
   { id: "timeline", label: "ציר זמן", icon: <Clock className="h-5 w-5" /> },
   { id: "stats", label: "סטטיסטיקה", icon: <BarChart3 className="h-5 w-5" /> },
   { id: "tools", label: "כלים", icon: <Wrench className="h-5 w-5" /> },
@@ -151,7 +150,7 @@ export function SmartSidebar({
   // Color constants
   const goldColor = "hsl(43 56% 52%)";
   const navyColor = "hsl(222.2 47.4% 11.2%)";
-  const navyBorder = `1.5px solid ${navyColor}`;
+  const goldBorder = `2px solid ${goldColor}`;
 
   // ── Resize handler ──
   const handleResizeStart = useCallback((e: React.MouseEvent) => {
@@ -196,8 +195,8 @@ export function SmartSidebar({
             onMouseDown={handleResizeStart}
           >
             <div
-              className="w-1 h-10 rounded-full opacity-30 group-hover:opacity-80 transition-opacity"
-              style={{ backgroundColor: navyColor }}
+              className="w-1 h-10 rounded-full opacity-40 group-hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: goldColor }}
             />
           </div>
         )}
@@ -210,7 +209,7 @@ export function SmartSidebar({
             !isResizing && "duration-300",
           )}
           style={{
-            border: navyBorder,
+            border: goldBorder,
             backgroundColor: "hsl(0 0% 100%)",
             opacity: isOpen ? 1 : 0,
           }}
@@ -235,8 +234,8 @@ export function SmartSidebar({
                         "transition-colors relative",
                       )}
                       style={{
-                        color: activeTab === tab.id ? "hsl(0 0% 100%)" : goldColor,
-                        backgroundColor: activeTab === tab.id ? goldColor : "transparent",
+                        color: activeTab === tab.id ? "hsl(0 0% 100%)" : navyColor,
+                        backgroundColor: activeTab === tab.id ? navyColor : "transparent",
                       }}
                     >
                       {tab.icon}
@@ -264,7 +263,7 @@ export function SmartSidebar({
                       if (!pinned) setHovered(false);
                     }}
                     className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-                    style={{ color: goldColor }}
+                    style={{ color: navyColor }}
                   >
                     {pinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
                   </button>
@@ -291,8 +290,8 @@ export function SmartSidebar({
           <div
             className="shrink-0 px-3 py-2 flex items-center justify-between"
             style={{
-              borderBottom: navyBorder,
-              color: goldColor,
+              borderBottom: goldBorder,
+              color: navyColor,
             }}
           >
             <div className="flex items-center gap-2">
@@ -305,7 +304,7 @@ export function SmartSidebar({
               <button
                 onClick={() => setHovered(false)}
                 className="transition-colors"
-                style={{ color: goldColor }}
+                style={{ color: navyColor }}
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

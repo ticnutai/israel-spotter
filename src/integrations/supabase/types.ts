@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      building_rights: {
+        Row: {
+          description: string | null
+          id: number
+          plan_number: string | null
+          quantity_json: string | null
+          raw_json: string | null
+        }
+        Insert: {
+          description?: string | null
+          id?: number
+          plan_number?: string | null
+          quantity_json?: string | null
+          raw_json?: string | null
+        }
+        Update: {
+          description?: string | null
+          id?: number
+          plan_number?: string | null
+          quantity_json?: string | null
+          raw_json?: string | null
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           category: string
@@ -160,6 +184,81 @@ export type Database = {
           parcel_count?: number | null
           permit_count?: number | null
           plan_count?: number | null
+        }
+        Relationships: []
+      }
+      migrash_data: {
+        Row: {
+          address: string | null
+          gush: number
+          helka: number
+          id: number
+          migrash: string | null
+          migrash_plan: string | null
+          plans_list: string | null
+          raw_json: string | null
+          shetach: string | null
+          source: string | null
+          yeud: string | null
+          yeud_plan: string | null
+        }
+        Insert: {
+          address?: string | null
+          gush: number
+          helka: number
+          id?: number
+          migrash?: string | null
+          migrash_plan?: string | null
+          plans_list?: string | null
+          raw_json?: string | null
+          shetach?: string | null
+          source?: string | null
+          yeud?: string | null
+          yeud_plan?: string | null
+        }
+        Update: {
+          address?: string | null
+          gush?: number
+          helka?: number
+          id?: number
+          migrash?: string | null
+          migrash_plan?: string | null
+          plans_list?: string | null
+          raw_json?: string | null
+          shetach?: string | null
+          source?: string | null
+          yeud?: string | null
+          yeud_plan?: string | null
+        }
+        Relationships: []
+      }
+      mmg_layers: {
+        Row: {
+          display_name: string | null
+          feature_count: number | null
+          file_path: string
+          file_size: number | null
+          id: number
+          layer_name: string
+          plan_number: string | null
+        }
+        Insert: {
+          display_name?: string | null
+          feature_count?: number | null
+          file_path: string
+          file_size?: number | null
+          id?: number
+          layer_name: string
+          plan_number?: string | null
+        }
+        Update: {
+          display_name?: string | null
+          feature_count?: number | null
+          file_path?: string
+          file_size?: number | null
+          id?: number
+          layer_name?: string
+          plan_number?: string | null
         }
         Relationships: []
       }
@@ -393,6 +492,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      plan_instructions: {
+        Row: {
+          id: number
+          instruction_text: string | null
+          plan_number: string | null
+        }
+        Insert: {
+          id?: number
+          instruction_text?: string | null
+          plan_number?: string | null
+        }
+        Update: {
+          id?: number
+          instruction_text?: string | null
+          plan_number?: string | null
+        }
+        Relationships: []
       }
       plans: {
         Row: {

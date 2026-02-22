@@ -198,27 +198,38 @@ All colors MUST be HSL.
 .sidebar-gold-content .font-medium,
 .sidebar-gold-content .font-semibold {
   color: hsl(222.2 47.4% 11.2%);
+  font-weight: 700;
 }
 .sidebar-gold-content .text-muted-foreground {
-  color: hsl(222.2 30% 45%);
+  color: hsl(222.2 30% 40%);
 }
 .sidebar-gold-content .border,
 .sidebar-gold-content .border-b,
 .sidebar-gold-content .border-t,
 .sidebar-gold-content .divide-y > * + *,
 .sidebar-gold-content .border-dashed {
-  border-color: hsl(222.2 47.4% 11.2% / 0.25);
+  border-color: hsl(43 56% 52% / 0.4);
 }
 .sidebar-gold-content select {
-  border-color: hsl(222.2 47.4% 11.2% / 0.25);
+  border-color: hsl(43 56% 52% / 0.4);
   text-align: right;
+  color: hsl(222.2 47.4% 11.2%);
 }
 .sidebar-gold-content input {
   text-align: right;
+  color: hsl(222.2 47.4% 11.2%);
+  border-color: hsl(43 56% 52% / 0.4);
 }
 .sidebar-gold-content button:hover {
-  background-color: hsl(222.2 47.4% 11.2% / 0.06);
+  background-color: hsl(43 56% 52% / 0.08);
 }
 .sidebar-gold-content * {
   text-align: right;
+}
+/* Gold accents for badges/pills inside sidebar */
+.sidebar-gold-content .bg-primary\/10 {
+  background-color: hsl(43 56% 52% / 0.12);
+}
+.sidebar-gold-content .text-primary {
+  color: hsl(43 56% 52%);
 }
