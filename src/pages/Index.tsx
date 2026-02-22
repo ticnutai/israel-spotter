@@ -5,6 +5,7 @@ import { MapView, type ParcelColorMode } from "@/components/MapView";
 import { MapLegend } from "@/components/MapLegend";
 import { SmartSidebar } from "@/components/SmartSidebar";
 import { ParcelInfoDialog, type ParcelDialogData } from "@/components/ParcelInfoDialog";
+import { SettingsDialog } from "@/components/SettingsDialog";
 import type { GeoResult } from "@/lib/geocode";
 import type { BoundaryResult } from "@/lib/boundaries";
 import { searchByGushHelka, reverseGeocodeParcel } from "@/lib/geocode";
@@ -202,6 +203,12 @@ const Index = () => {
             parcelColorMode={parcelColorMode}
           />
           {boundaries && <MapLegend colorMode={parcelColorMode} onColorModeChange={setParcelColorMode} />}
+          
+          {/* Floating settings button */}
+          <div className="absolute bottom-4 right-4 z-[1000]">
+            <SettingsDialog />
+          </div>
+
           <ParcelInfoDialog
             data={parcelDialog}
             onClose={() => {
