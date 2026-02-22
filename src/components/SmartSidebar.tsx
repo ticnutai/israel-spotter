@@ -1072,14 +1072,6 @@ function SettingsTab() {
           </div>
         )}
 
-        {/* Development Tools */}
-        <div className="border rounded-lg p-3">
-          <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">
-            <Wrench className="h-4 w-4 text-primary" />
-            כלי פיתוח
-          </h3>
-          <SettingsDialog />
-        </div>
 
         {/* Version */}
         <p className="text-[11px] text-muted-foreground text-center">
