@@ -69,6 +69,7 @@ export function CoordinateDisplay({ map }: CoordinateDisplayProps) {
           "border rounded-lg shadow-lg px-2.5 py-1.5",
           "text-xs font-mono",
         )}
+        dir="ltr"
       >
         <Crosshair className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
 

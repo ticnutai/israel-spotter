@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +43,7 @@ import { documentFileUrl } from "@/lib/kfar-chabad-api";
 import { DocumentViewer } from "./DocumentViewer";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchParcels } from "@/hooks/use-watch-parcels";
+import { wgs84ToItm } from "@/lib/itm-to-wgs84";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -132,6 +133,9 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
     localStorage.setItem("parcel-dialog-width", String(dialogWidth));
   }, [dialogWidth]);
 
+  // Responsive: narrow layout when dialog is small
+  const isNarrow = !isMobile && dialogWidth < 420;
+
   // Resize handler
   const handleResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -211,11 +215,26 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   }, {});
 
   const open = data !== null;
+  const itmCoords = useMemo(() => (data ? wgs84ToItm(data.lat, data.lng) : null), [data]);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
 
   return (
     <>
     <div
       ref={panelRef}
+      dir={isMobile ? undefined : "ltr"}
       className={cn(
         "fixed z-[45] bg-background shadow-2xl flex",
         // Mobile: full-screen bottom sheet
@@ -281,10 +300,15 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
                 )}
               </div>
             )}
-            {data && (
-              <p className="text-xs text-muted-foreground mt-1 font-mono">
-                {data.lat.toFixed(5)}, {data.lng.toFixed(5)}
-              </p>
+            {data && itmCoords && (
+              <div className="mt-1 text-xs text-muted-foreground font-mono space-y-0.5" dir="ltr">
+                <div>
+                  WGS84: {data.lat.toFixed(6)}°,&nbsp;{data.lng.toFixed(6)}°
+                </div>
+                <div>
+                  ITM: E {itmCoords[0].toFixed(1)},&nbsp;N {itmCoords[1].toFixed(1)}
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -332,7 +356,7 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
         <div className={cn("py-4 space-y-5", isMobile ? "px-4 pb-8" : "px-5")}>
 
           {/* ─── ArcGIS Parcel Details (always available) ─── */}
-          {data && <ParcelDetails data={data} />}
+          {data && <ParcelDetails data={data} narrow={isNarrow} />}
 
           <Separator />
 
@@ -455,7 +479,7 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
 // ── Sub-components ───────────────────────────────────────────────────────────
 
 /** Rich parcel info from ArcGIS Survey of Israel data */
-function ParcelDetails({ data }: { data: ParcelDialogData }) {
+function ParcelDetails({ data, narrow = false }: { data: ParcelDialogData; narrow?: boolean }) {
   const items: { icon: React.ReactNode; label: string; value: string }[] = [];
 
   // Area
@@ -542,13 +566,13 @@ function ParcelDetails({ data }: { data: ParcelDialogData }) {
         <MapPin className="h-4 w-4" />
         פרטי חלקה (מדידות ישראל)
       </h3>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+      <div className={cn("grid gap-x-4 gap-y-2.5", narrow ? "grid-cols-1" : "grid-cols-2")}>
         {items.map((item, i) => (
           <div key={i} className="flex items-start gap-2">
             <span className="shrink-0 mt-0.5">{item.icon}</span>
             <div className="min-w-0">
               <p className="text-[11px] text-muted-foreground leading-tight">{item.label}</p>
-              <p className="text-sm font-medium leading-tight">{item.value}</p>
+              <p className="text-sm font-medium leading-tight break-words">{item.value}</p>
             </div>
           </div>
         ))}
@@ -606,11 +630,11 @@ function QuickStats({
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 gap-2">
       {stats.map((s) => (
         <div
           key={s.label}
-          className={`rounded-lg p-3 text-center ${s.bg} border`}
+          className={`rounded-lg p-2 text-center ${s.bg} border`}
         >
           <div className="flex justify-center mb-1">{s.icon}</div>
           <div className="text-xl font-bold">{s.value}</div>
@@ -800,7 +824,7 @@ function LocalPlansSection({
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                       {plan.main_status && (
                         <Badge className={`text-[10px] px-1.5 py-0 ${statusColor(plan.main_status)}`}>
                           {plan.main_status}
@@ -828,7 +852,7 @@ function LocalPlansSection({
                     <div className="px-3 py-2 bg-muted/30 space-y-2" style={{ borderTop: '1px solid hsl(222.2 47.4% 11.2% / 0.2)' }}>
                       {/* Plan metadata */}
                       {(plan.entity_subtype || plan.authority || plan.area_dunam || plan.status_date) && (
-                        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] mb-2 pb-2 border-b">
+                        <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px] mb-2 pb-2 border-b">
                           {plan.entity_subtype && (
                             <>
                               <span className="text-muted-foreground">סוג תוכנית</span>
@@ -1037,7 +1061,7 @@ function LocalPlansSection({
             <Info className="h-4 w-4 text-gray-500" />
             <h3 className="text-sm font-semibold">פרטי חלקה (מאגר מקומי)</h3>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs rounded-lg border p-3 bg-card">
+          <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-xs rounded-lg border p-3 bg-card">
             {data.parcel_detail.legal_area_sqm != null && (
               <>
                 <span className="text-muted-foreground">שטח רשום</span>

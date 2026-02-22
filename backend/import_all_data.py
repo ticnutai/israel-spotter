@@ -3,13 +3,18 @@ backend/import_all_data.py – Import ALL Kfar Chabad data into SQLite
 =====================================================================
 
 Categories:
-  1. Parcels (חלקות)     – 778 parcels with area, status, location from JSON
-  2. Plans (תוכניות)     – 71 plans from all_plans_by_block.json + _plan_data.json
-  3. Documents (מסמכים)  – ~780 files from docs/ folders
-  4. Permits (היתרים)    – from permits/ folders
-  5. TABA Outlines (קווי תב"ע) – 25 planning polygons from GeoJSON
-  6. Aerial Photos (תצ"א) – 10 years of aerial imagery
-  7. Plan-Block linkage  – which plans cover which gush/helka
+  1.  Parcels (חלקות)       – 778 parcels with area, status, location from JSON
+  2.  Plans (תוכניות)       – 71 plans from all_plans_by_block.json + _plan_data.json
+  3.  Documents (מסמכים)    – ~780 files from docs/ folders
+  4.  Permits (היתרים)      – from permits/ folders
+  5.  TABA Outlines (קווי תב"ע) – 25 planning polygons from GeoJSON
+  6.  Aerial Photos (תצ"א) – 10 years of aerial imagery
+  7.  Plan-Block linkage   – which plans cover which gush/helka
+  8.  GIS Layers (שכבות)   – 90+ iPlan/GovMap GIS layers from gis_layers/
+  9.  Complot/Migrash data – migrash/yeud/shetach from Complot SOAP/XPA
+  10. MMG Layers           – extracted SHP/GeoJSON from plan ZIP files
+  11. Document Index       – comprehensive document metadata index
+  12. Building Rights      – building rights & plan instructions summaries
 
 Run:
   cd backend
@@ -217,6 +222,69 @@ def create_schema(conn: sqlite3.Connection):
         method TEXT DEFAULT 'estimated',
         notes TEXT
     );
+
+    -- GIS layers (iPlan / GovMap / TAMA etc.) ─────────────────
+    CREATE TABLE IF NOT EXISTS gis_layers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        layer_name TEXT NOT NULL UNIQUE,
+        display_name TEXT,
+        source TEXT,
+        feature_count INTEGER DEFAULT 0,
+        file_path TEXT,
+        file_size INTEGER DEFAULT 0,
+        description TEXT,
+        category TEXT,
+        crs TEXT DEFAULT 'EPSG:2039',
+        bbox_json TEXT,
+        imported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Complot migrash data ────────────────────────────────────
+    CREATE TABLE IF NOT EXISTS migrash_data (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        gush INTEGER NOT NULL,
+        helka INTEGER NOT NULL,
+        migrash TEXT,
+        migrash_plan TEXT,
+        yeud TEXT,
+        yeud_plan TEXT,
+        shetach TEXT,
+        address TEXT,
+        plans_list TEXT,
+        source TEXT DEFAULT 'xpa',
+        raw_json TEXT,
+        UNIQUE(gush, helka)
+    );
+
+    -- MMG extracted layers (SHP from plan ZIPs) ───────────────
+    CREATE TABLE IF NOT EXISTS mmg_layers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        plan_number TEXT NOT NULL,
+        layer_name TEXT NOT NULL,
+        display_name TEXT,
+        feature_count INTEGER DEFAULT 0,
+        file_path TEXT,
+        file_size INTEGER DEFAULT 0,
+        UNIQUE(plan_number, layer_name)
+    );
+
+    -- Building rights summary ─────────────────────────────────
+    CREATE TABLE IF NOT EXISTS building_rights (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        plan_number TEXT NOT NULL,
+        description TEXT,
+        quantity_json TEXT,
+        raw_json TEXT,
+        UNIQUE(plan_number)
+    );
+
+    -- Plan instructions ───────────────────────────────────────
+    CREATE TABLE IF NOT EXISTS plan_instructions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        plan_number TEXT NOT NULL,
+        instruction_text TEXT,
+        UNIQUE(plan_number)
+    );
     """)
 
     # Add new columns to existing tables (safe ALTER TABLE)
@@ -299,6 +367,14 @@ def create_indexes(conn: sqlite3.Connection):
         "CREATE INDEX IF NOT EXISTS idx_taba_pl_number ON taba_outlines(pl_number)",
         "CREATE INDEX IF NOT EXISTS idx_permits_gush_helka ON permits(gush, helka)",
         "CREATE INDEX IF NOT EXISTS idx_aerial_year ON aerial_images(year)",
+        # New indexes for integrated data
+        "CREATE INDEX IF NOT EXISTS idx_gis_layers_source ON gis_layers(source)",
+        "CREATE INDEX IF NOT EXISTS idx_gis_layers_category ON gis_layers(category)",
+        "CREATE INDEX IF NOT EXISTS idx_migrash_gush ON migrash_data(gush)",
+        "CREATE INDEX IF NOT EXISTS idx_migrash_gush_helka ON migrash_data(gush, helka)",
+        "CREATE INDEX IF NOT EXISTS idx_mmg_plan ON mmg_layers(plan_number)",
+        "CREATE INDEX IF NOT EXISTS idx_building_rights_plan ON building_rights(plan_number)",
+        "CREATE INDEX IF NOT EXISTS idx_plan_instructions_plan ON plan_instructions(plan_number)",
     ]
     for idx in indexes:
         conn.execute(idx)
@@ -904,11 +980,373 @@ def import_plans_from_plans_folder(conn: sqlite3.Connection):
     log(f"Imported {imported} documents from plans/ folder")
 
 
+def import_gis_layers(conn: sqlite3.Connection):
+    """Import GIS layer metadata from gis_layers/ directory (iPlan, TAMA, TMM, etc.)."""
+    print("\n═══ Importing GIS layers ═══")
+    gis_dir = DATA_DIR / "gis_layers"
+    if not gis_dir.is_dir():
+        log("gis_layers/ folder not found, skipping")
+        return
+
+    imported = 0
+    for f in sorted(gis_dir.iterdir()):
+        if not f.is_file() or f.suffix.lower() != ".geojson":
+            continue
+        if f.name.startswith("_"):
+            continue
+
+        layer_name = f.stem
+        rel_path = str(f.relative_to(BASE_DIR)).replace("\\", "/")
+        file_size = f.stat().st_size
+
+        # Determine category from layer name
+        if layer_name.startswith("tmm321"):
+            category, source = "tmm321", "iPlan"
+        elif layer_name.startswith("tmm_merkaz"):
+            category, source = "tmm_merkaz", "iPlan"
+        elif layer_name.startswith("tama35"):
+            category, source = "tama35", "iPlan"
+        elif layer_name.startswith("tama1"):
+            category, source = "tama1", "iPlan"
+        elif layer_name.startswith("xplan"):
+            category, source = "xplan", "iPlan"
+        elif layer_name.startswith("gvulot"):
+            category, source = "gvulot", "iPlan"
+        elif layer_name.startswith("road_") or layer_name.startswith("train_"):
+            category, source = "transport", "iPlan"
+        elif layer_name.startswith("shimour"):
+            category, source = "shimour", "iPlan"
+        elif layer_name.startswith("arcgis_"):
+            category, source = "arcgis", "ArcGIS"
+        else:
+            category, source = "other", "iPlan"
+
+        # Count features
+        feature_count = 0
+        try:
+            with open(f, "r", encoding="utf-8") as fp:
+                data = json.load(fp)
+            feature_count = len(data.get("features", []))
+        except Exception:
+            pass
+
+        # Human-readable display name
+        display_name = layer_name.replace("_", " ").replace("tmm321 ", "תמ\"מ 3/21 – ").replace(
+            "tama35 ", "תמ\"א 35 – ").replace("tama1 ", "תמ\"א 1 – ")
+
+        conn.execute("""
+            INSERT INTO gis_layers
+            (layer_name, display_name, source, feature_count, file_path,
+             file_size, category)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(layer_name) DO UPDATE SET
+                feature_count = excluded.feature_count,
+                file_path = excluded.file_path,
+                file_size = excluded.file_size,
+                display_name = excluded.display_name,
+                source = excluded.source,
+                category = excluded.category
+        """, (layer_name, display_name, source, feature_count, rel_path,
+              file_size, category))
+        imported += 1
+
+    conn.commit()
+    log(f"Imported {imported} GIS layers")
+
+
+def import_migrash_data(conn: sqlite3.Connection):
+    """Import migrash (lot) data from Complot XPA/SOAP results."""
+    print("\n═══ Importing migrash data ═══")
+
+    imported = 0
+
+    # Source 1: migrash_helka_mapping.json (clean mapping)
+    mapping_file = DATA_DIR / "migrash_helka_mapping.json"
+    if mapping_file.exists():
+        with open(mapping_file, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+
+        # Handle different structures:
+        # Structure A: {"mapping": [list of dicts]} with metadata
+        # Structure B: {"gush": {"helka": {...}}} nested dict
+        mapping_list = []
+        if isinstance(raw, dict):
+            if "mapping" in raw:
+                mapping_list = raw["mapping"] if isinstance(raw["mapping"], list) else []
+            else:
+                # Nested gush→helka dict
+                for gush_str, parcels in raw.items():
+                    if not isinstance(parcels, dict):
+                        continue
+                    try:
+                        gush = int(gush_str)
+                    except ValueError:
+                        continue
+                    for helka_str, info in parcels.items():
+                        try:
+                            helka = int(helka_str)
+                        except ValueError:
+                            continue
+                        if isinstance(info, dict):
+                            info["gush"] = gush
+                            info["helka"] = helka
+                            mapping_list.append(info)
+                        else:
+                            mapping_list.append({"gush": gush, "helka": helka, "migrash": str(info)})
+        elif isinstance(raw, list):
+            mapping_list = raw
+
+        for item in mapping_list:
+            gush = item.get("gush")
+            helka = item.get("helka")
+            if not gush or not helka:
+                continue
+
+            conn.execute("""
+                INSERT INTO migrash_data
+                (gush, helka, migrash, migrash_plan, yeud, yeud_plan,
+                 shetach, address, plans_list, source, raw_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(gush, helka) DO UPDATE SET
+                    migrash = COALESCE(excluded.migrash, migrash_data.migrash),
+                    migrash_plan = COALESCE(excluded.migrash_plan, migrash_data.migrash_plan),
+                    yeud = COALESCE(excluded.yeud, migrash_data.yeud),
+                    yeud_plan = COALESCE(excluded.yeud_plan, migrash_data.yeud_plan),
+                    shetach = COALESCE(excluded.shetach, migrash_data.shetach),
+                    address = COALESCE(excluded.address, migrash_data.address),
+                    plans_list = COALESCE(excluded.plans_list, migrash_data.plans_list),
+                    raw_json = COALESCE(excluded.raw_json, migrash_data.raw_json)
+            """, (
+                gush, helka,
+                item.get("migrash", ""),
+                item.get("migrash_plan", item.get("plan", "")),
+                item.get("yeud", ""),
+                item.get("yeud_plan", ""),
+                str(item.get("shetach_sqm", item.get("shetach", ""))),
+                item.get("address", ""),
+                item.get("plans_list", item.get("plans", "")),
+                item.get("source", "mapping"),
+                json.dumps(item, ensure_ascii=False),
+            ))
+            imported += 1
+
+    # Source 2: per-gush migrash data files from Complot
+    complot_dir = DATA_DIR / "complot_kfar_chabad"
+    if complot_dir.is_dir():
+        for f in complot_dir.iterdir():
+            if not f.name.startswith("migrash_data_gush_") or not f.name.endswith(".json"):
+                continue
+            try:
+                gush = int(f.name.replace("migrash_data_gush_", "").replace(".json", ""))
+                with open(f, "r", encoding="utf-8") as fp:
+                    gush_data = json.load(fp)
+
+                for helka_str, info in gush_data.items():
+                    if not isinstance(info, dict):
+                        continue
+                    try:
+                        helka = int(helka_str)
+                    except ValueError:
+                        continue
+
+                    raw_json = json.dumps(info, ensure_ascii=False)
+                    conn.execute("""
+                        INSERT INTO migrash_data
+                        (gush, helka, migrash, migrash_plan, yeud, yeud_plan,
+                         shetach, address, plans_list, source, raw_json)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'xpa', ?)
+                        ON CONFLICT(gush, helka) DO UPDATE SET
+                            raw_json = excluded.raw_json,
+                            source = 'xpa',
+                            migrash = COALESCE(excluded.migrash, migrash_data.migrash),
+                            yeud = COALESCE(excluded.yeud, migrash_data.yeud),
+                            shetach = COALESCE(excluded.shetach, migrash_data.shetach)
+                    """, (
+                        gush, helka,
+                        info.get("migrash", ""),
+                        info.get("migrash_plan", ""),
+                        info.get("yeud", ""),
+                        info.get("yeud_plan", ""),
+                        str(info.get("shetach", "")),
+                        info.get("address", ""),
+                        info.get("plans", ""),
+                        raw_json,
+                    ))
+                    imported += 1
+
+            except Exception:
+                continue
+
+    conn.commit()
+    log(f"Imported {imported} migrash records")
+
+
+def import_mmg_layers(conn: sqlite3.Connection):
+    """Import MMG layer index (SHP extracts from plan ZIP files)."""
+    print("\n═══ Importing MMG layers ═══")
+    mmg_dir = DATA_DIR / "mmg"
+    if not mmg_dir.is_dir():
+        log("mmg/ folder not found, skipping")
+        return
+
+    # Load index for display name lookup (may only cover some plans)
+    index_file = mmg_dir / "mmg_index.json"
+    display_names = {}  # (plan, layer_name) → display_name
+    if index_file.exists():
+        with open(index_file, "r", encoding="utf-8") as f:
+            mmg_index = json.load(f)
+        for plan_number, layers in mmg_index.items():
+            if isinstance(layers, list):
+                for layer_info in layers:
+                    name = layer_info.get("name", layer_info.get("layer", ""))
+                    name_heb = layer_info.get("name_heb", name)
+                    display_names[(plan_number, name)] = name_heb
+
+    imported = 0
+
+    # Always scan directory structure: mmg/{plan_number}/{layer}.geojson
+    for plan_dir in sorted(mmg_dir.iterdir()):
+        if not plan_dir.is_dir():
+            continue
+        plan_number = plan_dir.name
+
+        for f in sorted(plan_dir.iterdir()):
+            if not f.is_file() or f.suffix.lower() != ".geojson":
+                continue
+
+            layer_name = f.stem
+            rel_path = str(f.relative_to(BASE_DIR)).replace("\\", "/")
+            file_size = f.stat().st_size
+            display_name = display_names.get((plan_number, layer_name), layer_name)
+
+            feature_count = 0
+            try:
+                with open(f, "r", encoding="utf-8") as fp:
+                    data = json.load(fp)
+                feature_count = len(data.get("features", []))
+            except Exception:
+                pass
+
+            conn.execute("""
+                INSERT INTO mmg_layers
+                (plan_number, layer_name, display_name, feature_count,
+                 file_path, file_size)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(plan_number, layer_name) DO UPDATE SET
+                    feature_count = excluded.feature_count,
+                    file_path = excluded.file_path,
+                    file_size = excluded.file_size,
+                    display_name = excluded.display_name
+            """, (plan_number, layer_name, display_name, feature_count,
+                  rel_path, file_size))
+            imported += 1
+
+    conn.commit()
+    log(f"Imported {imported} MMG layers across {len(list(mmg_dir.iterdir()) if mmg_dir.is_dir() else [])} plans")
+
+
+def import_building_rights(conn: sqlite3.Connection):
+    """Import building rights and plan instructions summaries."""
+    print("\n═══ Importing building rights & instructions ═══")
+
+    # Building rights
+    br_file = DATA_DIR / "building_rights_summary.json"
+    br_count = 0
+    if br_file.exists():
+        with open(br_file, "r", encoding="utf-8") as f:
+            br_data = json.load(f)
+
+        for plan_number, info in br_data.items():
+            desc = ""
+            quantity_json = ""
+            raw_json = json.dumps(info, ensure_ascii=False) if info else ""
+
+            if isinstance(info, dict):
+                desc = info.get("description", "")
+                quantities = info.get("quantities", info.get("rsQuantity", []))
+                quantity_json = json.dumps(quantities, ensure_ascii=False) if quantities else ""
+            elif isinstance(info, list):
+                quantity_json = json.dumps(info, ensure_ascii=False)
+
+            conn.execute("""
+                INSERT INTO building_rights (plan_number, description, quantity_json, raw_json)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(plan_number) DO UPDATE SET
+                    description = excluded.description,
+                    quantity_json = excluded.quantity_json,
+                    raw_json = excluded.raw_json
+            """, (plan_number, desc, quantity_json, raw_json))
+            br_count += 1
+
+    # Plan instructions
+    pi_file = DATA_DIR / "plan_instructions_summary.json"
+    pi_count = 0
+    if pi_file.exists():
+        with open(pi_file, "r", encoding="utf-8") as f:
+            pi_data = json.load(f)
+
+        for plan_number, instruction_text in pi_data.items():
+            if not instruction_text:
+                continue
+            text = instruction_text if isinstance(instruction_text, str) else json.dumps(
+                instruction_text, ensure_ascii=False)
+
+            conn.execute("""
+                INSERT INTO plan_instructions (plan_number, instruction_text)
+                VALUES (?, ?)
+                ON CONFLICT(plan_number) DO UPDATE SET
+                    instruction_text = excluded.instruction_text
+            """, (plan_number, text))
+            pi_count += 1
+
+    conn.commit()
+    log(f"Imported {br_count} building rights, {pi_count} plan instructions")
+
+
+def import_cadastre_geojson(conn: sqlite3.Connection):
+    """Import cadastre GeoJSON boundaries from cadastre/ directory."""
+    print("\n═══ Importing cadastre GeoJSON ═══")
+    cad_dir = DATA_DIR / "cadastre"
+    if not cad_dir.is_dir():
+        log("cadastre/ folder not found, skipping")
+        return
+
+    imported = 0
+    for f in sorted(cad_dir.iterdir()):
+        if not f.is_file() or f.suffix.lower() != ".geojson":
+            continue
+        rel_path = str(f.relative_to(BASE_DIR)).replace("\\", "/")
+
+        feature_count = 0
+        try:
+            with open(f, "r", encoding="utf-8") as fp:
+                data = json.load(fp)
+            feature_count = len(data.get("features", []))
+        except Exception:
+            pass
+
+        layer_name = f"cadastre_{f.stem}"
+        conn.execute("""
+            INSERT INTO gis_layers
+            (layer_name, display_name, source, feature_count, file_path,
+             file_size, category)
+            VALUES (?, ?, 'cadastre', ?, ?, ?, 'cadastre')
+            ON CONFLICT(layer_name) DO UPDATE SET
+                feature_count = excluded.feature_count,
+                file_path = excluded.file_path,
+                file_size = excluded.file_size
+        """, (layer_name, f.stem, feature_count, rel_path, f.stat().st_size))
+        imported += 1
+
+    conn.commit()
+    log(f"Imported {imported} cadastre GeoJSON layers")
+
+
 def update_aggregates(conn: sqlite3.Connection):
     """Update all aggregate counts in gushim and parcels tables."""
     print("\n═══ Updating aggregate counts ═══")
 
-    # Update gushim counts
+    # Update gushim counts (including migrash data)
     conn.execute("""
         UPDATE gushim SET
             plan_count = (
@@ -973,6 +1411,11 @@ def print_summary(conn: sqlite3.Connection):
         ("taba_outlines", "קווי תב\"ע"),
         ("aerial_images", "תצ\"א"),
         ("plan_georef", "גיאורפרנס"),
+        ("gis_layers", "שכבות GIS"),
+        ("migrash_data", "נתוני מגרשים"),
+        ("mmg_layers", "שכבות MMG"),
+        ("building_rights", "זכויות בנייה"),
+        ("plan_instructions", "הוראות תוכנית"),
     ]
 
     for table, label in tables:
@@ -1024,6 +1467,13 @@ def main():
         import_permits(conn)
         import_taba(conn)
         import_aerial(conn)
+        # New data sources from gushim_halakot_project
+        import_gis_layers(conn)
+        import_migrash_data(conn)
+        import_mmg_layers(conn)
+        import_building_rights(conn)
+        import_cadastre_geojson(conn)
+        # Final aggregation
         update_aggregates(conn)
         create_indexes(conn)
         print_summary(conn)

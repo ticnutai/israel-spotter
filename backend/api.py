@@ -1143,6 +1143,275 @@ def _refresh_aggregates(conn, gush: int, helka: int):
         )
 
 
+# ═══ New endpoints from gushim_halakot integration ═══════════════════════════
+
+GIS_LAYERS_DIR = DATA_DIR / "gis_layers"
+MMG_DIR = DATA_DIR / "mmg"
+COMPLOT_DIR = DATA_DIR / "complot_kfar_chabad"
+CADASTRE_DIR = DATA_DIR / "cadastre"
+
+
+@app.get("/api/gis-layers")
+async def list_gis_layers(
+    category: Optional[str] = None,
+    source: Optional[str] = None,
+    search: Optional[str] = None,
+):
+    """List available GIS layers (iPlan, TAMA, TMM, GovMap, cadastre)."""
+    conn = get_db()
+    if not conn:
+        # Fallback: scan directory
+        if not GIS_LAYERS_DIR.exists():
+            return {"layers": [], "total": 0}
+        layers = []
+        for f in sorted(GIS_LAYERS_DIR.iterdir()):
+            if f.suffix.lower() == ".geojson" and not f.name.startswith("_"):
+                layers.append({
+                    "layer_name": f.stem,
+                    "file_path": str(f.relative_to(BASE_DIR)).replace("\\", "/"),
+                    "file_size": f.stat().st_size,
+                })
+        return {"layers": layers, "total": len(layers)}
+
+    try:
+        where_parts = ["1=1"]
+        params = []
+        if category:
+            where_parts.append("category = ?")
+            params.append(category)
+        if source:
+            where_parts.append("source = ?")
+            params.append(source)
+        if search:
+            where_parts.append("(layer_name LIKE ? OR display_name LIKE ?)")
+            params.extend([f"%{search}%", f"%{search}%"])
+
+        where = " AND ".join(where_parts)
+        rows = conn.execute(
+            f"SELECT * FROM gis_layers WHERE {where} ORDER BY category, layer_name",
+            params,
+        ).fetchall()
+        return {"layers": [dict(r) for r in rows], "total": len(rows)}
+    finally:
+        conn.close()
+
+
+@app.get("/api/gis-layers/{layer_name}/geojson")
+async def get_gis_layer_geojson(layer_name: str):
+    """Serve a GIS layer as GeoJSON."""
+    # Try gis_layers directory
+    for base_dir in [GIS_LAYERS_DIR, CADASTRE_DIR]:
+        if not base_dir.exists():
+            continue
+        fpath = base_dir / f"{layer_name}.geojson"
+        if fpath.exists():
+            return FileResponse(str(fpath), media_type="application/geo+json")
+
+    raise HTTPException(404, f"GIS layer '{layer_name}' not found")
+
+
+@app.get("/api/migrash")
+async def get_migrash(
+    gush: Optional[int] = None,
+    helka: Optional[int] = None,
+):
+    """Query migrash (lot) data from Complot."""
+    conn = get_db()
+    if not conn:
+        # Fallback: read from JSON
+        mapping_file = DATA_DIR / "migrash_helka_mapping.json"
+        if not mapping_file.exists():
+            return {"migrash": [], "total": 0}
+        with open(mapping_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if gush and helka:
+            info = data.get(str(gush), {}).get(str(helka))
+            return {"migrash": [info] if info else [], "total": 1 if info else 0}
+        if gush:
+            gush_data = data.get(str(gush), {})
+            items = [{"helka": int(k), **v} if isinstance(v, dict) else {"helka": int(k), "migrash": v}
+                     for k, v in gush_data.items()]
+            return {"migrash": items, "total": len(items)}
+        return {"migrash": [], "total": 0, "note": "Specify gush and/or helka"}
+
+    try:
+        if gush and helka:
+            rows = conn.execute(
+                "SELECT * FROM migrash_data WHERE gush = ? AND helka = ?",
+                (gush, helka),
+            ).fetchall()
+        elif gush:
+            rows = conn.execute(
+                "SELECT * FROM migrash_data WHERE gush = ? ORDER BY helka",
+                (gush,),
+            ).fetchall()
+        else:
+            return {"migrash": [], "total": 0, "note": "Specify gush and/or helka"}
+        return {"migrash": [dict(r) for r in rows], "total": len(rows)}
+    finally:
+        conn.close()
+
+
+@app.get("/api/mmg")
+async def list_mmg_plans():
+    """List plans with extracted MMG (SHP) layers."""
+    conn = get_db()
+    if not conn:
+        # Fallback: scan directory
+        if not MMG_DIR.exists():
+            return {"plans": [], "total": 0}
+        plans = []
+        for plan_dir in sorted(MMG_DIR.iterdir()):
+            if plan_dir.is_dir():
+                layers = [f.stem for f in plan_dir.iterdir() if f.suffix == ".geojson"]
+                plans.append({"plan_number": plan_dir.name, "layers": layers,
+                              "layer_count": len(layers)})
+        return {"plans": plans, "total": len(plans)}
+
+    try:
+        rows = conn.execute("""
+            SELECT plan_number, COUNT(*) as layer_count,
+                   GROUP_CONCAT(layer_name) as layers
+            FROM mmg_layers GROUP BY plan_number ORDER BY plan_number
+        """).fetchall()
+        plans = [{"plan_number": r["plan_number"], "layer_count": r["layer_count"],
+                  "layers": r["layers"].split(",") if r["layers"] else []}
+                 for r in rows]
+        return {"plans": plans, "total": len(plans)}
+    finally:
+        conn.close()
+
+
+@app.get("/api/mmg/{plan_number}/{layer_name}.geojson")
+async def get_mmg_layer(plan_number: str, layer_name: str):
+    """Serve an MMG layer GeoJSON for a specific plan."""
+    fpath = MMG_DIR / plan_number / f"{layer_name}.geojson"
+    if not fpath.exists():
+        raise HTTPException(404, f"MMG layer {layer_name} not found for plan {plan_number}")
+    return FileResponse(str(fpath), media_type="application/geo+json")
+
+
+@app.get("/api/building-rights")
+async def list_building_rights(
+    plan_number: Optional[str] = None,
+):
+    """Get building rights for a plan or list all."""
+    conn = get_db()
+    if not conn:
+        # Fallback: read JSON
+        br_file = DATA_DIR / "building_rights_summary.json"
+        if not br_file.exists():
+            return {"rights": [], "total": 0}
+        with open(br_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if plan_number:
+            info = data.get(plan_number)
+            return {"rights": [{"plan_number": plan_number, "data": info}] if info else [],
+                    "total": 1 if info else 0}
+        items = [{"plan_number": k, "data": v} for k, v in data.items()]
+        return {"rights": items, "total": len(items)}
+
+    try:
+        if plan_number:
+            rows = conn.execute(
+                "SELECT * FROM building_rights WHERE plan_number = ?",
+                (plan_number,),
+            ).fetchall()
+        else:
+            rows = conn.execute("SELECT * FROM building_rights").fetchall()
+        return {"rights": [dict(r) for r in rows], "total": len(rows)}
+    finally:
+        conn.close()
+
+
+@app.get("/api/plan-instructions")
+async def list_plan_instructions(
+    plan_number: Optional[str] = None,
+):
+    """Get plan instructions for a specific plan or list all."""
+    conn = get_db()
+    if not conn:
+        pi_file = DATA_DIR / "plan_instructions_summary.json"
+        if not pi_file.exists():
+            return {"instructions": [], "total": 0}
+        with open(pi_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if plan_number:
+            text = data.get(plan_number)
+            return {"instructions": [{"plan_number": plan_number, "text": text}] if text else [],
+                    "total": 1 if text else 0}
+        items = [{"plan_number": k, "text": v} for k, v in data.items()]
+        return {"instructions": items, "total": len(items)}
+
+    try:
+        if plan_number:
+            rows = conn.execute(
+                "SELECT * FROM plan_instructions WHERE plan_number = ?",
+                (plan_number,),
+            ).fetchall()
+        else:
+            rows = conn.execute("SELECT * FROM plan_instructions").fetchall()
+        return {"instructions": [dict(r) for r in rows], "total": len(rows)}
+    finally:
+        conn.close()
+
+
+@app.get("/api/complot")
+async def get_complot_data():
+    """Return Complot parsed data (migrashim, SOAP responses)."""
+    complot_file = COMPLOT_DIR / "complot_parsed.json"
+    if not complot_file.exists():
+        # Try all_migrashim_by_gush.json
+        alt = COMPLOT_DIR / "all_migrashim_by_gush.json"
+        if alt.exists():
+            with open(alt, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return {"error": "No Complot data found"}
+    with open(complot_file, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+@app.get("/api/cadastre/{filename}")
+async def get_cadastre_file(filename: str):
+    """Serve cadastre GeoJSON files."""
+    if not filename.endswith(".geojson"):
+        filename += ".geojson"
+    fpath = CADASTRE_DIR / filename
+    if not fpath.exists():
+        raise HTTPException(404, f"Cadastre file '{filename}' not found")
+    return FileResponse(str(fpath), media_type="application/geo+json")
+
+
+@app.get("/api/document-index")
+async def get_document_index():
+    """Return comprehensive document index from all_documents_index.json."""
+    index_file = DATA_DIR / "all_documents_index.json"
+    if not index_file.exists():
+        return {"error": "Document index not available", "total": 0}
+    with open(index_file, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+@app.get("/api/metadata/blocks-parcels")
+async def get_blocks_parcels_by_plan():
+    """Return block→plan mapping from blocks_parcels_by_plan.json."""
+    bp_file = DATA_DIR / "blocks_parcels_by_plan.json"
+    if not bp_file.exists():
+        return {"error": "Block-parcel mapping not available"}
+    with open(bp_file, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+@app.get("/api/metadata/extracted")
+async def get_mavat_extracted_metadata():
+    """Return full MAVAT extracted metadata."""
+    meta_file = DATA_DIR / "mavat_extracted_metadata.json"
+    if not meta_file.exists():
+        return {"error": "MAVAT metadata not available"}
+    with open(meta_file, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 # ─── Static file serving ─────────────────────────────────────────────────
 if AERIAL_DIR.exists():
     app.mount("/static/aerial", StaticFiles(directory=str(AERIAL_DIR)), name="aerial")
@@ -1150,3 +1419,9 @@ if PLANS_DIR.exists():
     app.mount("/static/plans", StaticFiles(directory=str(PLANS_DIR)), name="plans")
 if UPLOADS_DIR.exists():
     app.mount("/static/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
+if GIS_LAYERS_DIR.exists():
+    app.mount("/static/gis_layers", StaticFiles(directory=str(GIS_LAYERS_DIR)), name="gis_layers")
+if MMG_DIR.exists():
+    app.mount("/static/mmg", StaticFiles(directory=str(MMG_DIR)), name="mmg")
+if CADASTRE_DIR.exists():
+    app.mount("/static/cadastre", StaticFiles(directory=str(CADASTRE_DIR)), name="cadastre")

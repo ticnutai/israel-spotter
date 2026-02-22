@@ -31,18 +31,26 @@ from sdan_common import KFAR_CHABAD_GUSHIM, process_gush
 DOWNLOAD_ROOT = "./kfar_chabad_data"
 SDAN_CATEGORIES = ["plans", "permits"]
 API_CATEGORIES = ["cadastral", "mavat", "govmap", "details"]
+IPLAN_CATEGORIES = ["iplan_layers", "taba", "complot", "migrash", "mavat_docs"]
 ALL_CATEGORIES = ["cadastral", "mavat", "govmap", "details",
-                  "plans", "permits", "aerial", "georef"]
+                  "iplan_layers", "taba", "complot", "migrash", "mavat_docs",
+                  "plans", "permits", "aerial", "georef", "import_db"]
 
 CATEGORY_NAMES = {
     "cadastral": "מידע קדסטרי (ArcGIS מפות ישראל)",
     "mavat": "תכניות ממבא\"ת (IPA)",
     "govmap": "שכבות GIS (GovMap)",
     "details": "פרטי חלקות מפורטים",
+    "iplan_layers": "שכבות iPlan (תמ\"מ, תמ\"א, XPlan – 70+ שכבות)",
+    "taba": "תב\"ע כפר חב\"ד מ-iPlan",
+    "complot": "נתוני Complot (מגרשים, SOAP)",
+    "migrash": "נתוני מגרשים (XPA HTTP API)",
+    "mavat_docs": "מסמכי מבא\"ת + reCAPTCHA",
     "plans": "תכניות בניין עיר (תב\"ע) – SDAN",
     "permits": "בקשות להיתר בנייה – SDAN",
     "aerial": "צילומי אוויר (GIS-net)",
     "georef": "גיאורפרנס תשריטים",
+    "import_db": "ייבוא לבסיס נתונים SQLite",
 }
 
 
@@ -265,6 +273,202 @@ def run_parcel_details(gushim: list, html_report: bool = False):
     return {"files": total_files, "errors": total_errors}
 
 
+def run_iplan_layers():
+    """Download ~70 iPlan GIS layers (TMM, TAMA, XPlan, etc.)."""
+    import subprocess
+    import sys
+
+    name = CATEGORY_NAMES["iplan_layers"]
+    print(f"\n{'═'*50}")
+    print(f"  {name}")
+    print(f"{'═'*50}\n")
+
+    start = time.time()
+    script = os.path.join("scripts", "downloaders", "download_iplan_layers.py")
+    if not os.path.exists(script):
+        print(f"  Script not found: {script}")
+        return {"files": 0, "errors": 1}
+
+    try:
+        result = subprocess.run(
+            [sys.executable, script],
+            capture_output=True, text=True, timeout=600
+        )
+        print(result.stdout[-500:] if len(result.stdout) > 500 else result.stdout)
+        if result.returncode != 0:
+            print(f"  STDERR: {result.stderr[-300:]}")
+        total_files = result.stdout.count("features")
+        total_errors = 1 if result.returncode != 0 else 0
+    except Exception as e:
+        print(f"  שגיאה: {e}")
+        total_files, total_errors = 0, 1
+
+    elapsed = time.time() - start
+    print(f"\n  סיכום {name}: {elapsed:.1f} שניות")
+    return {"files": total_files, "errors": total_errors}
+
+
+def run_taba_download():
+    """Download TABA (תב\"ע) from iPlan GIS service."""
+    import subprocess
+    import sys
+
+    name = CATEGORY_NAMES["taba"]
+    print(f"\n{'═'*50}")
+    print(f"  {name}")
+    print(f"{'═'*50}\n")
+
+    start = time.time()
+    script = os.path.join("scripts", "downloaders", "download_taba_kfar_chabad.py")
+    if not os.path.exists(script):
+        print(f"  Script not found: {script}")
+        return {"files": 0, "errors": 1}
+
+    try:
+        result = subprocess.run(
+            [sys.executable, script],
+            capture_output=True, text=True, timeout=300
+        )
+        print(result.stdout[-500:] if len(result.stdout) > 500 else result.stdout)
+        total_errors = 1 if result.returncode != 0 else 0
+        total_files = 1 if result.returncode == 0 else 0
+    except Exception as e:
+        print(f"  שגיאה: {e}")
+        total_files, total_errors = 0, 1
+
+    elapsed = time.time() - start
+    print(f"\n  סיכום {name}: {elapsed:.1f} שניות")
+    return {"files": total_files, "errors": total_errors}
+
+
+def run_complot():
+    """Download Complot plan data via Playwright."""
+    import subprocess
+    import sys
+
+    name = CATEGORY_NAMES["complot"]
+    print(f"\n{'═'*50}")
+    print(f"  {name}")
+    print(f"{'═'*50}\n")
+
+    start = time.time()
+    script = os.path.join("scripts", "downloaders", "download_complot_kfar_chabad.py")
+    if not os.path.exists(script):
+        print(f"  Script not found: {script}")
+        return {"files": 0, "errors": 1}
+
+    try:
+        result = subprocess.run(
+            [sys.executable, script, "--list-only"],
+            capture_output=True, text=True, timeout=300
+        )
+        print(result.stdout[-500:] if len(result.stdout) > 500 else result.stdout)
+        total_errors = 1 if result.returncode != 0 else 0
+        total_files = result.stdout.count("plan")
+    except Exception as e:
+        print(f"  שגיאה: {e}")
+        total_files, total_errors = 0, 1
+
+    elapsed = time.time() - start
+    print(f"\n  סיכום {name}: {elapsed:.1f} שניות")
+    return {"files": total_files, "errors": total_errors}
+
+
+def run_migrash_download():
+    """Download migrash data via XPA HTTP API (no browser needed)."""
+    import subprocess
+    import sys
+
+    name = CATEGORY_NAMES["migrash"]
+    print(f"\n{'═'*50}")
+    print(f"  {name}")
+    print(f"{'═'*50}\n")
+
+    start = time.time()
+    script = os.path.join("scripts", "downloaders", "download_migrash_xpa.py")
+    if not os.path.exists(script):
+        print(f"  Script not found: {script}")
+        return {"files": 0, "errors": 1}
+
+    try:
+        result = subprocess.run(
+            [sys.executable, script],
+            capture_output=True, text=True, timeout=600
+        )
+        print(result.stdout[-500:] if len(result.stdout) > 500 else result.stdout)
+        total_errors = 1 if result.returncode != 0 else 0
+        total_files = result.stdout.count("gush")
+    except Exception as e:
+        print(f"  שגיאה: {e}")
+        total_files, total_errors = 0, 1
+
+    elapsed = time.time() - start
+    print(f"\n  סיכום {name}: {elapsed:.1f} שניות")
+    return {"files": total_files, "errors": total_errors}
+
+
+def run_mavat_docs():
+    """Download MAVAT documents with reCAPTCHA via Playwright."""
+    import subprocess
+    import sys
+
+    name = CATEGORY_NAMES["mavat_docs"]
+    print(f"\n{'═'*50}")
+    print(f"  {name}")
+    print(f"{'═'*50}\n")
+
+    start = time.time()
+    script = os.path.join("scripts", "downloaders", "download_kfar_chabad_docs.py")
+    if not os.path.exists(script):
+        print(f"  Script not found: {script}")
+        return {"files": 0, "errors": 1}
+
+    try:
+        result = subprocess.run(
+            [sys.executable, script],
+            capture_output=True, text=True, timeout=3600  # Long timeout for docs
+        )
+        print(result.stdout[-500:] if len(result.stdout) > 500 else result.stdout)
+        total_errors = 1 if result.returncode != 0 else 0
+        total_files = result.stdout.count("Downloaded")
+    except Exception as e:
+        print(f"  שגיאה: {e}")
+        total_files, total_errors = 0, 1
+
+    elapsed = time.time() - start
+    print(f"\n  סיכום {name}: {elapsed/60:.1f} דקות")
+    return {"files": total_files, "errors": total_errors}
+
+
+def run_import_db():
+    """Run the DB import to incorporate all downloaded data."""
+    import subprocess
+    import sys
+
+    name = CATEGORY_NAMES["import_db"]
+    print(f"\n{'═'*50}")
+    print(f"  {name}")
+    print(f"{'═'*50}\n")
+
+    start = time.time()
+    try:
+        result = subprocess.run(
+            [sys.executable, os.path.join("backend", "import_all_data.py")],
+            capture_output=True, text=True, timeout=120
+        )
+        print(result.stdout)
+        if result.returncode != 0:
+            print(f"  STDERR: {result.stderr[-300:]}")
+        total_errors = 1 if result.returncode != 0 else 0
+    except Exception as e:
+        print(f"  שגיאה: {e}")
+        total_errors = 1
+
+    elapsed = time.time() - start
+    print(f"\n  סיכום {name}: {elapsed:.1f} שניות")
+    return {"files": 0, "errors": total_errors}
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="הורדת כל המידע של כפר חב\"ד – קדסטר + תכניות + היתרים + צילומי אוויר + שכבות GIS"
@@ -348,11 +552,33 @@ def main():
         result = run_parcel_details(gushim, html_report=args.html_report)
         all_results.append(result)
 
+    # ── Phase 1.5: iPlan & Complot API downloads (no browser needed) ──
+    if "iplan_layers" in categories:
+        result = run_iplan_layers()
+        all_results.append(result)
+
+    if "taba" in categories:
+        result = run_taba_download()
+        all_results.append(result)
+
+    if "migrash" in categories:
+        result = run_migrash_download()
+        all_results.append(result)
+
     # ── Phase 2: SDAN categories (plans / permits – needs browser) ──
     sdan_cats = [c for c in categories if c in SDAN_CATEGORIES]
     for cat in sdan_cats:
         results = run_sdan_category(cat, gushim, workers)
         all_results.extend(results)
+
+    # ── Phase 2.5: Playwright-based downloads ──
+    if "complot" in categories:
+        result = run_complot()
+        all_results.append(result)
+
+    if "mavat_docs" in categories:
+        result = run_mavat_docs()
+        all_results.append(result)
 
     # ── Phase 3: GIS aerial download (needs browser) ──
     if "aerial" in categories:
@@ -363,6 +589,11 @@ def main():
     if "georef" in categories:
         georef_result = run_georef()
         all_results.append(georef_result)
+
+    # ── Phase 5: Import all data to DB ──
+    if "import_db" in categories:
+        import_result = run_import_db()
+        all_results.append(import_result)
 
     total_elapsed = time.time() - total_start
     grand_files = sum(r["files"] for r in all_results)
@@ -388,8 +619,18 @@ def main():
     if "aerial" in categories:
         print(f"    צילומי אוויר:        gis_downloads/aerial/")
     if "georef" in categories:
-        print(f"    גיאורפרנס:           {DOWNLOAD_ROOT}/plans/ (*.jgw + *.prj)")
-    print(f"    מסד נתונים:           kfar_chabad_documents.db")
+        print(f"    גיאורפרנס:           {DOWNLOAD_ROOT}/plans/ (*.jgw + *.prj)")    if "iplan_layers" in categories:
+        print(f"    שכבות iPlan:          {DOWNLOAD_ROOT}/gis_layers/")
+    if "taba" in categories:
+        print(f"    תב\"ע iPlan:           {DOWNLOAD_ROOT}/taba_kfar_chabad.geojson")
+    if "complot" in categories:
+        print(f"    Complot:              {DOWNLOAD_ROOT}/complot_kfar_chabad/")
+    if "migrash" in categories:
+        print(f"    מגרשים:               {DOWNLOAD_ROOT}/migrash_helka_mapping.json")
+    if "mavat_docs" in categories:
+        print(f"    מסמכי מבא\"ת:          {DOWNLOAD_ROOT}/docs/")
+    if "import_db" in categories:
+        print(f"    בסיס נתונים:          kfar_chabad_documents.db")    print(f"    מסד נתונים:           kfar_chabad_documents.db")
     print(f"{'═'*55}")
 
 
