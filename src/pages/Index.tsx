@@ -27,6 +27,7 @@ const Index = () => {
   const isMobile = useIsMobile();
   const [showSidebar, setShowSidebar] = useState(false);
   const [parcelColorMode, setParcelColorMode] = useState<ParcelColorMode>("default");
+  const [georefActive, setGeorefActive] = useState(false);
 
   // ── URL deep-link: open parcel from ?gush=X&helka=Y ──
   useEffect(() => {
@@ -180,6 +181,7 @@ const Index = () => {
         onSelectAerialYear={setAerialYear}
         onSelectPlanImage={setPlanPath}
         onShowGisLayer={(layer) => setGisOverlay(layer ? layer.geojson : null)}
+        onActivateGeoref={() => setGeorefActive(true)}
       />
 
       {/* Main content */}
@@ -201,6 +203,8 @@ const Index = () => {
             highlightGeometry={highlightGeometry}
             gisOverlay={gisOverlay}
             parcelColorMode={parcelColorMode}
+            georefActive={georefActive}
+            onGeorefClose={() => setGeorefActive(false)}
           />
           {boundaries && <MapLegend colorMode={parcelColorMode} onColorModeChange={setParcelColorMode} />}
           

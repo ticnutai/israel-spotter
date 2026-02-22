@@ -9,6 +9,7 @@ import { ScaleBarControl } from "./ScaleBarControl";
 import { CoordinateDisplay } from "./CoordinateDisplay";
 import { AerialOverlay } from "./AerialOverlay";
 import { PlanOverlay } from "./PlanOverlay";
+import { GeorefTool } from "./GeorefTool";
 import { useLayerStore } from "@/hooks/use-layer-store";
 import { getLandUseByName } from "@/lib/land-use-colors";
 
@@ -85,6 +86,8 @@ interface MapViewProps {
   highlightGeometry?: GeoJSON.Geometry | null;
   gisOverlay?: GeoJSON.FeatureCollection | null;
   parcelColorMode?: ParcelColorMode;
+  georefActive?: boolean;
+  onGeorefClose?: () => void;
 }
 
 // ── Parcel color helpers ──
@@ -138,7 +141,7 @@ function getParcelStyle(
   };
 }
 
-function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, onMapClick, highlightGeometry, gisOverlay, parcelColorMode = "default" }: MapViewProps) {
+function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, onMapClick, highlightGeometry, gisOverlay, parcelColorMode = "default", georefActive = false, onGeorefClose }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const boundaryLayerRef = useRef<L.LayerGroup | null>(null);
@@ -661,6 +664,13 @@ function MapViewInner({ result, boundaries, aerialYear, planPath, onClearPlan, o
           map={mapRef.current}
           planPath={planPath ?? null}
           onClose={onClearPlan ?? (() => {})}
+        />
+      )}
+      {mapReady && (
+        <GeorefTool
+          map={mapRef.current}
+          active={georefActive}
+          onClose={onGeorefClose ?? (() => {})}
         />
       )}
     </div>

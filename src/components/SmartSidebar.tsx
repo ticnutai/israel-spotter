@@ -71,6 +71,7 @@ interface SmartSidebarProps {
   onSelectAerialYear: (year: string) => void;
   onSelectPlanImage: (path: string) => void;
   onShowGisLayer?: (layer: ParsedGisLayer | null) => void;
+  onActivateGeoref?: () => void;
   defaultPinned?: boolean;
 }
 
@@ -90,6 +91,7 @@ export function SmartSidebar({
   onSelectAerialYear,
   onSelectPlanImage,
   onShowGisLayer,
+  onActivateGeoref,
   defaultPinned = true,
 }: SmartSidebarProps) {
   const [pinned, setPinned] = useState(() => {
@@ -330,7 +332,7 @@ export function SmartSidebar({
             {activeTab === "layers" && <LayerManager />}
             {activeTab === "timeline" && <PlanTimeline />}
             {activeTab === "stats" && <StatsCharts />}
-            {activeTab === "tools" && <ToolsTab />}
+            {activeTab === "tools" && <ToolsTab onActivateGeoref={onActivateGeoref} />}
             {activeTab === "settings" && <SettingsTab />}
           </div>
         </div>
@@ -921,7 +923,7 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
 //  TAB: Tools
 // ═════════════════════════════════════════════════════════════════════════════
 
-function ToolsTab() {
+function ToolsTab({ onActivateGeoref }: { onActivateGeoref?: () => void }) {
   return (
     <ScrollArea className="h-full" dir="rtl">
       <div className="px-3 py-3 space-y-3 text-right" dir="rtl">
@@ -934,13 +936,18 @@ function ToolsTab() {
           status="זמין"
           statusColor="text-green-600 bg-green-100"
         />
-        <ToolCard
-          icon={<Globe className="h-5 w-5 text-green-500" />}
-          title="גיאורפרנס"
-          description="הצג תשריטים מגיאורפרנס על המפה"
-          status="זמין"
-          statusColor="text-green-600 bg-green-100"
-        />
+        <div
+          className="cursor-pointer"
+          onClick={() => onActivateGeoref?.()}
+        >
+          <ToolCard
+            icon={<Globe className="h-5 w-5 text-green-500" />}
+            title="גיאורפרנס"
+            description="העלה תמונה וכוונן אותה על המפה בגרירה, סיבוב ושינוי גודל"
+            status="לחץ להפעלה"
+            statusColor="text-amber-700 bg-amber-100"
+          />
+        </div>
         <ToolCard
           icon={<Layers className="h-5 w-5 text-purple-500" />}
           title="שכבות מפה"
