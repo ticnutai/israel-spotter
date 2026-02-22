@@ -219,13 +219,22 @@ export function SmartSidebar({
         {/* ── Resize Handle ── */}
         {isOpen && (
           <div
-            className="w-3 h-full flex items-center justify-center cursor-col-resize shrink-0 z-20 group"
+            className="w-4 h-full flex items-center justify-center cursor-col-resize shrink-0 z-20 group"
             onMouseDown={handleResizeStart}
+            title="גרור לשינוי רוחב"
           >
             <div
-              className="w-1 h-10 rounded-full opacity-40 group-hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: goldColor }}
-            />
+              className="w-[6px] h-16 rounded-full flex flex-col items-center justify-center gap-[3px] transition-all group-hover:h-24 group-hover:scale-110 group-active:scale-125"
+              style={{
+                backgroundColor: "hsl(43 56% 52% / 0.25)",
+                boxShadow: "0 0 0 1px hsl(43 56% 52% / 0.15)",
+              }}
+            >
+              <div className="w-1 h-1 rounded-full opacity-50 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: goldColor }} />
+              <div className="w-1 h-1 rounded-full opacity-50 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: goldColor }} />
+              <div className="w-1 h-1 rounded-full opacity-50 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: goldColor }} />
+              <div className="w-1 h-1 rounded-full opacity-50 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: goldColor }} />
+            </div>
           </div>
         )}
 
