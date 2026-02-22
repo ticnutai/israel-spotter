@@ -25,6 +25,10 @@ import {
   Ruler,
   Clock,
   BarChart3,
+  FileText,
+  GripVertical,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -52,17 +56,37 @@ export interface SidebarTab {
   badge?: number;
 }
 
-const SIDEBAR_TABS: SidebarTab[] = [
-  { id: "data", label: "חיפוש גוש/חלקה", icon: <Database className="h-5 w-5" /> },
-  { id: "layers", label: "ניהול שכבות", icon: <Layers className="h-5 w-5" /> },
-  { id: "search", label: "חיפוש מסמכים", icon: <Search className="h-5 w-5" /> },
-  { id: "aerial", label: "צילום אוויר", icon: <Plane className="h-5 w-5" /> },
-  { id: "upload", label: "העלאת קבצים", icon: <Upload className="h-5 w-5" /> },
-  { id: "timeline", label: "ציר זמן", icon: <Clock className="h-5 w-5" /> },
-  { id: "stats", label: "סטטיסטיקה", icon: <BarChart3 className="h-5 w-5" /> },
-  { id: "tools", label: "כלים", icon: <Wrench className="h-5 w-5" /> },
-  { id: "settings", label: "הגדרות", icon: <Settings className="h-5 w-5" /> },
-];
+export const DEFAULT_TAB_ORDER = ["data", "layers", "search", "aerial", "upload", "timeline", "stats", "tools", "settings"];
+
+const TAB_DEFINITIONS: Record<string, { label: string; icon: React.ReactNode }> = {
+  data: { label: "חיפוש גוש/חלקה", icon: <Search className="h-5 w-5" /> },
+  layers: { label: "ניהול שכבות", icon: <Layers className="h-5 w-5" /> },
+  search: { label: "חיפוש מסמכים", icon: <FileText className="h-5 w-5" /> },
+  aerial: { label: "צילום אוויר", icon: <Plane className="h-5 w-5" /> },
+  upload: { label: "העלאת קבצים", icon: <Upload className="h-5 w-5" /> },
+  timeline: { label: "ציר זמן", icon: <Clock className="h-5 w-5" /> },
+  stats: { label: "סטטיסטיקה", icon: <BarChart3 className="h-5 w-5" /> },
+  tools: { label: "כלים", icon: <Wrench className="h-5 w-5" /> },
+  settings: { label: "הגדרות", icon: <Settings className="h-5 w-5" /> },
+};
+
+function getTabOrder(): string[] {
+  try {
+    const saved = localStorage.getItem("sidebar-tab-order");
+    if (saved) {
+      const parsed = JSON.parse(saved) as string[];
+      // Validate all IDs exist
+      if (parsed.every(id => id in TAB_DEFINITIONS) && parsed.length === DEFAULT_TAB_ORDER.length) {
+        return parsed;
+      }
+    }
+  } catch { /* ignore */ }
+  return DEFAULT_TAB_ORDER;
+}
+
+function buildTabs(order: string[]): SidebarTab[] {
+  return order.map(id => ({ id, ...TAB_DEFINITIONS[id] }));
+}
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -100,6 +124,8 @@ export function SmartSidebar({
   });
   const [hovered, setHovered] = useState(false);
   const [activeTab, setActiveTab] = useState("data");
+  const [tabOrder, setTabOrder] = useState<string[]>(getTabOrder);
+  const sidebarTabs = buildTabs(tabOrder);
   const [panelWidth, setPanelWidth] = useState(() => {
     const saved = localStorage.getItem("sidebar-panel-width");
     return saved ? Number(saved) : DEFAULT_PANEL_WIDTH;
@@ -206,24 +232,32 @@ export function SmartSidebar({
         {/* ── Unified sidebar container (rail + panel) ── */}
         <div
           className={cn(
-            "h-full flex flex-row overflow-hidden rounded-2xl",
-            "transition-all ease-in-out",
-            !isResizing && "duration-300",
+            "h-full flex flex-row overflow-hidden",
+            "transition-all ease-[cubic-bezier(0.4,0,0.2,1)]",
+            !isResizing && "duration-400",
           )}
           style={{
-            border: goldBorder,
+            border: `1.5px solid ${goldColor}`,
+            borderRadius: "1.25rem",
             backgroundColor: "hsl(0 0% 100%)",
             opacity: isOpen ? 1 : 0,
+            boxShadow: isOpen
+              ? "0 4px 24px -4px hsl(43 56% 52% / 0.12), 0 1px 4px hsl(222.2 47.4% 11.2% / 0.06)"
+              : "none",
           }}
         >
           {/* ── Icon Rail ── */}
           <div
-            className="flex flex-col items-center py-2 shrink-0"
-            style={{ width: RAIL_WIDTH }}
+            className="flex flex-col items-center py-3 shrink-0"
+            style={{
+              width: RAIL_WIDTH,
+              borderLeft: `1px solid hsl(43 56% 52% / 0.2)`,
+              background: "linear-gradient(180deg, hsl(0 0% 99%) 0%, hsl(0 0% 97%) 100%)",
+            }}
           >
             {/* Tab icons */}
-            <div className="flex-1 flex flex-col items-center gap-1 mt-1">
-              {SIDEBAR_TABS.map((tab) => (
+            <div className="flex-1 flex flex-col items-center gap-0.5 mt-1">
+              {sidebarTabs.map((tab) => (
                 <Tooltip key={tab.id}>
                   <TooltipTrigger asChild>
                     <button
@@ -232,12 +266,14 @@ export function SmartSidebar({
                         if (!pinned) setHovered(true);
                       }}
                       className={cn(
-                        "w-10 h-10 rounded-xl flex items-center justify-center",
-                        "transition-colors relative",
+                        "w-9 h-9 rounded-lg flex items-center justify-center",
+                        "transition-all duration-200 relative",
                       )}
                       style={{
-                        color: activeTab === tab.id ? "hsl(0 0% 100%)" : navyColor,
-                        backgroundColor: activeTab === tab.id ? navyColor : "transparent",
+                        color: activeTab === tab.id ? "hsl(43 56% 52%)" : "hsl(222.2 30% 40%)",
+                        backgroundColor: activeTab === tab.id ? "hsl(222.2 47.4% 11.2%)" : "transparent",
+                        boxShadow: activeTab === tab.id ? "0 2px 8px hsl(222.2 47.4% 11.2% / 0.25)" : "none",
+                        transform: activeTab === tab.id ? "scale(1.05)" : "scale(1)",
                       }}
                     >
                       {tab.icon}
@@ -290,22 +326,25 @@ export function SmartSidebar({
           >
           {/* Panel header */}
           <div
-            className="shrink-0 px-3 py-2 flex items-center justify-between"
+            className="shrink-0 px-3 py-2.5 flex items-center justify-between"
             style={{
-              borderBottom: goldBorder,
+              borderBottom: `1px solid hsl(43 56% 52% / 0.3)`,
               color: navyColor,
+              background: "linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(43 56% 52% / 0.04) 100%)",
             }}
           >
             <div className="flex items-center gap-2">
-              {SIDEBAR_TABS.find((t) => t.id === activeTab)?.icon}
-              <span className="font-semibold text-sm">
-                {SIDEBAR_TABS.find((t) => t.id === activeTab)?.label}
+              <span style={{ color: "hsl(43 56% 52%)" }}>
+                {sidebarTabs.find((t) => t.id === activeTab)?.icon}
+              </span>
+              <span className="font-semibold text-sm tracking-tight">
+                {sidebarTabs.find((t) => t.id === activeTab)?.label}
               </span>
             </div>
             {!pinned && (
               <button
                 onClick={() => setHovered(false)}
-                className="transition-colors"
+                className="transition-colors hover:opacity-70"
                 style={{ color: navyColor }}
               >
                 <ChevronRight className="h-4 w-4" />
@@ -333,7 +372,15 @@ export function SmartSidebar({
             {activeTab === "timeline" && <PlanTimeline />}
             {activeTab === "stats" && <StatsCharts />}
             {activeTab === "tools" && <ToolsTab onActivateGeoref={onActivateGeoref} />}
-            {activeTab === "settings" && <SettingsTab />}
+            {activeTab === "settings" && (
+              <SettingsTab
+                tabOrder={tabOrder}
+                onReorderTabs={(newOrder) => {
+                  setTabOrder(newOrder);
+                  localStorage.setItem("sidebar-tab-order", JSON.stringify(newOrder));
+                }}
+              />
+            )}
           </div>
         </div>
         </div>
@@ -367,7 +414,7 @@ import {
   ChevronDown,
   Download,
   Image,
-  FileText,
+  FileText as FileTextIcon,
   File,
   FolderOpen,
   MapPin,
@@ -378,7 +425,7 @@ import { Input } from "@/components/ui/input";
 // ── file helpers (reuse) ──
 function fileIcon(ft: string) {
   if (ft === "image") return <Image className="h-3.5 w-3.5 text-blue-500" />;
-  if (ft === "pdf") return <FileText className="h-3.5 w-3.5 text-red-500" />;
+  if (ft === "pdf") return <FileTextIcon className="h-3.5 w-3.5 text-red-500" />;
   return <File className="h-3.5 w-3.5 text-muted-foreground" />;
 }
 function formatSize(bytes: number): string {
@@ -610,7 +657,7 @@ function DataTab({
                               <div key={idx} className="border-b last:border-b-0">
                                 {bp.plan_number && (
                                   <div className="px-5 py-1 text-[11px] font-medium bg-muted/40 flex items-center gap-1 text-right" dir="rtl">
-                                    <FileText className="h-3 w-3 text-primary" />
+                                    <FileTextIcon className="h-3 w-3 text-primary" />
                                     תוכנית: {bp.plan_number}
                                   </div>
                                 )}
@@ -1001,7 +1048,7 @@ function ToolCard({
 //  TAB: Settings
 // ═════════════════════════════════════════════════════════════════════════════
 
-function SettingsTab() {
+function SettingsTab({ tabOrder, onReorderTabs }: { tabOrder: string[]; onReorderTabs: (order: string[]) => void }) {
   const [config, setConfig] = useState<KfarChabadConfig | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -1009,11 +1056,62 @@ function SettingsTab() {
     getConfig().then(setConfig).finally(() => setLoading(false));
   }, []);
 
+  const moveTab = (index: number, direction: "up" | "down") => {
+    const newOrder = [...tabOrder];
+    const swapIndex = direction === "up" ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= newOrder.length) return;
+    [newOrder[index], newOrder[swapIndex]] = [newOrder[swapIndex], newOrder[index]];
+    onReorderTabs(newOrder);
+  };
+
+  const resetOrder = () => {
+    onReorderTabs(DEFAULT_TAB_ORDER);
+  };
+
   if (loading) return <div className="p-4 text-center text-muted-foreground text-sm">טוען...</div>;
 
   return (
     <ScrollArea className="h-full" dir="rtl">
       <div className="px-3 py-3 space-y-4 text-right" dir="rtl">
+        {/* Tab order */}
+        <div className="border rounded-lg p-3">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium flex items-center gap-1.5">
+              <GripVertical className="h-4 w-4" style={{ color: "hsl(43 56% 52%)" }} />
+              סדר טאבים
+            </h3>
+            <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={resetOrder}>
+              איפוס
+            </Button>
+          </div>
+          <div className="space-y-1">
+            {tabOrder.map((id, i) => {
+              const def = TAB_DEFINITIONS[id];
+              if (!def) return null;
+              return (
+                <div key={id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <span className="text-muted-foreground">{def.icon}</span>
+                  <span className="flex-1 text-xs font-medium">{def.label}</span>
+                  <button
+                    onClick={() => moveTab(i, "up")}
+                    disabled={i === 0}
+                    className="p-0.5 rounded hover:bg-accent disabled:opacity-20 transition-colors"
+                  >
+                    <ArrowUp className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => moveTab(i, "down")}
+                    disabled={i === tabOrder.length - 1}
+                    className="p-0.5 rounded hover:bg-accent disabled:opacity-20 transition-colors"
+                  >
+                    <ArrowDown className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* System info */}
         <div className="border rounded-lg p-3">
           <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">
