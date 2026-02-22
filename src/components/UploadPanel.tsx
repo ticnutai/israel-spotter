@@ -48,7 +48,7 @@ import { useLayerStore, LAYER_COLORS } from "@/hooks/use-layer-store";
 
 // ── Accepted file extensions ─────────────────────────────────────────────────
 const ACCEPT_STRING =
-  ".dxf,.geojson,.json,.kml,.kmz,.pdf,.jpg,.jpeg,.png,.tif,.tiff,.dwfx,.bmp,.shp,.dbf,.prj,.shx";
+  ".dxf,.geojson,.json,.kml,.kmz,.zip,.pdf,.jpg,.jpeg,.png,.tif,.tiff,.dwfx,.bmp,.shp,.dbf,.prj,.shx";
 
 export interface UploadPanelProps {
   onShowGisLayer?: (layer: ParsedGisLayer | null) => void;
@@ -275,7 +275,7 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
               גרור קבצים לכאן או לחץ לבחירה
             </p>
             <p className="text-[11px] text-muted-foreground mt-1">
-              DXF, GeoJSON, KML, PDF, תמונות ועוד
+              DXF, GeoJSON, KML, ZIP (Shapefile), PDF, תמונות ועוד
             </p>
           </div>
 
