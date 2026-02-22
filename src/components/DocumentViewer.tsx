@@ -11,14 +11,26 @@ import { cn } from "@/lib/utils";
 interface DocumentViewerProps {
   url: string;
   title: string;
-  fileType: "pdf" | "image" | "other";
+  /** Accepts canonical "pdf"/"image"/"other" OR raw extensions like "jpg","png","tif" */
+  fileType: string;
   onClose: () => void;
+}
+
+const IMAGE_EXTENSIONS = new Set(["image", "jpg", "jpeg", "png", "gif", "bmp", "webp", "tif", "tiff", "svg"]);
+
+/** Normalize raw DB file_type (e.g. "jpg") into viewer category */
+function resolveFileType(raw: string): "pdf" | "image" | "other" {
+  const lower = raw.toLowerCase();
+  if (lower === "pdf") return "pdf";
+  if (IMAGE_EXTENSIONS.has(lower)) return "image";
+  return "other";
 }
 
 const goldColor = "hsl(43 56% 52%)";
 const navyColor = "hsl(222.2 47.4% 11.2%)";
 
-export function DocumentViewer({ url, title, fileType, onClose }: DocumentViewerProps) {
+export function DocumentViewer({ url, title, fileType: rawFileType, onClose }: DocumentViewerProps) {
+  const fileType = resolveFileType(rawFileType);
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);

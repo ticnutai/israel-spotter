@@ -22,7 +22,10 @@ interface CacheEntry {
 
 // ─── IndexedDB helpers ──────────────────────────────────────────────────────
 
+let _db: IDBDatabase | null = null;
+
 function openDB(): Promise<IDBDatabase> {
+  if (_db) return Promise.resolve(_db);
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
@@ -31,7 +34,12 @@ function openDB(): Promise<IDBDatabase> {
         db.createObjectStore(STORE_NAME, { keyPath: "key" });
       }
     };
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => {
+      _db = req.result;
+      // If the connection is closed externally, reset singleton
+      _db.onclose = () => { _db = null; };
+      resolve(_db);
+    };
     req.onerror = () => reject(req.error);
   });
 }

@@ -5,6 +5,7 @@
  */
 
 import { withCache, clearCache as clearLocalCache } from "./local-cache";
+import { supabase } from "@/integrations/supabase/client";
 
 const API_BASE = "/api";
 
@@ -31,6 +32,21 @@ async function supabaseGet<T>(table: string, params?: string): Promise<T[]> {
 
 async function supabaseCount(table: string): Promise<number> {
   const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&limit=1`;
+  const res = await fetch(url, {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      Prefer: "count=exact",
+    },
+  });
+  if (!res.ok) throw new Error(`Supabase count error ${res.status}`);
+  const range = res.headers.get("content-range") || "";
+  return parseInt(range.split("/").pop() || "0", 10);
+}
+
+/** Count rows with optional PostgREST filters (e.g. "&category=eq.plans&gush=eq.7188") */
+async function supabaseFilteredCount(table: string, filters: string): Promise<number> {
+  const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&limit=1${filters}`;
   const res = await fetch(url, {
     headers: {
       apikey: SUPABASE_KEY,
@@ -352,17 +368,19 @@ export async function getDocuments(params?: {
     },
     async () => {
       let filter = "select=*";
-      if (params?.category) filter += `&category=eq.${encodeURIComponent(params.category)}`;
-      if (params?.gush) filter += `&gush=eq.${params.gush}`;
-      if (params?.helka !== undefined) filter += `&helka=eq.${params.helka}`;
-      if (params?.plan_number) filter += `&plan_number=eq.${encodeURIComponent(params.plan_number)}`;
-      if (params?.file_type) filter += `&file_type=eq.${encodeURIComponent(params.file_type)}`;
-      if (params?.search) filter += `&file_name=ilike.*${encodeURIComponent(params.search)}*`;
+      let countFilter = "";
+      if (params?.category) { filter += `&category=eq.${encodeURIComponent(params.category)}`; countFilter += `&category=eq.${encodeURIComponent(params.category)}`; }
+      if (params?.gush) { filter += `&gush=eq.${params.gush}`; countFilter += `&gush=eq.${params.gush}`; }
+      if (params?.helka !== undefined) { filter += `&helka=eq.${params.helka}`; countFilter += `&helka=eq.${params.helka}`; }
+      if (params?.plan_number) { filter += `&plan_number=eq.${encodeURIComponent(params.plan_number)}`; countFilter += `&plan_number=eq.${encodeURIComponent(params.plan_number)}`; }
+      if (params?.file_type) { filter += `&file_type=eq.${encodeURIComponent(params.file_type)}`; countFilter += `&file_type=eq.${encodeURIComponent(params.file_type)}`; }
+      if (params?.search) { filter += `&file_name=ilike.*${encodeURIComponent(params.search)}*`; countFilter += `&file_name=ilike.*${encodeURIComponent(params.search)}*`; }
       const limit = params?.limit || 50;
       const offset = params?.offset || 0;
       filter += `&limit=${limit}&offset=${offset}&order=id`;
       const rows = await supabaseGet<DocumentRecord>("documents", filter);
-      const total = await supabaseCount("documents");
+      // Count with same filters so pagination works correctly
+      const total = await supabaseFilteredCount("documents", countFilter);
       return { documents: rows, total };
     }
   );
@@ -373,9 +391,10 @@ export async function getDocumentStats(): Promise<DocumentStats> {
     () => fetchJSON(`${API_BASE}/documents/stats`),
     () => withCache("doc-stats", async () => {
       const total = await supabaseCount("documents");
+      // Use a high limit to avoid PostgREST's default row cap (typically 1000)
       const [docs, gushim] = await Promise.all([
-        supabaseGet<any>("documents", "select=category,file_size,file_type,is_tashrit,is_georef"),
-        supabaseGet<any>("gushim", "select=gush,plan_count,permit_count,parcel_count"),
+        supabaseGet<any>("documents", "select=category,file_size,file_type,is_tashrit,is_georef&limit=100000"),
+        supabaseGet<any>("gushim", "select=gush,plan_count,permit_count,parcel_count&limit=100000"),
       ]);
       const by_category: Record<string, number> = {};
       const by_file_type: Record<string, number> = {};
@@ -414,21 +433,12 @@ export async function getAerialYears(): Promise<AerialYearInfo[]> {
 }
 
 // --------------- Georef ---------------
-
-export async function getGeorefEntries(): Promise<GeorefEntry[]> {
-  return withFallback(
-    async () => {
-      const data = await fetchJSON<{ georef: GeorefEntry[] }>(`${API_BASE}/georef`);
-      return data.georef;
-    },
-    () => withCache("georef", async () => {
-      const rows = await supabaseGet<any>("plan_georef", "select=*");
-      return rows.map(mapGeoref);
-    })
-  );
-}
+// NOTE: getGeorefEntries removed — was exported but never imported by any component.
+// Georef data is accessed via getPlanDetail() which returns georef entries per plan.
 
 // --------------- URL builders ---------------
+
+const STORAGE_BUCKET = "kfar-chabad-data";
 
 export function aerialStitchedUrl(year: string, level: number = 7): string {
   return `${API_BASE}/aerial/${year}/stitched?level=${level}`;
@@ -439,11 +449,34 @@ export function aerialWorldfileUrl(year: string, level: number = 7): string {
 }
 
 export function planImageUrl(path: string): string {
+  if (_backendAvailable === false) {
+    // Supabase Storage fallback – plans are stored under plans/ prefix
+    return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/plans/${path}`;
+  }
   return `${API_BASE}/plans/image/${path}`;
 }
 
 export function documentFileUrl(docId: number): string {
   return `${API_BASE}/documents/file/${docId}`;
+}
+
+/**
+ * Whether the local backend is currently reachable.
+ * Components can use this to decide between documentFileUrl (backend)
+ * and documentStorageUrl (Supabase Storage) when they hold a full DocumentRecord.
+ */
+export function isBackendAvailable(): boolean {
+  return _backendAvailable !== false;
+}
+
+/**
+ * Build a Supabase Storage public URL for a document by its file_path.
+ * Use this when you have the file_path from a DocumentRecord and the backend is down.
+ */
+export function documentStorageUrl(filePath: string): string {
+  // Strip leading ./kfar_chabad_data/ prefix if present
+  const cleaned = filePath.replace(/^\.?\/?(kfar_chabad_data\/)/, "");
+  return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${cleaned}`;
 }
 
 // --------------- Upload ---------------
@@ -484,28 +517,35 @@ export async function uploadDocument(params: {
 }
 
 export async function getUploads(limit = 50, offset = 0): Promise<{ uploads: DocumentRecord[]; total: number }> {
-  return fetchJSON(`${API_BASE}/uploads?limit=${limit}&offset=${offset}`);
-}
-
-export async function deleteUpload(docId: number): Promise<void> {
-  const res = await fetch(`${API_BASE}/uploads/${docId}`, { method: "DELETE" });
-  if (!res.ok) throw new Error("Delete failed");
-}
-
-// --------------- Plans list (for timeline) ---------------
-
-export async function getPlansForTimeline(): Promise<PlanSummary[]> {
   return withFallback(
+    async () => fetchJSON(`${API_BASE}/uploads?limit=${limit}&offset=${offset}`),
     async () => {
-      const data = await fetchJSON<{ plans: PlanSummary[] }>(`${API_BASE}/plans`);
-      return data.plans;
-    },
-    async () => {
-      const rows = await supabaseGet<PlanSummary>("plans", "select=*&order=plan_number");
-      return rows;
+      // Supabase fallback: query documents with upload paths
+      const uploadFilter = "&file_path=like.*%2Fuploads%2F*";
+      const rows = await supabaseGet<any>(
+        "documents",
+        `select=*${uploadFilter}&order=downloaded_at.desc&limit=${limit}&offset=${offset}`
+      );
+      const total = await supabaseFilteredCount("documents", uploadFilter);
+      return { uploads: rows.map(mapDocument), total };
     }
   );
 }
+
+export async function deleteUpload(docId: number): Promise<void> {
+  try {
+    const res = await fetch(`${API_BASE}/uploads/${docId}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Delete failed");
+  } catch {
+    // Supabase fallback
+    const { error } = await supabase.from("documents").delete().eq("id", docId);
+    if (error) throw new Error(error.message);
+  }
+}
+
+// --------------- Plans list (for timeline) ---------------
+// NOTE: getPlansForTimeline was identical to getPlans() and is removed.
+// PlanTimeline uses getPlans() directly.
 
 // --------------- GIS Layers ---------------
 
@@ -678,19 +718,6 @@ export async function getPlanInstructions(planNumber?: string): Promise<PlanInst
 }
 
 // --------------- Supabase row mappers ---------------
-
-function mapPlan(r: any): PlanSummary {
-  return {
-    id: r.id ?? 0,
-    plan_number: r.plan_number ?? "",
-    plan_name: r.plan_name ?? null,
-    status: r.status ?? null,
-    plan_type: r.plan_type ?? null,
-    doc_count: r.doc_count ?? 0,
-    gush_list: r.gush_list ?? null,
-    notes: r.notes ?? null,
-  };
-}
 
 function mapDocument(r: any): DocumentRecord {
   return {
@@ -912,22 +939,32 @@ export async function getLocalPlans(gush: number, helka: number): Promise<LocalP
         });
       }
 
-      // 5. Get TABA outlines (all outlines - same as local backend)
-      const tabaRows = await supabaseGet<any>(
-        "taba_outlines",
-        "select=pl_number,pl_name,entity_subtype,status,area_dunam,land_use,plan_county,pl_url"
+      // 5. Get TABA outlines filtered by plan_blocks for this gush
+      const tabaBlockRows = await supabaseGet<{ plan_number: string }>(
+        "plan_blocks",
+        `select=plan_number&gush=eq.${gush}`
       );
-      const tabaOutlines: TabaOutline[] = tabaRows.map((t: any) => ({
-        pl_number: t.pl_number ?? null,
-        pl_name: t.pl_name ?? null,
-        entity_subtype: t.entity_subtype ?? null,
-        status: t.status ?? null,
-        area_dunam: t.area_dunam ?? null,
-        land_use: t.land_use ?? null,
-        plan_county: t.plan_county ?? null,
-        pl_url: t.pl_url ?? null,
-        main_status: null,
-      }));
+      const tabaPlanNumbers = [...new Set(tabaBlockRows.map((b) => b.plan_number))];
+      let tabaOutlines: TabaOutline[] = [];
+      if (tabaPlanNumbers.length > 0) {
+        // Supabase `in` filter: pl_number=in.(val1,val2,...)
+        const inList = tabaPlanNumbers.map((pn) => `"${pn}"`).join(",");
+        const tabaRows = await supabaseGet<any>(
+          "taba_outlines",
+          `select=pl_number,pl_name,entity_subtype,status,area_dunam,land_use,plan_county,pl_url&pl_number=in.(${inList})`
+        );
+        tabaOutlines = tabaRows.map((t: any) => ({
+          pl_number: t.pl_number ?? null,
+          pl_name: t.pl_name ?? null,
+          entity_subtype: t.entity_subtype ?? null,
+          status: t.status ?? null,
+          area_dunam: t.area_dunam ?? null,
+          land_use: t.land_use ?? null,
+          plan_county: t.plan_county ?? null,
+          pl_url: t.pl_url ?? null,
+          main_status: null,
+        }));
+      }
 
       return {
         gush,

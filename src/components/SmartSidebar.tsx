@@ -425,6 +425,8 @@ import {
   getDocumentStats,
   getConfig,
   documentFileUrl,
+  documentStorageUrl,
+  isBackendAvailable,
   clearLocalCache,
   type AerialYearInfo,
   type GushInfo,
@@ -486,7 +488,7 @@ function DocRow({ doc, onShowImage, onViewDoc }: { doc: DocumentRecord; onShowIm
             <MapPin className="h-3 w-3" />
           </Button>
         )}
-        <a href={documentFileUrl(doc.id)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+        <a href={isBackendAvailable() ? documentFileUrl(doc.id) : documentStorageUrl(doc.file_path)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
           <Button variant="ghost" size="sm" className="h-5 w-5 p-0" title="הורד">
             <Download className="h-3 w-3" />
           </Button>
@@ -779,9 +781,9 @@ function DataTab({
 
     {viewingDoc && (
       <Suspense fallback={null}><DocumentViewer
-        url={documentFileUrl(viewingDoc.id)}
+        url={isBackendAvailable() ? documentFileUrl(viewingDoc.id) : documentStorageUrl(viewingDoc.file_path)}
         title={viewingDoc.title}
-        fileType={viewingDoc.file_type as "pdf" | "image" | "other"}
+        fileType={viewingDoc.file_type}
         onClose={() => setViewingDoc(null)}
       /></Suspense>
     )}
@@ -1025,9 +1027,9 @@ function SearchTab({ onSelectPlanImage }: { onSelectPlanImage: (p: string) => vo
 
       {viewingDoc && (
         <Suspense fallback={null}><DocumentViewer
-          url={documentFileUrl(viewingDoc.id)}
+          url={isBackendAvailable() ? documentFileUrl(viewingDoc.id) : documentStorageUrl(viewingDoc.file_path)}
           title={viewingDoc.title}
-          fileType={viewingDoc.file_type as "pdf" | "image" | "other"}
+          fileType={viewingDoc.file_type}
           onClose={() => setViewingDoc(null)}
         /></Suspense>
       )}

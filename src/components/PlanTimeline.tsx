@@ -17,7 +17,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getPlans, getPlanDetail, type PlanSummary, type DocumentRecord } from "@/lib/kfar-chabad-api";
+import { getPlans, getPlanDetail, documentFileUrl, documentStorageUrl, isBackendAvailable, type PlanSummary, type DocumentRecord } from "@/lib/kfar-chabad-api";
 
 /* ------------------------------------------------------------------ */
 /*  Plan Timeline Component                                           */
@@ -287,7 +287,7 @@ export function PlanTimeline({ onSelectGush }: PlanTimelineProps) {
                             planDocs[plan.plan_number].map((doc) => (
                               <a
                                 key={doc.id}
-                                href={`/api/documents/file/${doc.id}`}
+                                href={isBackendAvailable() ? documentFileUrl(doc.id) : documentStorageUrl(doc.file_path)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 text-[11px] text-muted-foreground hover:text-primary py-0.5"

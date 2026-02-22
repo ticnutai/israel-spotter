@@ -268,6 +268,8 @@ const MapViewInner = memo(function MapViewInner({ result, boundaries, aerialYear
     if (!map) return;
 
     const handler = (e: L.LeafletMouseEvent) => {
+      // Skip if a toolbar tool already handled this click (e.g., marker placement)
+      if ((e as any)._handledByToolbar) return;
       if (onMapClickRef.current) {
         onMapClickRef.current(e.latlng.lat, e.latlng.lng);
       }

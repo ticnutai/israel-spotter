@@ -45,7 +45,7 @@ import {
   type BuildingRight,
   type PlanInstruction,
 } from "@/lib/kfar-chabad-api";
-import { documentFileUrl } from "@/lib/kfar-chabad-api";
+import { documentFileUrl, documentStorageUrl, isBackendAvailable } from "@/lib/kfar-chabad-api";
 import { DocumentViewer } from "./DocumentViewer";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchParcels } from "@/hooks/use-watch-parcels";
@@ -213,16 +213,25 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
   }, []);
 
   useEffect(() => {
-    if (data) {
-      fetchDbData(data.gush, data.helka);
-      // Fetch local plans & permits from disk
-      setLoadingLocalPlans(true);
-      setLocalPlansData(null);
-      getLocalPlans(data.gush, data.helka)
-        .then(setLocalPlansData)
-        .catch(() => {})
-        .finally(() => setLoadingLocalPlans(false));
-    }
+    if (!data) return;
+    // Guard against race conditions: if the user clicks a new parcel before
+    // the previous fetch completes, ignore the stale result.
+    let cancelled = false;
+    const gush = data.gush;
+    const helka = data.helka;
+
+    fetchDbData(gush, helka).then(() => {
+      if (cancelled) return;
+    });
+    // Fetch local plans & permits from disk
+    setLoadingLocalPlans(true);
+    setLocalPlansData(null);
+    getLocalPlans(gush, helka)
+      .then((res) => { if (!cancelled) setLocalPlansData(res); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoadingLocalPlans(false); });
+
+    return () => { cancelled = true; };
   }, [data, fetchDbData]);
 
   const togglePlan = (planNumber: string) => {
@@ -628,9 +637,9 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
 
       {viewingDoc && (
         <DocumentViewer
-          url={documentFileUrl(viewingDoc.id)}
+          url={isBackendAvailable() ? documentFileUrl(viewingDoc.id) : documentStorageUrl(viewingDoc.file_path)}
           title={viewingDoc.title}
-          fileType={viewingDoc.file_type as "pdf" | "image" | "other"}
+          fileType={viewingDoc.file_type}
           onClose={() => setViewingDoc(null)}
         />
       )}
@@ -770,6 +779,7 @@ function QuickStats({
   docCount: number;
   planCount: number;
 }) {
+  const tashritCount = parcelInfo?.has_tashrit ? "✓" : "—";
   const stats = [
     {
       label: "תוכניות",
@@ -784,8 +794,8 @@ function QuickStats({
       bg: "bg-green-50 dark:bg-green-950",
     },
     {
-      label: "תשריטים",
-      value: parcelInfo?.has_tashrit ?? 0,
+      label: "תשריט",
+      value: tashritCount,
       icon: <Image className="h-4 w-4 text-purple-600" />,
       bg: "bg-purple-50 dark:bg-purple-950",
     },

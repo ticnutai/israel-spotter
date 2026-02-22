@@ -8,7 +8,7 @@
  * • Non-GIS files are uploaded to backend as before
  */
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +36,8 @@ import {
   getUploads,
   deleteUpload,
   documentFileUrl,
+  documentStorageUrl,
+  isBackendAvailable,
   type DocumentRecord,
 } from "@/lib/kfar-chabad-api";
 import {
@@ -79,18 +81,17 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
 
   // Recent uploads
   const [recentUploads, setRecentUploads] = useState<DocumentRecord[]>([]);
-  const [loadedRecent, setLoadedRecent] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadRecent = useCallback(async () => {
     try {
       const data = await getUploads(20);
       setRecentUploads(data.uploads);
-      setLoadedRecent(true);
     } catch { /* ignore */ }
   }, []);
 
-  if (!loadedRecent) loadRecent();
+  // Load recent uploads once on mount (not during render)
+  useEffect(() => { loadRecent(); }, [loadRecent]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -558,7 +559,7 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
                       </p>
                     </div>
                     <a
-                      href={documentFileUrl(u.id)}
+                      href={isBackendAvailable() ? documentFileUrl(u.id) : documentStorageUrl(u.file_path)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-muted-foreground hover:text-primary"

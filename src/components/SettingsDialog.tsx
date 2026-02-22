@@ -92,7 +92,7 @@ export function SettingsDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (v) loadUser(); }}>
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" title="הגדרות" className="h-10 w-10 rounded-full shadow-lg bg-background hover:bg-accent border-border">
           <Settings className="h-5 w-5" />

@@ -60,12 +60,14 @@ export function PlanOverlay({ map, planPath, georef, onClose }: PlanOverlayProps
         const [neLat, neLng] = itmToWgs84(maxX, maxY);
         bounds = L.latLngBounds([swLat, swLng], [neLat, neLng]);
       } else {
-        // Default: center on Kfar Chabad with ~500m extent
+        // Default: center on Kfar Chabad with ~500m extent, preserving aspect ratio
         const center = { lat: 31.9604, lng: 34.8536 };
-        const delta = 0.003;
+        const aspect = img.naturalWidth / img.naturalHeight;
+        const latDelta = 0.003;
+        const lngDelta = latDelta * aspect;
         bounds = L.latLngBounds(
-          [center.lat - delta, center.lng - delta],
-          [center.lat + delta, center.lng + delta]
+          [center.lat - latDelta, center.lng - lngDelta],
+          [center.lat + latDelta, center.lng + lngDelta]
         );
       }
 

@@ -59,6 +59,10 @@ export function GeorefTool({ map, active, onClose }: GeorefToolProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
+  // Keep a ref for rotation so Leaflet drag handlers always read the latest value
+  const rotationRef = useRef(rotation);
+  rotationRef.current = rotation;
+
   // Export georef data as JSON
   const exportGeoref = useCallback(() => {
     if (!boundsRef.current || !imageDims) return;
@@ -143,15 +147,17 @@ export function GeorefTool({ map, active, onClose }: GeorefToolProps) {
   }, [rotation]);
 
   // Update overlay bounds and handle markers
+  // Uses rotationRef instead of rotation state so Leaflet drag handlers
+  // always read the latest value (avoids stale closure bug).
   const updateOverlay = useCallback(() => {
     if (!map || !boundsRef.current || !overlayRef.current) return;
     overlayRef.current.setBounds(boundsRef.current);
 
-    // Apply rotation CSS
+    // Apply rotation CSS – read from ref to avoid stale closure
     const el = overlayRef.current.getElement();
     if (el) {
       el.style.transformOrigin = "center center";
-      el.style.transform = `rotate(${rotation}deg)`;
+      el.style.transform = `rotate(${rotationRef.current}deg)`;
     }
 
     // Update corner markers
@@ -171,7 +177,7 @@ export function GeorefTool({ map, active, onClose }: GeorefToolProps) {
     // Update rotate marker (above the top center)
     const topCenter = L.latLng(ne.lat + (ne.lat - sw.lat) * 0.15, (sw.lng + ne.lng) / 2);
     rotateMarkerRef.current?.setLatLng(topCenter);
-  }, [map, rotation]);
+  }, [map]);
 
   // Create the interactive overlay once image is loaded
   const createOverlay = useCallback(
@@ -308,7 +314,7 @@ export function GeorefTool({ map, active, onClose }: GeorefToolProps) {
 
       rotateMarkerRef.current = rotMarker;
     },
-    [map, opacity, rotation, cleanup, updateOverlay]
+    [map, cleanup, updateOverlay]
   );
 
   // Handle file upload

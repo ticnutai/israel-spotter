@@ -297,6 +297,9 @@ export function MapToolbar({ map }: MapToolbarProps) {
       const tool = activeToolRef.current;
       if (tool === "none") return;
 
+      // Mark event as consumed so MapView's click handler won't also fire reverse geocode
+      (e as any)._handledByToolbar = true;
+
       if (tool === "marker") {
         placeMarker(e.latlng, markerLabel, pinColor);
         return;

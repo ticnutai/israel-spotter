@@ -501,12 +501,15 @@ async def get_local_plans_for_parcel(gush: int, helka: int):
             "ORDER BY pl_number",
             (gush, helka)
         ).fetchall()
-        # If none found via plan_blocks, get all TABA for this area
+        # If none found via plan_blocks for specific helka, try gush-level only
         if not taba_rows:
             taba_rows = conn.execute(
                 "SELECT pl_number, pl_name, entity_subtype, status, area_dunam, "
-                "land_use, plan_county, pl_url, depositing_date as main_status "
-                "FROM taba_outlines ORDER BY pl_number"
+                "land_use, plan_county, pl_url, main_status "
+                "FROM taba_outlines WHERE pl_number IN "
+                "(SELECT plan_number FROM plan_blocks WHERE gush = ?) "
+                "ORDER BY pl_number",
+                (gush,)
             ).fetchall()
         taba_list = [dict(t) for t in taba_rows]
 

@@ -401,11 +401,6 @@ async function parseZipFile(file: File): Promise<ParsedGisLayer> {
     throw new Error("לא נמצאו קבצי GIS (Shapefile/GeoJSON/KML/DXF) בתוך ה-ZIP");
   }
 
-  // Parse the first GIS file found
-  const key = gisKeys[0];
-  const content = new TextDecoder().decode(zipFiles[key]);
-  const virtualFile = new File([content], key, { type: "text/plain" });
-
   const allLayers: ParsedGisLayer[] = [];
 
   for (const key of gisKeys) {

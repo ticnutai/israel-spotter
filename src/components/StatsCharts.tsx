@@ -184,13 +184,13 @@ export function StatsCharts() {
               color="text-blue-600"
             />
             <StatCard
-              label="תשריטים"
+              label={filterGush ? "תשריטים (כלל)" : "תשריטים"}
               value={stats.tashrit_count}
               icon={<PieChartIcon className="h-4 w-4" />}
               color="text-green-600"
             />
             <StatCard
-              label="גאו-רפרנס"
+              label={filterGush ? "גאו-רפרנס (כלל)" : "גאו-רפרנס"}
               value={stats.georef_count}
               icon={<TrendingUp className="h-4 w-4" />}
               color="text-violet-600"
