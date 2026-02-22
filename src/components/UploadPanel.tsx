@@ -1,7 +1,8 @@
 /**
- * UploadPanel.tsx – File upload with GIS file parsing (DXF, GeoJSON, KML)
+ * UploadPanel.tsx – File upload with GIS file parsing (DXF, GeoJSON, KML, GPX, Shapefile)
  *
- * • Accepts DXF, GeoJSON, KML, KMZ + images/PDF for DB storage
+ * • Accepts DXF, GeoJSON, KML, KMZ, GPX + images/PDF for DB storage
+ * • Shapefiles: auto-bundles .shp+.dbf+.prj+.shx components into ZIP for parsing
  * • GIS files are parsed client-side and displayed on the map
  * • Auto-detects ITM (EPSG:2039) coordinates and converts to WGS84
  * • Non-GIS files are uploaded to backend as before
@@ -40,6 +41,8 @@ import {
 import {
   parseGisFile,
   isGisFile,
+  isShapefileComponent,
+  bundleShapefileComponents,
   type ParsedGisLayer,
   looksLikeItm,
   convertItmToWgs84,
@@ -49,7 +52,7 @@ import { useLayerStore, LAYER_COLORS } from "@/hooks/use-layer-store";
 
 // ── Accepted file extensions ─────────────────────────────────────────────────
 const ACCEPT_STRING =
-  ".dxf,.geojson,.json,.kml,.kmz,.zip,.pdf,.jpg,.jpeg,.png,.tif,.tiff,.dwfx,.bmp,.shp,.dbf,.prj,.shx";
+  ".dxf,.geojson,.json,.kml,.kmz,.zip,.gpx,.pdf,.jpg,.jpeg,.png,.tif,.tiff,.dwfx,.bmp,.shp,.dbf,.prj,.shx";
 
 export interface UploadPanelProps {
   onShowGisLayer?: (layer: ParsedGisLayer | null) => void;
@@ -108,7 +111,11 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
   // ── Parse GIS files locally ──
   const handleParseGis = async () => {
     const gisFiles = files.filter((f) => isGisFile(f.name));
-    if (gisFiles.length === 0) return;
+    const shpCompanions = files.filter(
+      (f) => !isGisFile(f.name) && isShapefileComponent(f.name)
+    );
+    
+    if (gisFiles.length === 0 && shpCompanions.length === 0) return;
 
     setParsing(true);
     setParseError(null);
@@ -116,7 +123,39 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
     const newLayers: ParsedGisLayer[] = [];
     const errors: string[] = [];
 
+    // Auto-bundle shapefile companion files (.shp + .dbf + .prj + .shx)
+    if (shpCompanions.length > 0) {
+      // Group by base name (e.g., "parcels.shp" + "parcels.dbf" → "parcels")
+      const groups = new Map<string, File[]>();
+      for (const f of shpCompanions) {
+        const base = f.name.replace(/\.\w+$/, "").toLowerCase();
+        if (!groups.has(base)) groups.set(base, []);
+        groups.get(base)!.push(f);
+      }
+      
+      for (const [base, groupFiles] of groups) {
+        const hasShp = groupFiles.some((f) => f.name.toLowerCase().endsWith(".shp"));
+        if (!hasShp) {
+          errors.push(`${base}: חסר קובץ .shp – נדרש לפרוס נתוני Shapefile`);
+          continue;
+        }
+        try {
+          const layer = await bundleShapefileComponents(groupFiles);
+          // Auto-detect and convert ITM coordinates
+          if (looksLikeItm(layer.geojson)) {
+            convertItmToWgs84(layer.geojson);
+            layer.bbox = computeBbox(layer.geojson);
+          }
+          newLayers.push(layer);
+        } catch (err) {
+          errors.push(`${base} (Shapefile): ${err instanceof Error ? err.message : "שגיאה"}`);
+        }
+      }
+    }
+
+    // Parse regular GIS files (skip standalone .shp – handled above)
     for (const file of gisFiles) {
+      if (file.name.toLowerCase().endsWith(".shp")) continue; // Already handled in bundling
       try {
         const layer = await parseGisFile(file);
 
@@ -167,13 +206,13 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
       });
     }
 
-    // Remove parsed GIS files from upload queue
-    setFiles((prev) => prev.filter((f) => !isGisFile(f.name)));
+    // Remove parsed GIS files and shapefile companions from upload queue
+    setFiles((prev) => prev.filter((f) => !isGisFile(f.name) && !isShapefileComponent(f.name)));
   };
 
   // ── Upload non-GIS files to backend ──
   const handleUpload = async () => {
-    const nonGisFiles = files.filter((f) => !isGisFile(f.name));
+    const nonGisFiles = files.filter((f) => !isGisFile(f.name) && !isShapefileComponent(f.name));
     if (!gush || nonGisFiles.length === 0) return;
 
     setUploading(true);
@@ -202,7 +241,7 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
     }
 
     setResults(newResults);
-    setFiles((prev) => prev.filter((f) => isGisFile(f.name)));
+    setFiles((prev) => prev.filter((f) => isGisFile(f.name) || isShapefileComponent(f.name)));
     setUploading(false);
     loadRecent();
   };
@@ -234,12 +273,12 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
     setParsedLayers((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const hasGisFiles = files.some((f) => isGisFile(f.name));
-  const hasNonGisFiles = files.some((f) => !isGisFile(f.name));
+  const hasGisFiles = files.some((f) => isGisFile(f.name) || isShapefileComponent(f.name));
+  const hasNonGisFiles = files.some((f) => !isGisFile(f.name) && !isShapefileComponent(f.name));
 
   function fileIcon(name: string) {
     const ext = name.split(".").pop()?.toLowerCase() || "";
-    if (isGisFile(name)) return <MapIcon className="h-4 w-4 text-emerald-600" />;
+    if (isGisFile(name) || isShapefileComponent(name)) return <MapIcon className="h-4 w-4 text-emerald-600" />;
     if (["jpg", "jpeg", "png", "tif", "tiff", "bmp"].includes(ext))
       return <Image className="h-4 w-4 text-blue-500" />;
     if (ext === "pdf") return <FileText className="h-4 w-4 text-red-500" />;
@@ -276,7 +315,7 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
               גרור קבצים לכאן או לחץ לבחירה
             </p>
             <p className="text-[11px] text-muted-foreground mt-1">
-              DXF, GeoJSON, KML, ZIP (Shapefile), PDF, תמונות ועוד
+              DXF, GeoJSON, KML, GPX, ZIP (Shapefile), PDF, תמונות ועוד
             </p>
           </div>
 
@@ -291,7 +330,7 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
                 >
                   {fileIcon(f.name)}
                   <span className="flex-1 truncate">{f.name}</span>
-                  {isGisFile(f.name) && (
+                  {(isGisFile(f.name) || isShapefileComponent(f.name)) && (
                     <Badge className="text-[10px] px-1.5 py-0 bg-emerald-100 text-emerald-700">
                       GIS
                     </Badge>
@@ -320,7 +359,7 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
               ) : (
                 <MapIcon className="h-4 w-4 ml-2" />
               )}
-              הצג על המפה ({files.filter((f) => isGisFile(f.name)).length} קבצי GIS)
+              הצג על המפה ({files.filter((f) => isGisFile(f.name) || isShapefileComponent(f.name)).length} קבצי GIS)
             </Button>
           )}
 
@@ -468,7 +507,7 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
                     ) : (
                       <Upload className="h-4 w-4 ml-2" />
                     )}
-                    העלה {files.filter((f) => !isGisFile(f.name)).length} קבצים למאגר
+                    העלה {files.filter((f) => !isGisFile(f.name) && !isShapefileComponent(f.name)).length} קבצים למאגר
                   </Button>
                 )}
               </div>
