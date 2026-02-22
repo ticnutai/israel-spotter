@@ -47,8 +47,8 @@ export type Database = {
           file_path: string
           file_size: number | null
           file_type: string | null
-          gush: number
-          helka: number
+          gush: number | null
+          helka: number | null
           id: number
           is_georef: number | null
           is_takanon: number | null
@@ -65,8 +65,8 @@ export type Database = {
           file_path: string
           file_size?: number | null
           file_type?: string | null
-          gush: number
-          helka: number
+          gush?: number | null
+          helka?: number | null
           id?: number
           is_georef?: number | null
           is_takanon?: number | null
@@ -83,8 +83,8 @@ export type Database = {
           file_path?: string
           file_size?: number | null
           file_type?: string | null
-          gush?: number
-          helka?: number
+          gush?: number | null
+          helka?: number | null
           id?: number
           is_georef?: number | null
           is_takanon?: number | null
@@ -93,15 +93,7 @@ export type Database = {
           subcategory?: string | null
           title?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "documents_gush_fkey"
-            columns: ["gush"]
-            isOneToOne: false
-            referencedRelation: "gushim"
-            referencedColumns: ["gush"]
-          },
-        ]
+        Relationships: []
       }
       favorites: {
         Row: {
@@ -132,28 +124,46 @@ export type Database = {
       }
       gis_layers: {
         Row: {
-          created_at: string
-          file_path: string
-          file_type: string
-          geojson: Json | null
-          id: string
-          name: string
+          bbox_json: string | null
+          category: string | null
+          crs: string | null
+          description: string | null
+          display_name: string | null
+          feature_count: number | null
+          file_path: string | null
+          file_size: number | null
+          id: number
+          imported_at: string | null
+          layer_name: string | null
+          source: string | null
         }
         Insert: {
-          created_at?: string
-          file_path: string
-          file_type: string
-          geojson?: Json | null
-          id?: string
-          name: string
+          bbox_json?: string | null
+          category?: string | null
+          crs?: string | null
+          description?: string | null
+          display_name?: string | null
+          feature_count?: number | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: number
+          imported_at?: string | null
+          layer_name?: string | null
+          source?: string | null
         }
         Update: {
-          created_at?: string
-          file_path?: string
-          file_type?: string
-          geojson?: Json | null
-          id?: string
-          name?: string
+          bbox_json?: string | null
+          category?: string | null
+          crs?: string | null
+          description?: string | null
+          display_name?: string | null
+          feature_count?: number | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: number
+          imported_at?: string | null
+          layer_name?: string | null
+          source?: string | null
         }
         Relationships: []
       }
