@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-import { Settings, Play, Upload, Loader2, CheckCircle2, XCircle, AlertTriangle, FileCode, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Settings, Play, Upload, Loader2, CheckCircle2, XCircle, AlertTriangle, FileCode, Trash2, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,7 +12,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-
+import { Separator } from "@/components/ui/separator";
 interface MigrationResult {
   statement: string;
   success: boolean;
@@ -32,12 +33,26 @@ interface RunSqlResponse {
 }
 
 export function SettingsDialog() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [sql, setSql] = useState("");
   const [running, setRunning] = useState(false);
   const [response, setResponse] = useState<RunSqlResponse | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  const loadUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUserEmail(user?.email ?? null);
+  };
+
+  const handleLogout = async () => {
+    localStorage.removeItem("kfar_remember_me");
+    await supabase.auth.signOut();
+    setOpen(false);
+    navigate("/auth");
+  };
 
   const runMigration = async (sqlText: string) => {
     if (!sqlText.trim()) return;
@@ -87,13 +102,36 @@ export function SettingsDialog() {
         <DialogHeader>
           <DialogTitle>הגדרות</DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="dev" className="flex-1">
+        <Tabs defaultValue="account" className="flex-1" onValueChange={(v) => { if (v === 'account') loadUser(); }}>
           <TabsList className="w-full">
+            <TabsTrigger value="account" className="gap-2 flex-1">
+              <User className="h-4 w-4" />
+              חשבון
+            </TabsTrigger>
             <TabsTrigger value="dev" className="gap-2 flex-1">
               <FileCode className="h-4 w-4" />
               פיתוח
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="account" className="mt-4 space-y-4">
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold">פרטי חשבון</h3>
+              {userEmail && (
+                <p className="text-sm text-muted-foreground">{userEmail}</p>
+              )}
+              <Separator />
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  ניתוק החשבון ימחק את "זכור אותי" ויחזיר למסך הכניסה.
+                </p>
+                <Button variant="destructive" onClick={handleLogout} className="w-full gap-2">
+                  <LogOut className="h-4 w-4" />
+                  התנתק מהמערכת
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
 
           <TabsContent value="dev" className="mt-4 space-y-4">
             <div className="space-y-2">
