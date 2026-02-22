@@ -151,6 +151,7 @@ const Index = () => {
                 onSelectAerialYear={(y) => { setAerialYear(y); setShowSidebar(false); }}
                 onSelectPlanImage={(p) => { setPlanPath(p); setShowSidebar(false); }}
                 onShowGisLayer={(layer) => { setGisOverlay(layer ? layer.geojson : null); setShowSidebar(false); }}
+                onActivateGeoref={() => { handleActivateGeoref(); setShowSidebar(false); }}
                 defaultPinned={false}
               />
             </div>
@@ -169,6 +170,9 @@ const Index = () => {
             highlightGeometry={highlightGeometry}
             gisOverlay={gisOverlay}
             parcelColorMode={parcelColorMode}
+            georefActive={georefActive}
+            onGeorefClose={handleDeactivateGeoref}
+            onClearAerial={() => setAerialYear(null)}
           />
           {boundaries && <MapLegend colorMode={parcelColorMode} onColorModeChange={setParcelColorMode} />}
           <ParcelInfoDialog
@@ -207,6 +211,7 @@ const Index = () => {
             aerialYear={aerialYear}
             planPath={planPath}
             onClearPlan={handleClearPlan}
+            onClearAerial={() => setAerialYear(null)}
             onMapClick={handleMapClick}
             highlightGeometry={highlightGeometry}
             gisOverlay={gisOverlay}

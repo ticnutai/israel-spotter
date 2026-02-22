@@ -385,6 +385,15 @@ export function ParcelInfoDialog({ data, onClose, onShowPlan }: Props) {
           {/* ─── ArcGIS Parcel Details (always available) ─── */}
           {data && <ParcelDetails data={data} narrow={isNarrow} />}
 
+          {/* ─── QuickStats summary ─── */}
+          {!loadingDb && (
+            <QuickStats
+              parcelInfo={parcelInfo}
+              docCount={documents.length}
+              planCount={plans.length}
+            />
+          )}
+
           <Separator />
 
           {/* ─── Plans, Permits & Documents (unified) ─── */}

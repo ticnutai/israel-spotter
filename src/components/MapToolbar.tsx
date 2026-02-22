@@ -246,18 +246,10 @@ export function MapToolbar({ map }: MapToolbarProps) {
 
     const polygon = L.polygon(pts, { color: pinColor, weight: 2, fillColor: pinColor, fillOpacity: 0.15 });
 
-    // Calculate area using Leaflet's geodesic area
+    // Calculate area using spherical polygon formula
     const latLngs = polygon.getLatLngs()[0] as L.LatLng[];
-    const area = L.GeometryUtil
-      ? 0
-      : Math.abs(
-          latLngs.reduce((acc, cur, i) => {
-            const next = latLngs[(i + 1) % latLngs.length];
-            return acc + (cur.lng * next.lat - next.lng * cur.lat);
-          }, 0) / 2 * 111320 * 111320 * Math.cos((latLngs[0].lat * Math.PI) / 180)
-        );
 
-    // Simple spherical polygon area
+    // Spherical polygon area
     const earthRadius = 6371000;
     let sphericalArea = 0;
     for (let i = 0; i < latLngs.length; i++) {

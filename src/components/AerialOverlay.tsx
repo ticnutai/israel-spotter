@@ -14,9 +14,10 @@ import { Slider } from "@/components/ui/slider";
 interface AerialOverlayProps {
   map: L.Map | null;
   year: string | null;
+  onClose?: () => void;
 }
 
-export function AerialOverlay({ map, year }: AerialOverlayProps) {
+export function AerialOverlay({ map, year, onClose }: AerialOverlayProps) {
   const overlayRef = useRef<L.ImageOverlay | null>(null);
   const [opacity, setOpacity] = useState(0.7);
   const [loading, setLoading] = useState(false);
@@ -134,6 +135,15 @@ export function AerialOverlay({ map, year }: AerialOverlayProps) {
           צילום אוויר {year}
           {loading && <span className="text-muted-foreground mr-1">טוען...</span>}
         </span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-destructive transition-colors p-0.5 rounded"
+            title="סגור שכבת אוויר"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <span className="text-xs text-muted-foreground">שקיפות</span>

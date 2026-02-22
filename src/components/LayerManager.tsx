@@ -50,6 +50,7 @@ import {
   Type,
   Map,
   Loader2,
+  Download,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -439,6 +440,24 @@ function SortableLayerItem({
             >
               <Copy className="h-3 w-3" /> שכפל
             </button>
+            {layer.data && (
+              <button
+                onClick={() => {
+                  const blob = new Blob([JSON.stringify(layer.data, null, 2)], { type: "application/geo+json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `${layer.name}.geojson`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
+                className="text-[10px] flex items-center gap-0.5 text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-muted"
+              >
+                <Download className="h-3 w-3" /> ייצוא
+              </button>
+            )}
             <div className="flex-1" />
             <button
               onClick={() => { if (!layer.locked) onDelete(); }}

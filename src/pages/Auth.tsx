@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 
-const REMEMBER_KEY = "kfar_remember_me";
+const REMEMBER_KEY = "kfar_remember_email";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -25,30 +25,22 @@ const Auth = () => {
   const [autoLogging, setAutoLogging] = useState(false);
 
   useEffect(() => {
-    // Try auto-login from remembered credentials
-    const saved = localStorage.getItem(REMEMBER_KEY);
-    if (saved) {
-      try {
-        const { email: savedEmail, password: savedPassword } = JSON.parse(saved);
-        if (savedEmail && savedPassword) {
-          setEmail(savedEmail);
-          setPassword(savedPassword);
-          setRememberMe(true);
-          // Auto-login
-          setAutoLogging(true);
-          supabase.auth.signInWithPassword({ email: savedEmail, password: savedPassword })
-            .then(({ error }) => {
-              setAutoLogging(false);
-              if (error) {
-                localStorage.removeItem(REMEMBER_KEY);
-                toast({ title: "שגיאה בכניסה אוטומטית", description: error.message, variant: "destructive" });
-              }
-            });
-        }
-      } catch {
-        localStorage.removeItem(REMEMBER_KEY);
-      }
+    // Restore remembered email (never store passwords!)
+    const savedEmail = localStorage.getItem(REMEMBER_KEY);
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
     }
+
+    // Try auto-login from existing Supabase session
+    setAutoLogging(true);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setAutoLogging(false);
+      if (session) navigate("/");
+    });
+
+    // Clean up old insecure remember-me data
+    localStorage.removeItem("kfar_remember_me");
   }, []);
 
   useEffect(() => {
@@ -73,7 +65,7 @@ const Auth = () => {
     if (error) {
       toast({ title: "שגיאה", description: error.message, variant: "destructive" });
     } else if (rememberMe) {
-      localStorage.setItem(REMEMBER_KEY, JSON.stringify({ email, password }));
+      localStorage.setItem(REMEMBER_KEY, email);
     } else {
       localStorage.removeItem(REMEMBER_KEY);
     }
