@@ -5,9 +5,13 @@ import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { Eye, EyeOff } from "lucide-react";
+
+const REMEMBER_KEY = "kfar_remember_me";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -16,6 +20,36 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [autoLogging, setAutoLogging] = useState(false);
+
+  useEffect(() => {
+    // Try auto-login from remembered credentials
+    const saved = localStorage.getItem(REMEMBER_KEY);
+    if (saved) {
+      try {
+        const { email: savedEmail, password: savedPassword } = JSON.parse(saved);
+        if (savedEmail && savedPassword) {
+          setEmail(savedEmail);
+          setPassword(savedPassword);
+          setRememberMe(true);
+          // Auto-login
+          setAutoLogging(true);
+          supabase.auth.signInWithPassword({ email: savedEmail, password: savedPassword })
+            .then(({ error }) => {
+              setAutoLogging(false);
+              if (error) {
+                localStorage.removeItem(REMEMBER_KEY);
+                toast({ title: "שגיאה בכניסה אוטומטית", description: error.message, variant: "destructive" });
+              }
+            });
+        }
+      } catch {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -38,6 +72,10 @@ const Auth = () => {
     setLoading(false);
     if (error) {
       toast({ title: "שגיאה", description: error.message, variant: "destructive" });
+    } else if (rememberMe) {
+      localStorage.setItem(REMEMBER_KEY, JSON.stringify({ email, password }));
+    } else {
+      localStorage.removeItem(REMEMBER_KEY);
     }
   };
 
@@ -70,6 +108,17 @@ const Auth = () => {
       toast({ title: "שגיאה", description: String(error), variant: "destructive" });
     }
   };
+
+  if (autoLogging) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
+        <div className="text-center space-y-4">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
+          <p className="text-muted-foreground">מתחבר אוטומטית...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4" dir="rtl">
@@ -118,7 +167,30 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>סיסמה</Label>
-                  <Input type="password" value={password} onChange={e => setPassword(e.target.value)} className="text-right" required />
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      className="text-right pl-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="remember"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  />
+                  <Label htmlFor="remember" className="text-sm cursor-pointer">זכור אותי</Label>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "מתחבר..." : "כניסה"}
@@ -138,7 +210,22 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>סיסמה</Label>
-                  <Input type="password" value={password} onChange={e => setPassword(e.target.value)} className="text-right" required />
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      className="text-right pl-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "נרשם..." : "הרשמה"}
