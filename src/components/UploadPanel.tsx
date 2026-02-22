@@ -43,6 +43,7 @@ import {
   type ParsedGisLayer,
   looksLikeItm,
   convertItmToWgs84,
+  computeBbox,
 } from "@/lib/gis-parser";
 import { useLayerStore, LAYER_COLORS } from "@/hooks/use-layer-store";
 
@@ -122,7 +123,7 @@ export function UploadPanel({ onShowGisLayer }: UploadPanelProps) {
         // Auto-detect and convert ITM coordinates
         if (looksLikeItm(layer.geojson)) {
           convertItmToWgs84(layer.geojson);
-          layer.bbox = null; // will be recomputed by map
+          layer.bbox = computeBbox(layer.geojson); // recompute bbox in WGS84
         }
 
         newLayers.push(layer);

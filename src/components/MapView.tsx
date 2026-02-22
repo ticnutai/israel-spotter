@@ -185,6 +185,7 @@ const MapViewInner = memo(function MapViewInner({ result, boundaries, aerialYear
           zoomAnimation: true,
           fadeAnimation: true,
           markerZoomAnimation: true,
+          preferCanvas: true, // Canvas renderer – much faster with many features
         });
 
         // Safe initial view – Kfar Chabad center
@@ -316,6 +317,8 @@ const MapViewInner = memo(function MapViewInner({ result, boundaries, aerialYear
     if (!mapRef.current) return;
 
     if (boundaryLayerRef.current) {
+      // Clean up zoom event handler from previous render
+      (boundaryLayerRef.current as any).__cleanupZoom?.();
       boundaryLayerRef.current.clearLayers();
       boundaryLayerRef.current.remove();
       boundaryLayerRef.current = null;
@@ -337,43 +340,89 @@ const MapViewInner = memo(function MapViewInner({ result, boundaries, aerialYear
       }).addTo(layerGroup);
     }
 
-    // Show all parcels within the gush
+    // Show all parcels within the gush — single batched L.geoJSON for performance
     if (boundaries.allParcels && boundaries.allParcels.length > 0) {
-      for (const parcel of boundaries.allParcels) {
-        // Enrich parcel with land use data from DB
+      // Build a single FeatureCollection with enriched properties
+      const features: GeoJSON.Feature[] = boundaries.allParcels.map((parcel) => {
         const luInfo = landUseMap.get(parcel.helka);
-        const enrichedParcel = luInfo
-          ? { ...parcel, landUse: luInfo.landUse, lotNumber: luInfo.lotNumber }
-          : parcel;
+        return {
+          type: "Feature" as const,
+          properties: {
+            helka: parcel.helka,
+            gush: parcel.gush,
+            legalArea: parcel.legalArea,
+            status: parcel.status,
+            landUse: luInfo?.landUse ?? parcel.landUse,
+            lotNumber: luInfo?.lotNumber ?? parcel.lotNumber,
+          },
+          geometry: parcel.geometry,
+        };
+      });
 
-        const style = getParcelStyle(enrichedParcel, parcelColorMode, borderSettings.color, borderSettings.weight, borderSettings.fillOpacity);
-        const pLayer = L.geoJSON(parcel.geometry as any, { style }).addTo(layerGroup);
+      const fc: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
 
-        // Build tooltip label: helka + optional lot number
-        if (parcel.helka > 0 && labelSettings.visible) {
-          let tooltipText = String(parcel.helka);
-          if (labelSettings.showLotNumbers && luInfo?.lotNumber) {
-            tooltipText += `\nמגרש ${luInfo.lotNumber}`;
-          }
-          pLayer.bindTooltip(tooltipText, {
-            permanent: true,
-            direction: "center",
-            className: "parcel-number-label",
+      const parcelsLayer = L.geoJSON(fc, {
+        style: (feature) => {
+          if (!feature) return {};
+          const p = feature.properties as any;
+          return getParcelStyle(p, parcelColorMode, borderSettings.color, borderSettings.weight, borderSettings.fillOpacity);
+        },
+        onEachFeature: (feature, featureLayer) => {
+          const p = feature.properties as any;
+          // Popup with parcel info
+          featureLayer.bindPopup(
+            `<div dir="rtl" style="text-align:right;font-size:13px;">` +
+            `<b>חלקה ${p.helka}</b><br/>` +
+            `גוש ${p.gush}<br/>` +
+            (p.lotNumber ? `<b>מגרש ${p.lotNumber}</b><br/>` : "") +
+            (p.landUse ? `יעוד: ${p.landUse}<br/>` : "") +
+            (p.legalArea ? `שטח רשום: ${Number(p.legalArea).toLocaleString()} מ"ר<br/>` : "") +
+            (p.status ? `סטטוס: ${p.status}` : "") +
+            `</div>`
+          );
+        },
+      }).addTo(layerGroup);
+
+      // ── Zoom-gated labels: only show above zoom 15 to avoid DOM overload ──
+      const LABEL_ZOOM_THRESHOLD = 15;
+      let tooltipsBound = false;
+
+      const syncTooltips = () => {
+        const map = mapRef.current;
+        if (!map) return;
+        const zoom = map.getZoom();
+        const shouldShow = labelSettings.visible && zoom >= LABEL_ZOOM_THRESHOLD;
+
+        if (shouldShow && !tooltipsBound) {
+          parcelsLayer.eachLayer((layer: any) => {
+            const f = layer.feature;
+            if (!f || f.properties.helka <= 0) return;
+            let text = String(f.properties.helka);
+            if (labelSettings.showLotNumbers && f.properties.lotNumber) {
+              text += `\nמגרש ${f.properties.lotNumber}`;
+            }
+            layer.bindTooltip(text, {
+              permanent: true,
+              direction: "center",
+              className: "parcel-number-label",
+            });
           });
+          tooltipsBound = true;
+        } else if (!shouldShow && tooltipsBound) {
+          parcelsLayer.eachLayer((layer: any) => {
+            layer.unbindTooltip();
+          });
+          tooltipsBound = false;
         }
+      };
 
-        // Add popup with parcel info
-        pLayer.bindPopup(
-          `<div dir="rtl" style="text-align:right;font-size:13px;">` +
-          `<b>חלקה ${parcel.helka}</b><br/>` +
-          `גוש ${parcel.gush}<br/>` +
-          (luInfo?.lotNumber ? `<b>מגרש ${luInfo.lotNumber}</b><br/>` : "") +
-          (luInfo?.landUse ? `יעוד: ${luInfo.landUse}<br/>` : "") +
-          (parcel.legalArea ? `שטח רשום: ${parcel.legalArea.toLocaleString()} מ"ר<br/>` : "") +
-          (parcel.status ? `סטטוס: ${parcel.status}` : "") +
-          `</div>`
-        );
-      }
+      syncTooltips(); // initial check
+      mapRef.current.on("zoomend", syncTooltips);
+
+      // Store cleanup handler on the layerGroup so it's removed on re-render
+      (layerGroup as any).__cleanupZoom = () => {
+        mapRef.current?.off("zoomend", syncTooltips);
+      };
     }
 
     // Highlighted specific parcel (thicker) if searching for specific helka
@@ -405,7 +454,7 @@ const MapViewInner = memo(function MapViewInner({ result, boundaries, aerialYear
     }
 
     boundaryLayerRef.current = layerGroup;
-  }, [boundaries, parcelColorMode, labelSettings.visible, borderSettings, landUseMap]);
+  }, [boundaries, parcelColorMode, labelSettings.visible, labelSettings.showLotNumbers, borderSettings, landUseMap]);
 
   // ── Dynamic CSS for parcel label styling ──
   useEffect(() => {
