@@ -1,9 +1,10 @@
 /**
- * gis-parser.ts – Parse GIS files (DXF, GeoJSON, KML, KMZ) into GeoJSON
+ * gis-parser.ts – Parse GIS files (DXF, GeoJSON, KML, KMZ, ZIP/Shapefile) into GeoJSON
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import DxfParser from "dxf-parser";
+import shp from "shpjs";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -15,9 +16,9 @@ export interface ParsedGisLayer {
   geometryTypes: string[];
 }
 
-export type SupportedGisExt = "dxf" | "geojson" | "json" | "kml" | "kmz";
+export type SupportedGisExt = "dxf" | "geojson" | "json" | "kml" | "kmz" | "zip";
 
-const GIS_EXTENSIONS: SupportedGisExt[] = ["dxf", "geojson", "json", "kml", "kmz"];
+const GIS_EXTENSIONS: SupportedGisExt[] = ["dxf", "geojson", "json", "kml", "kmz", "zip"];
 
 export function isGisFile(fileName: string): boolean {
   const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
@@ -43,6 +44,8 @@ export async function parseGisFile(file: File): Promise<ParsedGisLayer> {
       return parseKmlFile(file);
     case "kmz":
       return parseKmzFile(file);
+    case "zip":
+      return parseZipFile(file);
     default:
       throw new Error(`סוג קובץ לא נתמך: .${ext}`);
   }
@@ -334,6 +337,65 @@ async function parseKmzFile(file: File): Promise<ParsedGisLayer> {
       reject(new Error("לא ניתן לפרוס קובץ KMZ"));
     }
   });
+}
+
+// ── ZIP Parser (Shapefile ZIP or ZIP with GIS files) ─────────────────────────
+
+async function parseZipFile(file: File): Promise<ParsedGisLayer> {
+  const buffer = await file.arrayBuffer();
+
+  // First try shpjs – it handles shapefile ZIPs natively
+  try {
+    const result = await shp(buffer);
+
+    // shpjs returns a single FeatureCollection or an array of them
+    let fc: GeoJSON.FeatureCollection;
+    if (Array.isArray(result)) {
+      const allFeatures = result.flatMap((r: any) =>
+        r.type === "FeatureCollection" ? r.features : [r]
+      );
+      fc = { type: "FeatureCollection", features: allFeatures };
+    } else if (result.type === "FeatureCollection") {
+      fc = result as GeoJSON.FeatureCollection;
+    } else {
+      fc = { type: "FeatureCollection", features: [result as GeoJSON.Feature] };
+    }
+
+    if (fc.features.length > 0) {
+      return {
+        name: file.name.replace(/\.zip$/i, ""),
+        geojson: fc,
+        bbox: computeBbox(fc),
+        featureCount: fc.features.length,
+        geometryTypes: [...new Set(fc.features.map((f) => f.geometry?.type).filter(Boolean) as string[])],
+      };
+    }
+  } catch {
+    // Not a shapefile ZIP – fall through to try extracting GIS files
+  }
+
+  // Fallback: extract known GIS files from the ZIP using fflate
+  const { unzipSync } = await import("fflate");
+  const uint8 = new Uint8Array(buffer);
+  const zipFiles = unzipSync(uint8);
+
+  const gisKeys = Object.keys(zipFiles).filter((k) => {
+    const ext = k.split(".").pop()?.toLowerCase() ?? "";
+    return ["geojson", "json", "kml", "dxf"].includes(ext);
+  });
+
+  if (gisKeys.length === 0) {
+    throw new Error("לא נמצאו קבצי GIS (Shapefile/GeoJSON/KML/DXF) בתוך ה-ZIP");
+  }
+
+  // Parse the first GIS file found
+  const key = gisKeys[0];
+  const content = new TextDecoder().decode(zipFiles[key]);
+  const virtualFile = new File([content], key, { type: "text/plain" });
+
+  const layer = await parseGisFile(virtualFile);
+  layer.name = key;
+  return layer;
 }
 
 function kmlToFeatures(doc: Document): GeoJSON.Feature[] {
