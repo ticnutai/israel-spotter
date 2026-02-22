@@ -108,7 +108,11 @@ export function MapToolbar({ map }: MapToolbarProps) {
     setShowPanel(null);
     setPolyPoints([]);
     if (tempLayerRef.current) tempLayerRef.current.clearLayers();
-    if (map) map.getContainer().style.cursor = "";
+    if (map) {
+      map.getContainer().style.cursor = "";
+      map.dragging.enable();
+      map.doubleClickZoom.enable();
+    }
   }, [map]);
 
   // ── Add annotation to state ──
@@ -393,6 +397,13 @@ export function MapToolbar({ map }: MapToolbarProps) {
     if (tempLayerRef.current) tempLayerRef.current.clearLayers();
     if (map) {
       map.getContainer().style.cursor = tool === "none" ? "" : "crosshair";
+      if (tool !== "none" && tool !== "goto") {
+        map.dragging.disable();
+        map.doubleClickZoom.disable();
+      } else {
+        map.dragging.enable();
+        map.doubleClickZoom.enable();
+      }
     }
 
     // Only goto requires a mandatory input panel
